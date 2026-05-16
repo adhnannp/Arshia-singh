@@ -2,6 +2,10 @@ import Lenis from 'lenis'
 import gsap from 'gsap'
 import ScrollTrigger from 'gsap/ScrollTrigger'
 import * as THREE from 'three'
+import Swiper from 'swiper'
+import { EffectCards, Autoplay } from 'swiper/modules'
+import 'swiper/css'
+import 'swiper/css/effect-cards'
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -114,37 +118,56 @@ document.addEventListener('DOMContentLoaded', () => {
     // WEAR YOUR MOOD — Skiper30-style parallax columns
     // Columns are absolutely positioned; GSAP animates Y from 0 → travel distance
     // Travel amounts match Skiper30's y = height*2, y2 = height*3.3, y3 = height*1.25, y4 = height*3
-    const galleryTrigger = {
-      trigger: '.parallax-gallery',
-      start: 'top bottom',
-      end: 'bottom top',
-      scrub: 1.5, // Smooth Lenis-quality drag
-    };
+    if (window.innerWidth >= 1024) {
+      const galleryTrigger = {
+        trigger: '.parallax-gallery',
+        start: 'top bottom',
+        end: 'bottom top',
+        scrub: 1.5, // Smooth Lenis-quality drag
+      };
 
-    // Col 1: y = height*2 ≈ 200vh travel
-    gsap.fromTo('#pcol1', { y: 0 }, {
-      y: '200vh',
-      ease: 'none',
-      scrollTrigger: galleryTrigger,
-    });
-    // Col 2: y2 = height*3.3 ≈ 330vh travel (fastest, starts highest)
-    gsap.fromTo('#pcol2', { y: 0 }, {
-      y: '330vh',
-      ease: 'none',
-      scrollTrigger: galleryTrigger,
-    });
-    // Col 3: y3 = height*1.25 ≈ 125vh travel (slowest)
-    gsap.fromTo('#pcol3', { y: 0 }, {
-      y: '125vh',
-      ease: 'none',
-      scrollTrigger: galleryTrigger,
-    });
-    // Col 4: y4 = height*3 ≈ 300vh travel
-    gsap.fromTo('#pcol4', { y: 0 }, {
-      y: '300vh',
-      ease: 'none',
-      scrollTrigger: galleryTrigger,
-    });
+      // Col 1: y = height*2 ≈ 200vh travel
+      gsap.fromTo('#pcol1', { y: 0 }, {
+        y: '200vh',
+        ease: 'none',
+        scrollTrigger: galleryTrigger,
+      });
+      // Col 2: y2 = height*3.3 ≈ 330vh travel (fastest, starts highest)
+      gsap.fromTo('#pcol2', { y: 0 }, {
+        y: '330vh',
+        ease: 'none',
+        scrollTrigger: galleryTrigger,
+      });
+      // Col 3: y3 = height*1.25 ≈ 125vh travel (slowest)
+      gsap.fromTo('#pcol3', { y: 0 }, {
+        y: '125vh',
+        ease: 'none',
+        scrollTrigger: galleryTrigger,
+      });
+      // Col 4: y4 = height*3 ≈ 300vh travel
+      gsap.fromTo('#pcol4', { y: 0 }, {
+        y: '300vh',
+        ease: 'none',
+        scrollTrigger: galleryTrigger,
+      });
+    }
+
+    // Swiper Card Effect Carousel for Mobile (Skiper48 effect)
+    const moodSwiperEl = document.querySelector('.mood-mobile-swiper');
+    if (moodSwiperEl) {
+      new Swiper('.mood-mobile-swiper', {
+        modules: [EffectCards, Autoplay],
+        effect: 'cards',
+        grabCursor: true,
+        loop: true,
+        autoplay: false,
+        cardsEffect: {
+          slideShadows: true,
+          perSlideRotate: 2,
+          perSlideOffset: 8,
+        }
+      });
+    }
 
     // Old marquee calls kept for other sections
     setupMarquee('.atelier-marquee.row-1 .track', 40, -1);

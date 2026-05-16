@@ -476,6 +476,11 @@ a {
   background: var(--color-bg);
 }
 
+/* Swiper Mobile Cards Gallery (Default hidden on desktop) */
+.mood-mobile-swiper {
+  display: none;
+}
+
 /* Each column — positioned absolutely within the gallery clip window */
 .parallax-col {
   position: absolute;
@@ -535,6 +540,11 @@ a {
   padding: 0 4vw;
 }
 
+/* Hide mobile card swiper on desktop */
+.mood-mobile-swiper {
+  display: none !important;
+}
+
 /* Section Shared */
 .section {
   padding: 15vh 4vw;
@@ -566,7 +576,39 @@ a {
   display: flex;
   gap: 5vw;
   background-color: var(--color-bg);
+  position: relative;
+  overflow: hidden;
 }
+
+/* Floating Parallax Decorative Illustrations */
+.floating-illustration {
+  position: absolute !important;
+  pointer-events: none;
+  z-index: 0;
+  mix-blend-mode: multiply;
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .floating-illustration {
+    display: block;
+  }
+}
+
+.phulkari-decor {
+  top: 5%;
+  right: -5%;
+  width: 35vw;
+  opacity: 0.08 !important;
+}
+
+.weave-decor {
+  top: 10%;
+  left: 2%;
+  width: 25vw;
+  opacity: 0.06 !important;
+}
+
 
 .craft-container {
   display: flex;
@@ -773,7 +815,7 @@ a {
   left: 0;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle at center, transparent 30%, rgba(255, 255, 255, 0.4) 100%);
+  background: radial-gradient(circle at center, transparent 40%, rgba(255, 255, 255, 0.15) 100%);
   z-index: 1;
   pointer-events: none;
 }
@@ -872,8 +914,8 @@ a {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 0.7;
-  filter: contrast(0.95) brightness(1.05) saturate(0.9);
+  opacity: 1.0;
+  filter: contrast(1.22) brightness(0.92) saturate(1.05);
   animation: gentle-flow 20s ease-in-out infinite alternate;
 }
 
@@ -997,6 +1039,10 @@ a {
   margin-top: 5vh;
   position: relative;
   width: 100%;
+}
+
+.swipe-indicator-wrapper {
+  display: none;
 }
 
 .grid-item {
@@ -1705,25 +1751,35 @@ a {
   }
 
   .parallax-gallery {
-    height: 120vh;
+    display: none !important;
   }
 
-  /* On mobile: show only 3 columns */
-  .parallax-col-4 {
-    display: none;
+  /* Swiper Cards Carousel on Mobile */
+  .mood-mobile-swiper {
+    display: block !important;
+    width: 280px;
+    height: 410px;
+    margin: 40px auto 60px;
+    position: relative;
+    overflow: visible !important;
   }
 
-  /* Recalculate 3-column positions */
-  .parallax-col {
-    width: calc(33.33% - 1.5vw);
+  .mood-mobile-swiper .swiper-slide {
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(0, 0, 0, 0.05);
   }
-  .parallax-col-1 { left: 0; top: -20%; }
-  .parallax-col-2 { left: calc(33.33% + 0.75vw); top: -50%; }
-  .parallax-col-3 { left: calc(66.66% + 0.75vw); top: -20%; }
 
-  /* Shorter images on mobile */
-  .pcol-img-wrap {
-    height: 50vh;
+  .mood-mobile-swiper .swiper-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
   }
 
   .parallax-mood-body {
@@ -1732,28 +1788,54 @@ a {
     margin: 40px auto;
   }
 
-  /* Craft Section Mobile */
   .craft-container {
-    flex-direction: column;
+    flex-direction: column !important;
     gap: 30px;
     padding: 0;
+    margin-left: 0 !important;
+    width: 100%;
   }
 
   .craft-images {
     width: 100%;
-    height: 50vh;
+    height: auto;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    gap: 15px;
+  }
+
+  .craft-img-link {
+    display: block !important;
+    width: 100%;
+    height: 32vh;
+    overflow: hidden;
   }
 
   .craft-images img {
-    position: relative !important;
+    position: static !important;
     width: 100% !important;
     height: 100% !important;
+    object-fit: cover !important;
     left: auto !important;
     top: auto !important;
     transform: none !important;
+  }
+
+  .craft-text {
+    padding: 25px 24px 0;
+    text-align: center;
+    align-items: center;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  .craft-title {
+    font-size: 32px !important;
+    line-height: 1.2;
+    margin-bottom: 0;
+    text-align: center;
+    font-weight: 700;
   }
 
   /* Consciousness Mobile */
@@ -1803,6 +1885,38 @@ a {
 
   .collection-badges {
     justify-content: center;
+  }
+
+  /* Mobile Swipe Indicator */
+  .swipe-indicator-wrapper {
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+    margin: 5px 0 0 0 !important;
+    width: 100%;
+  }
+
+  .swipe-indicator {
+    font-family: var(--font-mono);
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--color-dark);
+    opacity: 1 !important;
+    animation: swipePulse 1.8s infinite ease-in-out;
+    display: inline-block;
+  }
+
+  @keyframes swipePulse {
+    0%, 100% {
+      opacity: 0.6;
+      transform: translateX(0);
+    }
+    50% {
+      opacity: 1;
+      transform: translateX(6px);
+    }
   }
 
   /* Founder Quote Mobile */
@@ -2024,6 +2138,15 @@ a {
     position: relative;
     margin-left: 0 !important;
     transform: none !important;
+    display: flex;
+    flex-direction: column;
+    gap: 8px !important;
+  }
+
+  .grid-item-link {
+    height: auto !important;
+    display: block !important;
+    width: 100%;
   }
 
   .grid-item img {
