@@ -31,6 +31,8 @@ body {
   -webkit-overflow-scrolling: touch;
   /* Momentum scroll for mobile */
   overflow-x: hidden;
+  scroll-behavior: auto !important;
+  overscroll-behavior: none;
 }
 
 #webgl-canvas {
@@ -175,7 +177,7 @@ a {
   max-width: 1400px;
   height: 60px;
   /* Slimmer profile */
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(25px) saturate(180%);
   -webkit-backdrop-filter: blur(25px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.3);
@@ -308,6 +310,13 @@ a {
   background: url('assets/pawel-czerwinski-ymzs15Afjhg-unsplash.jpg') center/cover no-repeat;
 }
 
+.cinematic-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
 .hero-texture {
   position: absolute;
   top: 0;
@@ -438,91 +447,92 @@ a {
   opacity: 0.4;
 }
 
-/* Ticker Section */
-.ticker-section {
-  padding: 10vh 0;
+/* ── WEAR YOUR MOOD: Parallax Column Gallery (Skiper30-style) ── */
+.parallax-mood-section {
   background-color: var(--color-bg);
+  padding-top: 10vh;
   overflow: hidden;
   border-bottom: 1px solid var(--color-surface);
-  will-change: transform;
-  transform: translateZ(0);
-  contain: paint;
 }
 
-
-.ticker-title {
-  font-size: 8vw;
-  font-weight: 700;
-  /* Bold and Attractive */
+.parallax-mood-header {
   text-align: center;
-  margin-bottom: 5vh;
-  letter-spacing: 0.1em;
+  padding: 0 4vw 6vh;
+}
+
+.parallax-mood-title {
+  font-size: clamp(3rem, 8vw, 9rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
+  line-height: 1;
 }
 
+/* Gallery container — clip window, columns position absolutely inside */
+.parallax-gallery {
+  position: relative;
+  height: 175vh;
+  overflow: hidden;
+  background: var(--color-bg);
+}
 
-.ticker-track {
-  display: flex;
-  width: max-content;
-  /* Ensure it takes full width of children */
-  margin-bottom: 50px;
+/* Each column — positioned absolutely within the gallery clip window */
+.parallax-col {
+  position: absolute;
+  top: 0;
+  width: calc(25% - 1.5vw);
   will-change: transform;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
 }
 
-.track-ltr {
-  /* animation: ticker-ltr 80s linear infinite; */
-  /* Much slower */
-}
+/* Spread columns evenly across the 4-column layout */
+.parallax-col-1 { left: 0%; }
+.parallax-col-2 { left: calc(25% + 0.5vw); }
+.parallax-col-3 { left: calc(50% + 0.5vw); }
+.parallax-col-4 { left: calc(75% + 0.5vw); }
 
-.track-rtl {
-  /* animation: ticker-rtl 80s linear infinite; */
-  /* Much slower */
-}
+/* Stagger start Y positions — each column "parked" at a different height */
+/* These match Skiper30: -top-[45%] | [nth-2]:-top-[95%] | [nth-3]:-top-[45%] | [nth-4]:-top-[75%] */
+.parallax-col-1 { top: -45%; }
+.parallax-col-2 { top: -95%; }
+.parallax-col-3 { top: -45%; }
+.parallax-col-4 { top: -75%; }
 
-
-.ticker-content {
+.pcol-inner {
   display: flex;
-  gap: 30px;
-  padding-right: 30px;
+  flex-direction: column;
+  gap: 2vw;
+  width: 100%;
+  height: auto;
+  /* Grows naturally with image heights */
+}
+
+/* Each image gets a fixed tall height — 3 images = ~220vh total column height */
+.pcol-img-wrap {
+  position: relative;
+  width: 100%;
+  height: 70vh;
+  overflow: hidden;
   flex-shrink: 0;
-  /* Critical: prevent blocks from shrinking */
 }
 
-.ticker-content img {
-  height: 40vh;
-  width: 30vw;
+.pcol-img-wrap img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
+  object-position: top center;
+  display: block;
+  pointer-events: none;
 }
 
-@keyframes ticker-ltr {
-  0% {
-    transform: translateX(-50%);
-  }
-
-  100% {
-    transform: translateX(0);
-  }
-}
-
-@keyframes ticker-rtl {
-  0% {
-    transform: translateX(0);
-  }
-
-  100% {
-    transform: translateX(-50%);
-  }
-}
-
-.ticker-body {
+/* Quote below gallery */
+.parallax-mood-body {
   text-align: center;
   max-width: 800px;
-  margin: 8vh auto 0 auto;
-  font-size: 1.5vw;
-  line-height: 1.6;
-  opacity: 0.8;
+  margin: 8vh auto;
+  font-size: clamp(1rem, 1.5vw, 1.4rem);
+  line-height: 1.7;
+  opacity: 0.75;
+  padding: 0 4vw;
 }
 
 /* Section Shared */
@@ -1010,6 +1020,7 @@ a {
   width: 100%;
   height: auto;
   object-fit: cover;
+  object-position: top center;
   background-color: var(--color-silver);
   transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), filter 0.6s;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.05);
@@ -1221,6 +1232,7 @@ a {
   position: relative;
   display: block;
   width: 100%;
+  text-align: center;
 }
 
 .shop-it-btn .btn-text {
@@ -1686,23 +1698,38 @@ a {
   }
 
 
-  /* Ticker Mobile */
-  .ticker-title {
+  /* WEAR YOUR MOOD Parallax Gallery — Mobile */
+  .parallax-mood-title {
     font-size: 12vw;
-    margin-bottom: 30px;
+    letter-spacing: 0.04em;
   }
 
-
-
-  .ticker-content img {
-    height: 35vh;
-    width: 65vw;
+  .parallax-gallery {
+    height: 120vh;
   }
 
-  .ticker-body {
+  /* On mobile: show only 3 columns */
+  .parallax-col-4 {
+    display: none;
+  }
+
+  /* Recalculate 3-column positions */
+  .parallax-col {
+    width: calc(33.33% - 1.5vw);
+  }
+  .parallax-col-1 { left: 0; top: -20%; }
+  .parallax-col-2 { left: calc(33.33% + 0.75vw); top: -50%; }
+  .parallax-col-3 { left: calc(66.66% + 0.75vw); top: -20%; }
+
+  /* Shorter images on mobile */
+  .pcol-img-wrap {
+    height: 50vh;
+  }
+
+  .parallax-mood-body {
     font-size: 16px;
-    padding: 0;
-    margin-top: 40px;
+    padding: 0 6vw;
+    margin: 40px auto;
   }
 
   /* Craft Section Mobile */
@@ -1905,7 +1932,7 @@ a {
     top: 0;
     right: -20%;
     width: 120%;
-    opacity: 0.15;
+    opacity: 0.4;
     /* Subtle background texture */
     pointer-events: none;
   }
@@ -1913,7 +1940,7 @@ a {
   .brand-lockup {
     font-size: 18vw;
     line-height: 0.8;
-    text-align: left;
+    text-align: center;
     letter-spacing: -0.06em;
     padding: 0;
     margin-bottom: 60px;
@@ -2169,8 +2196,8 @@ a {
 
   .founder-creative-stamp {
     position: absolute;
-    top: -20px;
-    left: -20px;
+    top: 10px;
+    left: 10px;
     width: 90px;
     height: 90px;
     margin: 0;

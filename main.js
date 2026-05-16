@@ -11,17 +11,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
   
   const lenis = isTouchDevice ? null : new Lenis({
-    lerp: 0.1,
-    wheelMultiplier: 1.0,
+    duration: 1.2,
+    easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+    orientation: 'vertical',
+    gestureOrientation: 'vertical',
     smoothWheel: true,
+    wheelMultiplier: 1,
+    touchMultiplier: 2,
+    infinite: false,
   });
 
   if (lenis) {
+    function raf(time) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+    requestAnimationFrame(raf);
+    
     lenis.on('scroll', ScrollTrigger.update);
-
-    gsap.ticker.add((time) => {
-      lenis.raf(time * 1000);
-    });
     gsap.ticker.lagSmoothing(0);
   } else {
     window.addEventListener('scroll', () => {
@@ -72,8 +79,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function initScrollAnimations() {
+    gsap.config({ force3D: true });
     initHeroAnimations();
     
+    // Set will-change for performance
+    gsap.set('.cinematic-bg, .cinematic-content, .grid-item, .founder-img, .floating-illustration, .fade-up', { willChange: 'transform, opacity' });
+
     ScrollTrigger.refresh();
 
     // Hero Parallax
@@ -84,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
         trigger: '.hero',
         start: 'top top',
         end: 'bottom top',
-        scrub: true
+        scrub: 0.5
       }
     });
 
@@ -96,13 +107,46 @@ document.addEventListener('DOMContentLoaded', () => {
         trigger: '.hero',
         start: 'top top',
         end: 'bottom top',
-        scrub: true
+        scrub: 0.5
       }
     });
 
-    // Marquees
-    setupMarquee('.ticker-section .track-ltr', 80, 1);
-    setupMarquee('.ticker-section .track-rtl', 80, -1);
+    // WEAR YOUR MOOD — Skiper30-style parallax columns
+    // Columns are absolutely positioned; GSAP animates Y from 0 → travel distance
+    // Travel amounts match Skiper30's y = height*2, y2 = height*3.3, y3 = height*1.25, y4 = height*3
+    const galleryTrigger = {
+      trigger: '.parallax-gallery',
+      start: 'top bottom',
+      end: 'bottom top',
+      scrub: 1.5, // Smooth Lenis-quality drag
+    };
+
+    // Col 1: y = height*2 ≈ 200vh travel
+    gsap.fromTo('#pcol1', { y: 0 }, {
+      y: '200vh',
+      ease: 'none',
+      scrollTrigger: galleryTrigger,
+    });
+    // Col 2: y2 = height*3.3 ≈ 330vh travel (fastest, starts highest)
+    gsap.fromTo('#pcol2', { y: 0 }, {
+      y: '330vh',
+      ease: 'none',
+      scrollTrigger: galleryTrigger,
+    });
+    // Col 3: y3 = height*1.25 ≈ 125vh travel (slowest)
+    gsap.fromTo('#pcol3', { y: 0 }, {
+      y: '125vh',
+      ease: 'none',
+      scrollTrigger: galleryTrigger,
+    });
+    // Col 4: y4 = height*3 ≈ 300vh travel
+    gsap.fromTo('#pcol4', { y: 0 }, {
+      y: '300vh',
+      ease: 'none',
+      scrollTrigger: galleryTrigger,
+    });
+
+    // Old marquee calls kept for other sections
     setupMarquee('.atelier-marquee.row-1 .track', 40, -1);
     setupMarquee('.atelier-marquee.row-2 .track', 45, 1);
     setupMarquee('.keyword-marquee .marquee-track', 35, -1);
@@ -156,20 +200,29 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    gsap.to('.grass-1', { y: -50, ease: 'none', scrollTrigger: { trigger: '.consciousness', start: 'top bottom', end: 'bottom top', scrub: true }});
-    gsap.to('.grass-2', { y: -100, ease: 'none', scrollTrigger: { trigger: '.consciousness', start: 'top bottom', end: 'bottom top', scrub: true }});
-    gsap.to('.grass-3', { y: -70, ease: 'none', scrollTrigger: { trigger: '.consciousness', start: 'top bottom', end: 'bottom top', scrub: true }});
-    gsap.to('.brand-lockup', { y: 30, ease: 'none', scrollTrigger: { trigger: '.consciousness', start: 'top bottom', end: 'bottom top', scrub: true }});
+    gsap.to('.grass-1', { y: -50, ease: 'none', scrollTrigger: { trigger: '.consciousness', start: 'top bottom', end: 'bottom top', scrub: 0.5 }});
+    gsap.to('.grass-2', { y: -100, ease: 'none', scrollTrigger: { trigger: '.consciousness', start: 'top bottom', end: 'bottom top', scrub: 0.5 }});
+    gsap.to('.grass-3', { y: -70, ease: 'none', scrollTrigger: { trigger: '.consciousness', start: 'top bottom', end: 'bottom top', scrub: 0.5 }});
+    gsap.to('.brand-lockup', { y: 30, ease: 'none', scrollTrigger: { trigger: '.consciousness', start: 'top bottom', end: 'bottom top', scrub: 0.5 }});
 
     // Editorial Grid
     const gridItems = document.querySelectorAll('.grid-item');
     gridItems.forEach(item => {
       const speed = parseFloat(item.getAttribute('data-speed')) || 1;
-      gsap.fromTo(item, { y: 50 * speed }, { y: -50 * speed, ease: 'none', scrollTrigger: { trigger: '.editorial-grid', start: 'top bottom', end: 'bottom top', scrub: true }});
+      gsap.fromTo(item, { y: 30 * speed }, { 
+        y: -30 * speed, 
+        ease: 'none', 
+        scrollTrigger: { 
+          trigger: '.editorial-grid', 
+          start: 'top bottom', 
+          end: 'bottom top', 
+          scrub: 0.5 // Add slight smoothing to scrub
+        }
+      });
     });
 
     // Founder Note
-    gsap.to('.founder-img', { yPercent: -20, ease: 'none', scrollTrigger: { trigger: '.founder-note', start: 'top bottom', end: 'bottom top', scrub: true }});
+    gsap.to('.founder-img', { yPercent: -15, ease: 'none', scrollTrigger: { trigger: '.founder-note', start: 'top bottom', end: 'bottom top', scrub: 0.5 }});
 
     // General Fade Ups
     document.querySelectorAll('.fade-up').forEach((el) => {
@@ -186,7 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
           trigger: el.parentElement,
           start: 'top bottom',
           end: 'bottom top',
-          scrub: true
+          scrub: 0.5
         }
       });
     });
@@ -277,20 +330,25 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), grainMaterial));
 
+    let resizeTimeout;
     window.addEventListener('resize', () => {
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        ScrollTrigger.refresh();
+      }, 250);
     });
 
     function updateWebGL() {
       if (window.innerWidth >= 1024) {
-        grainMaterial.uniforms.uTime.value = performance.now() * 0.001;
+        grainMaterial.uniforms.uTime.value = performance.now() * 0.0005;
         renderer.render(scene, camera);
+        requestAnimationFrame(updateWebGL);
       }
-      requestAnimationFrame(updateWebGL);
     }
-    updateWebGL();
+    if (window.innerWidth >= 1024) updateWebGL();
   }
 
   // Monogram Parallax
