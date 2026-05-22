@@ -1498,7 +1498,7 @@ a {
 /* Legendary Footer */
 .footer {
   background-color: var(--color-dark);
-  background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.85)), url('/assets/footer-bg.jpg');
+  background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.85)), url('/assets/footer-bg-desktop.jpeg');
   background-size: cover;
   background-position: center;
   color: var(--color-bg);
@@ -1579,6 +1579,8 @@ a {
 @media (max-width: 1024px) {
   .footer {
     padding: 15vh 6vw 6vh;
+    background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.85)), url('/assets/footer-bg-mobile.jpeg');
+    background-position: top center;
   }
 
   .footer-hero-text {
