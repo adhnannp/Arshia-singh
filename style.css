@@ -1498,7 +1498,7 @@ a {
 /* Legendary Footer */
 .footer {
   background-color: var(--color-dark);
-  background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.85)), url('/assets/footer-bg-desktop.jpeg');
+  background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.85)), url('/assets/footer-bg-desktop-opt1.jpeg');
   background-size: cover;
   background-position: center;
   color: var(--color-bg);
@@ -1579,8 +1579,11 @@ a {
 @media (max-width: 1024px) {
   .footer {
     padding: 15vh 6vw 6vh;
-    background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.85)), url('/assets/footer-bg-mobile.jpeg');
-    background-position: top center;
+    background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.85)), url('/assets/footer-bg-mobile-opt1.jpeg');
+    background-position: center, center;
+    background-size: cover, cover;
+    background-repeat: no-repeat, no-repeat;
+    background-color: var(--color-dark);
   }
 
   .footer-hero-text {
@@ -1781,6 +1784,7 @@ a {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: top center;
     display: block;
   }
 
@@ -1809,15 +1813,17 @@ a {
   .craft-img-link {
     display: block !important;
     width: 100%;
-    height: 32vh;
+    height: auto;
     overflow: hidden;
   }
 
   .craft-images img {
     position: static !important;
     width: 100% !important;
-    height: 100% !important;
+    height: auto !important;
+    aspect-ratio: 3/4;
     object-fit: cover !important;
+    object-position: top center !important;
     left: auto !important;
     top: auto !important;
     transform: none !important;
@@ -2153,8 +2159,10 @@ a {
 
   .grid-item img {
     width: 100% !important;
-    height: 65vh !important;
-    object-fit: cover;
+    height: auto !important;
+    aspect-ratio: 3/4;
+    object-fit: cover !important;
+    object-position: top center !important;
     border-radius: 0;
     filter: none;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
@@ -2221,7 +2229,11 @@ a {
   }
 
   .shop-card img {
-    height: 55vh;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 3/4;
+    object-fit: cover;
+    object-position: top center;
   }
 
   .horizontal-scroll-wrapper {
