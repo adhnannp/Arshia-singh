@@ -13,6 +13,40 @@
     rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="stylesheet" href="./style.css">
+  <!-- ASSET LOAD BALANCER & PRELOADER -->
+  <script>
+    (function() {
+      const criticalAssets = [
+        '/assets/Scene-17.mp4',
+        '/assets/logo2.png',
+        '/assets/hero_bg_video.webp',
+        '/assets/new_coll_1.jpg',
+        '/assets/new_coll_2.png',
+        '/assets/new_coll_3.png',
+        '/assets/new_coll_4.jpeg',
+        '/assets/new_coll_5.JPG',
+        '/assets/new_coll_6.jpg',
+        '/assets/new_coll_7.jpg',
+        '/assets/founder.jpeg',
+        '/assets/logo.glb'
+      ];
+      
+      // Load all key assets in parallel into browser cache
+      criticalAssets.forEach(url => {
+        if (url.endsWith('.mp4')) {
+          const v = document.createElement('video');
+          v.src = url;
+          v.preload = 'auto';
+        } else if (url.endswith('.glb')) {
+          fetch(url, { priority: 'high' }).catch(() => {});
+        } else {
+          const img = new Image();
+          img.src = url;
+        }
+      });
+    })();
+  </script>
+
 </head>
 
 <body class="subpage custom-page">
@@ -31,19 +65,58 @@
     </div>
   </nav>
 
-  <!-- MENU OVERLAY -->
+          <!-- MENU OVERLAY -->
   <div class="menu-overlay">
-    <div class="menu-inner">
-      <ul>
-        <li><a href="shop.html">Shop</a></li>
-        <li><a href="new.html">New</a></li>
-        <li><a href="story.html">Story</a></li>
-        <li><a href="custom.html">Custom</a></li>
-      </ul>
+    <div class="menu-close-btn">&times;</div>
+    <div class="menu-container">
+      
+      <!-- Left Column: Editorial Showcase -->
+      <div class="menu-visual-showcase">
+        <div class="showcase-img-wrapper">
+          <img src="/assets/new_coll_3.png" alt="Editorial Showcase" id="menu-showcase-img" class="showcase-img">
+        </div>
+      </div>
+      
+      <!-- Right Column: Navigation Grid -->
+      <div class="menu-navigation-grid">
+        
+        <div class="nav-section">
+          <span class="nav-section-num">01</span>
+          <span class="nav-section-title">Women</span>
+          <ul class="nav-section-links">
+            <li><a href="matching-moods.html" data-img="/assets/new_coll_2.png">Matching Moods</a></li>
+            <li><a href="flow-state.html" data-img="/assets/new_coll_5.JPG">Flow State</a></li>
+            <li><a href="power-layers.html" data-img="/assets/new_coll_3.png">Power Layers</a></li>
+            <li><a href="top-tier.html" data-img="/assets/new_coll_4.jpeg">Top Tier</a></li>
+            <li><a href="six-yards-of-good.html" data-img="/assets/new_coll_1.jpg">Six Yards of Good</a></li>
+            <li><a href="custom-made-for-moments.html" data-img="/assets/new_coll_6.jpg">Custom Made for Moments</a></li>
+          </ul>
+        </div>
+        
+        <div class="nav-section">
+          <span class="nav-section-num">02</span>
+          <span class="nav-section-title">Men</span>
+          <ul class="nav-section-links">
+            <li><a href="natural-luxury.html" data-img="/assets/new_coll_6.jpg">Natural Luxury</a></li>
+            <li><a href="printed-stories.html" data-img="/assets/new_coll_7.jpg">Printed Stories</a></li>
+            <li><a href="modern-classics.html" data-img="/assets/new_coll_3.png">Modern Classics</a></li>
+          </ul>
+        </div>
+        
+        <div class="nav-section connect-section">
+          <span class="nav-section-num">03</span>
+          <span class="nav-section-title">Connect</span>
+          <ul class="nav-section-links connect-links">
+            <li><a href="https://www.instagram.com/arshia.singh.official?igsh=bWN5cXd1M2txNmsx" target="_blank" rel="noopener noreferrer">Instagram</a></li>
+            <li><a href="custom.html">Inquiries</a></li>
+          </ul>
+        </div>
+
+      </div>
+      
     </div>
   </div>
-
-  <main id="smooth-wrapper">
+<main id="smooth-wrapper">
     <div id="smooth-content">
 
       <!-- SUBPAGE HERO -->

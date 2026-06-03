@@ -5,14 +5,15 @@
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/vite.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OUR STORY | ARSHIA SINGH</title>
+  <title>SIX YARDS OF GOOD | ARSHIA SINGH</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
     href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Outfit:wght@100..900&display=swap"
     rel="stylesheet">
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="stylesheet" href="./style.css">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
   <!-- ASSET LOAD BALANCER & PRELOADER -->
   <script>
     (function() {
@@ -49,7 +50,7 @@
 
 </head>
 
-<body class="subpage story-page">
+<body class="subpage shop-page">
 
   <canvas id="webgl-canvas"></canvas>
 
@@ -121,40 +122,53 @@
 
       <!-- SUBPAGE HERO -->
       <section class="subpage-hero">
-        <div class="subpage-hero-bg" style="background-image: url('/assets/12.jpg');"></div>
+        <div class="subpage-hero-bg" style="background-image: url('/assets/new_coll_1.jpg');"></div>
         <div class="subpage-hero-content">
-          <span class="subpage-hero-subtitle fade-up">Our Heritage</span>
-          <h1 class="subpage-hero-title fade-up">The Narrative</h1>
+          <span class="subpage-hero-subtitle fade-up">Conscious Handcrafted Sarees</span>
+          <h1 class="subpage-hero-title fade-up">Six Yards of Good</h1>
         </div>
       </section>
 
-      <!-- EDITORIAL BLOCK 1 -->
-      <section class="editorial-block">
-        <h2 class="editorial-title fade-up">Craftsmanship Reimagined</h2>
-        <p class="editorial-text fade-up">
-          Arshia Singh was born from a desire to bridge the gap between traditional Indian craftsmanship and modern conscious living. Our story is not just about clothes; it's about the hands that make them, the heritage they carry, and the future we are building together.
-        </p>
-      </section>
-
-      <!-- STORY VISUALS -->
-      <section class="masterclass-grid" style="padding-top: 0;">
-        <div class="masterclass-item fade-up">
-          <img src="/assets/13.jpg" alt="Craft Detail" style="width: 100%; height: auto; display: block;">
-          <div style="margin-top: 20px; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; opacity: 0.5;">Atelier // PHULKARI PROCESS</div>
+      <!-- FILTER BAR -->
+      <div class="editorial-block fade-up">
+        <div class="filter-bar" style="display: flex; justify-content: center; gap: 40px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;">
+          <span style="cursor: pointer; opacity: 1; text-decoration: underline;">All</span>
+          <span style="cursor: pointer; opacity: 0.4;">Phulkari</span>
+          <span style="cursor: pointer; opacity: 0.4;">Block Print</span>
+          <span style="cursor: pointer; opacity: 0.4;">Vegan Silk</span>
         </div>
-        <div class="masterclass-item fade-up" style="margin-top: 100px;">
-          <img src="/assets/14.jpg" alt="Craft Detail" style="width: 100%; height: auto; display: block;">
-          <div style="margin-top: 20px; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; opacity: 0.5;">Material // VEGAN CONSCIOUS</div>
-        </div>
-      </section>
+      </div>
 
-      <!-- FOUNDER QUOTE REVISITED -->
-      <section class="editorial-block" style="background: var(--color-dark); color: var(--color-bg); margin-bottom: 15vh;">
-        <h2 class="editorial-title fade-up" style="color: var(--color-bg);">"Luxury is not about excess. It is about intention."</h2>
-        <p class="editorial-text fade-up" style="opacity: 0.6;">
-          — Arshia Singh, Founder
-        </p>
-      </section>
+      <!-- MASTERCLASS GRID -->
+      <section class="masterclass-grid">
+        <a href="product-detail.html?product=libaas-saree" class="masterclass-item fade-up" style="color: inherit; display: block; text-decoration: none;">
+          <div class="luxury-card">
+            <img src="/assets/new_coll_1.jpg" alt="LIBAAS SAREE">
+            <div class="luxury-card-overlay">
+              <h3 class="luxury-card-title">LIBAAS SAREE</h3>
+              <p class="luxury-card-meta">Modal Satin & Viscose Muslin // ₹16,500</p>
+            </div>
+          </div>
+        </a>
+        <a href="product-detail.html?product=ravel-saree" class="masterclass-item fade-up" style="color: inherit; display: block; text-decoration: none;">
+          <div class="luxury-card">
+            <img src="/assets/new_coll_2.png" alt="RAVEL SAREE">
+            <div class="luxury-card-overlay">
+              <h3 class="luxury-card-title">RAVEL SAREE</h3>
+              <p class="luxury-card-meta">Modal Satin & Viscose Muslin // ₹14,500</p>
+            </div>
+          </div>
+        </a>
+        <a href="product-detail.html?product=marble-print-saree" class="masterclass-item fade-up" style="color: inherit; display: block; text-decoration: none;">
+          <div class="luxury-card">
+            <img src="/assets/new_coll_3.png" alt="MARBLE PRINT SAREE">
+            <div class="luxury-card-overlay">
+              <h3 class="luxury-card-title">MARBLE PRINT SAREE</h3>
+              <p class="luxury-card-meta">Viscose Muslin // ₹15,000</p>
+            </div>
+          </div>
+        </a>
+</section>
 
       <footer class="footer">
         <div class="footer-main">

@@ -1,21 +1,21 @@
 import { defineConfig } from 'vite'
 import { resolve } from 'path'
+import { readdirSync } from 'fs'
+import { fileURLToPath } from 'url'
+
+const rootDir = fileURLToPath(new URL('.', import.meta.url))
+const input = Object.fromEntries(
+  readdirSync(rootDir)
+    .filter(file => file.endsWith('.html'))
+    .map(file => [file.replace(/\.html$/, ''), resolve(rootDir, file)])
+)
 
 export default defineConfig({
   base: './',
 
   build: {
     rollupOptions: {
-      input: {
-        main: resolve(__dirname, 'index.html'),
-        shop: resolve(__dirname, 'shop.html'),
-        story: resolve(__dirname, 'story.html'),
-        custom: resolve(__dirname, 'custom.html'),
-        newpage: resolve(__dirname, 'new.html'),
-        product1: resolve(__dirname, 'product-1.html'),
-        product2: resolve(__dirname, 'product-2.html'),
-        product3: resolve(__dirname, 'product-3.html'),
-      }
+      input
     }
   },
 

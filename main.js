@@ -286,7 +286,14 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Menu ---
   const menuToggle = document.querySelector('.menu-toggle');
   const menuOverlay = document.querySelector('.menu-overlay');
+  const menuCloseBtn = document.querySelector('.menu-close-btn');
   let menuOpen = false;
+
+  const closeMenu = () => {
+    menuOpen = false;
+    menuOverlay.classList.remove('open');
+    menuToggle.textContent = 'MENU';
+  };
 
   if (menuToggle && menuOverlay) {
     menuToggle.addEventListener('click', () => {
@@ -294,12 +301,29 @@ document.addEventListener('DOMContentLoaded', () => {
       menuOverlay.classList.toggle('open', menuOpen);
       menuToggle.textContent = menuOpen ? 'CLOSE' : 'MENU';
     });
-    document.querySelectorAll('.menu-inner a').forEach(link => {
-      link.addEventListener('click', () => {
-        menuOpen = false;
-        menuOverlay.classList.remove('open');
-        menuToggle.textContent = 'MENU';
+
+    if (menuCloseBtn) menuCloseBtn.addEventListener('click', closeMenu);
+
+    // Interactive Showcase Image Hover
+    const showcaseImg = document.getElementById('menu-showcase-img');
+    const hoverLinks = document.querySelectorAll('.menu-navigation-grid a[data-img]');
+    
+    hoverLinks.forEach(link => {
+      link.addEventListener('mouseenter', () => {
+        const newImgSrc = link.getAttribute('data-img');
+        if (showcaseImg && newImgSrc && showcaseImg.getAttribute('src') !== newImgSrc) {
+          showcaseImg.classList.add('fade-out');
+          setTimeout(() => {
+            showcaseImg.setAttribute('src', newImgSrc);
+            showcaseImg.classList.remove('fade-out');
+          }, 150);
+        }
       });
+    });
+
+    // Close menu when clicking normal links
+    document.querySelectorAll('.menu-navigation-grid a:not([target="_blank"])').forEach(link => {
+      link.addEventListener('click', closeMenu);
     });
   }
 
@@ -334,45 +358,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // --- WebGL ---
-  const webglCanvas = document.querySelector('#webgl-canvas');
-  if (webglCanvas) {
-    const renderer = new THREE.WebGLRenderer({ canvas: webglCanvas, alpha: true, antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
-    camera.position.z = 5;
 
-    const grainVertexShader = `varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position, 1.0); }`;
-    const grainFragmentShader = `uniform float uTime; uniform float uOpacity; varying vec2 vUv; float random(vec2 p) { return fract(sin(dot(p.xy, vec2(12.9898, 78.233))) * 43758.5453); } void main() { float noise = random(vUv + uTime); gl_FragColor = vec4(vec3(0.0), noise * uOpacity); }`;
-    const grainMaterial = new THREE.ShaderMaterial({
-      vertexShader: grainVertexShader, fragmentShader: grainFragmentShader,
-      uniforms: { uTime: { value: 0 }, uOpacity: { value: window.innerWidth < 1024 ? 0.02 : 0.04 } },
-      transparent: true, depthTest: false
-    });
-    scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), grainMaterial));
-
-    let resizeTimeout;
-    window.addEventListener('resize', () => {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(() => {
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        ScrollTrigger.refresh();
-      }, 250);
-    });
-
-    function updateWebGL() {
-      if (window.innerWidth >= 1024) {
-        grainMaterial.uniforms.uTime.value = performance.now() * 0.0005;
-        renderer.render(scene, camera);
-        requestAnimationFrame(updateWebGL);
-      }
-    }
-    if (window.innerWidth >= 1024) updateWebGL();
-  }
 
   // Monogram Parallax
   gsap.to('.philosophy-monogram', {
