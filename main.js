@@ -4,6 +4,7 @@ import ScrollTrigger from 'gsap/ScrollTrigger'
 import * as THREE from 'three'
 import Swiper from 'swiper'
 import { EffectCards, Autoplay } from 'swiper/modules'
+import { products } from './products-data.js'
 import 'swiper/css'
 import 'swiper/css/effect-cards'
 
@@ -298,13 +299,41 @@ document.addEventListener('DOMContentLoaded', () => {
   if (menuToggle && menuOverlay) {
     menuToggle.addEventListener('click', () => {
       menuOpen = !menuOpen;
-      menuOverlay.classList.toggle('open', menuOpen);
       menuToggle.textContent = menuOpen ? 'CLOSE' : 'MENU';
+      
+      if (menuOpen) {
+        // Prepare starting states for dynamic reveal
+        gsap.set('.nav-section-title, .nav-section-num, .nav-section-links li a, .connect-links li a', { opacity: 0, y: 30 });
+        
+        menuOverlay.classList.add('open');
+        
+        // Staggered reveal of headers
+        gsap.to('.nav-section-title, .nav-section-num', { 
+          y: 0, 
+          opacity: 1, 
+          duration: 0.8, 
+          stagger: 0.05, 
+          ease: 'power3.out', 
+          delay: 0.25 
+        });
+        
+        // Staggered reveal of individual links
+        gsap.to('.nav-section-links li a, .connect-links li a', { 
+          y: 0, 
+          opacity: 1, 
+          duration: 1.0, 
+          stagger: 0.02, 
+          ease: 'power4.out', 
+          delay: 0.35 
+        });
+      } else {
+        closeMenu();
+      }
     });
 
     if (menuCloseBtn) menuCloseBtn.addEventListener('click', closeMenu);
 
-    // Interactive Showcase Image Hover
+    // Interactive Showcase Image Hover with Ken Burns dynamic feel
     const showcaseImg = document.getElementById('menu-showcase-img');
     const hoverLinks = document.querySelectorAll('.menu-navigation-grid a[data-img]');
     
@@ -316,7 +345,7 @@ document.addEventListener('DOMContentLoaded', () => {
           setTimeout(() => {
             showcaseImg.setAttribute('src', newImgSrc);
             showcaseImg.classList.remove('fade-out');
-          }, 150);
+          }, 250);
         }
       });
     });
@@ -373,5 +402,231 @@ document.addEventListener('DOMContentLoaded', () => {
       const progress = (grid.scrollLeft / (grid.scrollWidth - grid.clientWidth)) * 100;
       progressBar.style.width = `${progress}%`;
     });
+  }
+
+  // ==========================================================================
+  // E-COMMERCE CORE & SLIDING CART DRAWER INTEGRATION
+  // ==========================================================================
+
+  // 1. Inject Cart Drawer HTML & Overlay
+  if (!document.querySelector('.cart-drawer')) {
+    const drawerHTML = `
+      <div class="cart-drawer">
+        <div class="cart-drawer-header">
+          <h3>Your Drawer</h3>
+          <button class="cart-drawer-close">&times;</button>
+        </div>
+        <div class="cart-drawer-items"></div>
+        <div class="cart-drawer-footer">
+          <div class="cart-total">Total: <span class="cart-total-price">₹0</span></div>
+          <button class="cart-checkout-btn">Book Entire Order</button>
+        </div>
+      </div>
+      <div class="cart-overlay-bg"></div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', drawerHTML);
+  }
+
+  // 2. Inject Cart Button in Nav
+  const navRight = document.querySelector('.nav-right');
+  if (navRight && !document.querySelector('.cart-toggle')) {
+    const cartBtn = document.createElement('button');
+    cartBtn.className = 'cart-toggle';
+    cartBtn.innerHTML = `CART <span class="cart-count-badge" style="display: none;">0</span>`;
+    navRight.insertBefore(cartBtn, navRight.firstChild);
+  }
+
+  // 3. Cart State Management
+  let cartItems = JSON.parse(localStorage.getItem('as_cart_items')) || [];
+
+  const updateCartUI = () => {
+    const countBadge = document.querySelector('.cart-count-badge');
+    const drawerItems = document.querySelector('.cart-drawer-items');
+    const totalPriceEl = document.querySelector('.cart-total-price');
+
+    if (countBadge) {
+      if (cartItems.length === 0) {
+        countBadge.style.display = 'none';
+      } else {
+        countBadge.style.display = 'inline-block';
+        countBadge.textContent = cartItems.length;
+        countBadge.classList.add('bump');
+        setTimeout(() => countBadge.classList.remove('bump'), 300);
+      }
+    }
+
+    if (drawerItems) {
+      if (cartItems.length === 0) {
+        drawerItems.innerHTML = '<div class="cart-empty-msg">Your collection is empty.</div>';
+      } else {
+        drawerItems.innerHTML = cartItems.map((item, index) => {
+          const priceStr = item.price.replace('/-', '').replace('₹', '').trim();
+          return `
+            <div class="cart-item">
+              <img src="${item.img}" alt="${item.name}" class="cart-item-img">
+              <div class="cart-item-details">
+                <div>
+                  <h4 class="cart-item-name">${item.name}</h4>
+                  <div class="cart-item-meta">Size: ${item.size}</div>
+                </div>
+                <div class="cart-item-price-row">
+                  <span class="cart-item-price">₹${priceStr}</span>
+                  <button class="cart-item-remove" data-index="${index}">Remove</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        // Wire up remove buttons
+        document.querySelectorAll('.cart-item-remove').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const index = parseInt(e.target.getAttribute('data-index'));
+            removeFromCart(index);
+          });
+        });
+      }
+    }
+
+    if (totalPriceEl) {
+      const total = cartItems.reduce((acc, item) => {
+        const priceNum = parseInt(item.price.replace(/[^0-9]/g, '')) || 0;
+        return acc + priceNum;
+      }, 0);
+      totalPriceEl.textContent = `₹${total.toLocaleString('en-IN')}`;
+    }
+  };
+
+  const saveCart = () => {
+    localStorage.setItem('as_cart_items', JSON.stringify(cartItems));
+    updateCartUI();
+  };
+
+  const removeFromCart = (index) => {
+    cartItems.splice(index, 1);
+    saveCart();
+  };
+
+  // Expose global dynamic function to add items to cart
+  window.addToASCart = (name, size, price, img) => {
+    cartItems.push({ name, size, price, img });
+    saveCart();
+    openCartDrawer();
+  };
+
+  // 4. Cart Drawer Toggle Controls
+  const cartToggle = document.querySelector('.cart-toggle');
+  const cartClose = document.querySelector('.cart-drawer-close');
+  const cartDrawer = document.querySelector('.cart-drawer');
+  const cartOverlay = document.querySelector('.cart-overlay-bg');
+  const checkoutBtn = document.querySelector('.cart-checkout-btn');
+
+  const openCartDrawer = () => {
+    cartDrawer.classList.add('open');
+    cartOverlay.classList.add('open');
+  };
+
+  const closeCartDrawer = () => {
+    cartDrawer.classList.remove('open');
+    cartOverlay.classList.remove('open');
+  };
+
+  if (cartToggle) cartToggle.addEventListener('click', openCartDrawer);
+  if (cartClose) cartClose.addEventListener('click', closeCartDrawer);
+  if (cartOverlay) cartOverlay.addEventListener('click', closeCartDrawer);
+
+  if (checkoutBtn) {
+    checkoutBtn.addEventListener('click', () => {
+      if (cartItems.length === 0) return;
+      // Redirect to Shopify backend checkout flow integration
+      const itemsPayload = encodeURIComponent(JSON.stringify(cartItems));
+      window.location.href = `https://arshia-singh-website.myshopify.com/cart?checkout=true&items=${itemsPayload}`;
+    });
+  }
+
+  // Initialize UI
+  updateCartUI();
+
+  // ==========================================================================
+  // DYNAMIC CATEGORY PRODUCT RENDERING
+  // ==========================================================================
+  const pageTitleEl = document.querySelector('.subpage-hero-title');
+  const gridContainer = document.querySelector('.masterclass-grid');
+
+  if (pageTitleEl && gridContainer) {
+    const pageTitle = pageTitleEl.textContent.trim().toLowerCase();
+    
+    // Normalize categories to match the structure in products-data.js
+    let matchedCategory = pageTitle;
+    if (pageTitle === 'six yards of good') {
+      matchedCategory = '6 yards of good';
+    } else if (pageTitle === 'custom made for moments') {
+      matchedCategory = 'custom made';
+    }
+
+    let displayProducts = [];
+    
+    if (pageTitle === 'top tier') {
+      // Filter out products belonging to tops/dresses/shirts
+      displayProducts = products.filter(p => 
+        p.name.toLowerCase().includes('dress') || 
+        p.name.toLowerCase().includes('shirt') || 
+        p.name.toLowerCase().includes('kurta') ||
+        p.category.toLowerCase() === 'power layers'
+      ).slice(0, 6);
+    } else {
+      displayProducts = products.filter(p => p.category && p.category.toLowerCase() === matchedCategory);
+    }
+
+    if (displayProducts.length > 0) {
+      gridContainer.innerHTML = displayProducts.map(p => {
+        const slug = p.name.toLowerCase().replace(/ /g, '-').replace(/'/g, '');
+        const cleanPrice = p.price !== 'N/A' ? `₹${p.price.replace('/-', '')}` : 'Price on Request';
+        return `
+          <a href="product-detail.html?product=${slug}" class="masterclass-item fade-up" style="color: inherit; display: block; text-decoration: none;">
+            <div class="luxury-card">
+              <img src="${p.img}" alt="${p.name.toUpperCase()}">
+              <div class="luxury-card-overlay">
+                <h3 class="luxury-card-title">${p.name.toUpperCase()}</h3>
+                <p class="luxury-card-meta">${p.fabric.toUpperCase()} // ${cleanPrice}</p>
+              </div>
+            </div>
+          </a>
+        `;
+      }).join('');
+
+      // Stagger animations for dynamic elements via GSAP
+      document.querySelectorAll('.masterclass-item.fade-up').forEach((el) => {
+        gsap.from(el, { 
+          y: 40, 
+          opacity: 0, 
+          duration: 1.2, 
+          ease: 'power3.out', 
+          scrollTrigger: { trigger: el, start: 'top 85%' }
+        });
+      });
+    }
+  }
+
+  // Inject luxury menu clock & branding info dynamically
+  const menuGrid = document.querySelector('.menu-navigation-grid');
+  if (menuGrid && !document.querySelector('.menu-footer-info')) {
+    const footerHTML = `
+      <div class="menu-footer-info">
+        <div class="m-footer-left">ARSHIA SINGH © 2026 / CONSCIOUS LUXURY</div>
+        <div class="m-footer-right">NEW DELHI, IN // LOCAL TIME <span class="menu-local-time">00:00:00</span></div>
+      </div>
+    `;
+    menuGrid.parentElement.insertAdjacentHTML('beforeend', footerHTML);
+    
+    const timeSpan = document.querySelector('.menu-local-time');
+    const updateMenuClock = () => {
+      if (timeSpan) {
+        const now = new Date();
+        timeSpan.textContent = now.toLocaleTimeString('en-US', { hour12: false });
+      }
+    };
+    updateMenuClock();
+    setInterval(updateMenuClock, 1000);
   }
 });
