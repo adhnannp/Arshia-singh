@@ -101,7 +101,7 @@ export default function HomePage() {
           <p className="hero-subtitle italic fade-up cinematic-subtitle">Where Craftsmanship Meets Consciousness.</p>
           <div className="hero-ctas fade-up cinematic-ctas">
             <Link href="/collections/matching-moods" className="btn-primary cinematic-btn">Enter the Collection</Link>
-            <Link href="/our-story" className="btn-secondary cinematic-btn-outline">Discover the Story</Link>
+            <Link href="/story" className="btn-secondary cinematic-btn-outline">Discover the Story</Link>
           </div>
         </div>
       </section>
