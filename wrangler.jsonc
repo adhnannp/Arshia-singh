@@ -1,0 +1,5 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "arshia-singh",
+  "compatibility_date": "2026-06-18"
+}
