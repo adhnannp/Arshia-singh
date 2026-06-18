@@ -92,6 +92,7 @@ arshia-singh-nextjs/
 
 ---
 
+
 ## Tech Stack
 
 - **Framework**: Next.js 14 (App Router)
