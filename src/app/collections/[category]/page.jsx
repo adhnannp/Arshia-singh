@@ -181,34 +181,14 @@ export default function CollectionPage() {
 
   return (
     <>
-      {/* ─── EDITORIAL SPLIT HERO ─── */}
-      <section className="subpage-hero">
-        <div className="subpage-hero-bg-wrap">
-          <div className="subpage-hero-bg" style={{ backgroundImage: `url('${meta.heroImg}')` }}></div>
-        </div>
-        <div className="subpage-hero-content">
-          <span className="subpage-hero-subtitle">{meta.subtitle}</span>
-          <h1 className="subpage-hero-title">{meta.title}</h1>
-          <p className="subpage-hero-desc">{meta.description}</p>
-          
-          <div className="hero-metrics">
-            <div className="metric-item">
-              <span className="metric-val">{filteredByCategory.length}</span>
-              <span className="metric-label">Silhouettes</span>
-            </div>
-            <div className="metric-item">
-              <span className="metric-val">{fabricsList.length}</span>
-              <span className="metric-label">Craft Fabrics</span>
-            </div>
-            <div className="metric-item">
-              <span className="metric-val">100%</span>
-              <span className="metric-label">PETA Vegan</span>
-            </div>
+      {/* ─── MINIMALIST PREMIUM HERO ─── */}
+      <section className="collection-hero">
+        <div className="collection-hero-container">
+          <div className="collection-hero-content">
+            <span className="collection-hero-subtitle">{meta.subtitle}</span>
+            <h1 className="collection-hero-title">{meta.title}</h1>
+            <p className="collection-hero-desc">{meta.description}</p>
           </div>
-        </div>
-        <div className="scroll-indicator-wrap">
-          <div className="scroll-indicator-line"></div>
-          <span>Scroll down</span>
         </div>
       </section>
 
@@ -273,7 +253,7 @@ export default function CollectionPage() {
           <p className="narrative-quote">
             "A conscious harmony of heritage handloom traditions, reimagined on modern canvases for standard luxury occasion styling."
           </p>
-          <span className="narrative-author">Arshia Singh, Lead Designer</span>
+          <span className="narrative-author">Arshia Singh</span>
         </div>
       </section>
 

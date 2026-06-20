@@ -10,11 +10,13 @@ export default function StoryPage() {
     gsap.registerPlugin(ScrollTrigger);
 
     gsap.config({ force3D: true });
+    
+    // Animate chapters on scroll
     document.querySelectorAll('.fade-up').forEach((el) => {
       gsap.from(el, {
-        y: 40,
+        y: 45,
         opacity: 0,
-        duration: 1.2,
+        duration: 1.4,
         ease: 'power3.out',
         scrollTrigger: {
           trigger: el,
@@ -22,49 +24,93 @@ export default function StoryPage() {
         },
       });
     });
+
     ScrollTrigger.refresh();
     return () => ScrollTrigger.getAll().forEach((st) => st.kill());
   }, []);
 
   return (
     <>
-      {/* SUBPAGE HERO */}
-      <section className="subpage-hero">
-        <div className="subpage-hero-bg" style={{ backgroundImage: "url('/assets/12.jpg')" }}></div>
-        <div className="subpage-hero-content">
-          <span className="subpage-hero-subtitle fade-up">Our Heritage</span>
-          <h1 className="subpage-hero-title fade-up">The Narrative</h1>
+      <div className="story-masterpiece">
+        {/* TYPOGRAPHIC HERO */}
+        <section className="story-hero">
+          <span className="story-hero-subtitle fade-up">Our Heritage</span>
+          <h1 className="story-hero-title fade-up">The Narrative</h1>
+          <div className="story-divider fade-up"></div>
+        </section>
+
+        <div className="story-container">
+          {/* CHAPTER 1 */}
+          <section className="story-chapter fade-up">
+            <div className="story-chapter-meta">
+              <span className="story-chapter-num">Chapter I</span>
+              <h2 className="story-chapter-title">The Origin</h2>
+            </div>
+            <div className="story-chapter-intro">
+              <p>
+                Arshia Singh was born from a desire to bridge the gap between traditional Indian craftsmanship and modern conscious living. The label emerged not merely to produce garments, but to honor the quiet beauty of slow fashion—where every node, print, and cut carries a memory.
+              </p>
+            </div>
+            <div className="story-chapter-body">
+              <p>
+                In a world that demands speed and excess, we choose patience and precision. We design for individuals who view dressing not as an act of vanity, but as a deliberate expression of identity and power.
+              </p>
+            </div>
+          </section>
+
+          {/* PULLQUOTE */}
+          <div className="story-pullquote fade-up">
+            <h2 className="story-pullquote-text">
+              "Dressing up has never been vanity for me, it's escape, empowerment, emotional shift. It is transformation."
+            </h2>
+            <span className="story-pullquote-author">— Arshia Singh, Founder</span>
+          </div>
+
+          {/* CHAPTER 2 */}
+          <section className="story-chapter fade-up">
+            <div className="story-chapter-meta">
+              <span className="story-chapter-num">Chapter II</span>
+              <h2 className="story-chapter-title">The Vegan Promise</h2>
+            </div>
+            <div className="story-chapter-intro">
+              <p>
+                Consciousness is not an afterthought for us; it is our foundation. Arshia Singh is a PETA-approved vegan brand, committed to creating luxury fashion that respects all life. We actively exclude any animal-derived materials from our sourcing.
+              </p>
+            </div>
+            <div className="story-chapter-body">
+              <p>
+                Instead, we seek out and utilize organic cotton, hemp, and premium bio-based vegan silks. We prove that luxury can be cruelty-free, offering premium textures and silhouettes that speak to both sensory excellence and moral clarity.
+              </p>
+            </div>
+          </section>
+
+          {/* PULLQUOTE 2 */}
+          <div className="story-pullquote fade-up">
+            <h2 className="story-pullquote-text">
+              "Luxury is not about excess. It is about intention."
+            </h2>
+            <span className="story-pullquote-author">— Conscious Luxury</span>
+          </div>
+
+          {/* CHAPTER 3 */}
+          <section className="story-chapter fade-up">
+            <div className="story-chapter-meta">
+              <span className="story-chapter-num">Chapter III</span>
+              <h2 className="story-chapter-title">Legacy of the Karigar</h2>
+            </div>
+            <div className="story-chapter-intro">
+              <p>
+                At the core of our label is the Karigar—the artisan. By collaborating directly with master embroiderers in Punjab and block printers in Jaipur, we preserve ancestral techniques that face threat of dilution from industrial duplication.
+              </p>
+            </div>
+            <div className="story-chapter-body">
+              <p>
+                By providing fair wages, safe working environments, and creative respect, our atelier in New Delhi keeps the heartbeat of heritage Indian craftsmanship alive. Each piece is a canvas of human dignity, time, and generational mastery.
+              </p>
+            </div>
+          </section>
         </div>
-      </section>
-
-      {/* EDITORIAL BLOCK 1 */}
-      <section className="editorial-block">
-        <h2 className="editorial-title fade-up">Craftsmanship Reimagined</h2>
-        <p className="editorial-text fade-up">
-          Arshia Singh was born from a desire to bridge the gap between traditional Indian craftsmanship and modern conscious living. Our story is not just about clothes; it's about the hands that make them, the heritage they carry, and the future we are building together.
-        </p>
-      </section>
-
-      {/* STORY VISUALS */}
-      <section className="masterclass-grid" style={{ paddingTop: 0, paddingBottom: '10vh' }}>
-        <div className="masterclass-item fade-up">
-          <img src="/assets/13.jpg" alt="Craft Detail" style={{ width: '100%', height: 'auto', display: 'block' }} />
-          <div style={{ marginTop: '20px', fontFamily: 'var(--font-mono)', fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase', opacity: 0.5 }}>Atelier // PHULKARI PROCESS</div>
-        </div>
-        <div className="masterclass-item fade-up" style={{ marginTop: '100px' }}>
-          <img src="/assets/14.jpg" alt="Craft Detail" style={{ width: '100%', height: 'auto', display: 'block' }} />
-          <div style={{ marginTop: '20px', fontFamily: 'var(--font-mono)', fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase', opacity: 0.5 }}>Material // VEGAN CONSCIOUS</div>
-        </div>
-      </section>
-
-      {/* FOUNDER QUOTE REVISITED */}
-      <section className="editorial-block" style={{ background: 'var(--color-dark)', color: 'var(--color-bg)', marginBottom: '15vh', padding: '10vh 8vw' }}>
-        <h2 className="editorial-title fade-up" style={{ color: 'var(--color-bg)' }}>"Luxury is not about excess. It is about intention."</h2>
-        <p className="editorial-text fade-up" style={{ opacity: 0.6 }}>
-          — Arshia Singh, Founder
-        </p>
-      </section>
-
+      </div>
       <Footer />
     </>
   );

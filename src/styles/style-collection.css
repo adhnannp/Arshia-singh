@@ -2,150 +2,103 @@
    style-collection.css — Premium Luxury Collection Redesign
    ================================================================ */
 
-/* Subpage Hero Split Screen */
-.subpage-hero {
+/* Centered Typographic Collection Hero */
+.collection-hero {
   position: relative;
-  height: 85vh;
-  min-height: 600px;
+  min-height: 55vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #FAF9F6; /* Luxury warm off-white */
+  color: #1d1d1f;
+  padding: 180px 8% 100px;
   overflow: hidden;
-  display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
-  background-color: #0b0b0c;
-  color: #fff;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-.subpage-hero-bg-wrap {
-  position: relative;
+.collection-hero-container {
   width: 100%;
-  height: 100%;
-  overflow: hidden;
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
 }
 
-.subpage-hero-bg {
-  position: absolute;
-  inset: 0;
-  background-size: cover;
-  background-position: center;
-  transition: transform 12s cubic-bezier(0.25, 1, 0.3, 1);
-  filter: brightness(0.65) contrast(1.05);
-}
-
-.subpage-hero:hover .subpage-hero-bg {
-  transform: scale(1.05);
-}
-
-.subpage-hero-content {
-  position: relative;
+.collection-hero-content {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: 150px 6vw 40px; /* Increased top padding to drop content below floating header */
+  align-items: center;
   z-index: 2;
-  background: linear-gradient(135deg, rgba(11, 11, 12, 0.95) 0%, rgba(18, 18, 20, 0.95) 100%);
-  border-left: 1px solid rgba(255, 255, 255, 0.08);
-  height: 100%;
 }
 
-.subpage-hero-subtitle {
-  display: inline-block;
+.collection-hero-subtitle {
   font-family: var(--font-mono);
   font-size: 11px;
-  letter-spacing: 0.3em;
+  letter-spacing: 0.35em;
   text-transform: uppercase;
-  color: #eae3d2; /* Luxury gold tint */
+  color: #887a64; /* Sophisticated muted gold/bronze */
   margin-bottom: 24px;
+  font-weight: 500;
 }
 
-.subpage-hero-title {
+.collection-hero-title {
   font-family: var(--font-display);
-  font-size: clamp(3.2rem, 5.5vw, 6.5rem);
+  font-size: clamp(3.8rem, 7vw, 8rem);
   font-weight: 300;
-  line-height: 1.05;
+  line-height: 1.1;
   text-transform: uppercase;
+  color: #111111;
+  margin-bottom: 28px;
   letter-spacing: -0.01em;
-  color: #fff;
-  margin-bottom: 24px;
 }
 
-.subpage-hero-desc {
+.collection-hero-desc {
   font-family: var(--font-body);
-  font-size: clamp(0.95rem, 1.2vw, 1.15rem);
-  line-height: 1.7;
-  color: rgba(255, 255, 255, 0.7);
-  max-width: 480px;
-  margin-bottom: 40px;
+  font-size: clamp(1.1rem, 1.3vw, 1.4rem);
+  line-height: 1.8;
+  color: #444444;
+  max-width: 900px;
+  margin-bottom: 50px;
 }
 
-/* Info Metrics */
-.hero-metrics {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-  padding-top: 30px;
-  margin-top: auto;
+/* Minimalist Inline Metrics */
+.collection-hero-metrics {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 48px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  padding-top: 36px;
+  width: 100%;
 }
 
-.metric-item {
+.collection-metric-item {
   display: flex;
   flex-direction: column;
+  align-items: center;
 }
 
-.metric-val {
+.collection-metric-val {
   font-family: var(--font-display);
   font-size: 2.2rem;
-  color: #fff;
+  color: #111111;
   line-height: 1;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
-.metric-label {
+.collection-metric-label {
   font-family: var(--font-mono);
   font-size: 9px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.45);
+  color: #8a8a8f;
 }
 
-/* Scroll indicator */
-.scroll-indicator-wrap {
-  position: absolute;
-  bottom: 30px;
-  left: 6vw;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  color: rgba(255, 255, 255, 0.4);
-  font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-}
-
-.scroll-indicator-line {
-  width: 50px;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.25);
-  position: relative;
-  overflow: hidden;
-}
-
-.scroll-indicator-line::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 50%;
-  height: 100%;
-  background: #eae3d2;
-  animation: scroll-line-anim 2s infinite ease-in-out;
-}
-
-@keyframes scroll-line-anim {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(200%); }
+/* Responsive */
+@media (max-width: 1024px) {
+  .collection-hero {
+    min-height: auto;
+    padding: 150px 6% 80px;
+  }
 }
 
 /* ── Filter & Utility Bar ── */
@@ -304,7 +257,8 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: 420px;
+  width: 100%;
+  max-width: 420px;
   height: 100vh;
   background: #fff;
   z-index: 1000;

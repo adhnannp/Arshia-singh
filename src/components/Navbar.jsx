@@ -62,6 +62,10 @@ export default function Navbar() {
             <img src="/assets/logo2.png" alt="Arshia Singh Logo" className="brand-logo" />
           </Link>
         </div>
+        <div className="nav-links">
+          <Link href="/story" className="nav-link-item">Our Story</Link>
+          <Link href="/blog" className="nav-link-item">Blog</Link>
+        </div>
         <div className="nav-right">
           <button
             className="cart-toggle"
@@ -71,8 +75,10 @@ export default function Navbar() {
               <span className="cart-count-badge">{cartItems.length}</span>
             )}
           </button>
-          <button className="menu-toggle" onClick={() => setMenuOpen(true)}>
-            MENU
+          <button className="menu-toggle" onClick={() => setMenuOpen(true)} aria-label="Open Menu">
+            <svg width="22" height="14" viewBox="0 0 22 14" fill="none" xmlns="http://www.w3.org/2000/svg" className="menu-icon-svg">
+              <path d="M1.5 2H20.5M1.5 7H20.5M1.5 12H20.5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+            </svg>
           </button>
         </div>
       </nav>
@@ -136,12 +142,26 @@ export default function Navbar() {
                 ))}
               </ul>
             </div>
+
+            {/* Karigar of AS */}
+            <div className="nav-section karigar-section">
+              <span className="nav-section-title karigar-title">
+                <Link href="/karigar-of-as" onClick={closeMenu}>Karigar of AS</Link>
+              </span>
+            </div>
           </div>
 
           {/* Menu Footer */}
           <div className="menu-footer-info">
             <div className="m-footer-left">ARSHIA SINGH © 2026 / CONSCIOUS LUXURY</div>
-            <div className="m-footer-right">NEW DELHI, IN // LOCAL TIME <span className="menu-local-time">{currentTime}</span></div>
+            <div className="m-footer-links">
+              <Link href="/shipping-policy" onClick={closeMenu}>Shipping Policy</Link>
+              <Link href="/privacy-policy" onClick={closeMenu}>Privacy Policy</Link>
+              <Link href="/exchange-policy" onClick={closeMenu}>Exchange Policy</Link>
+              <Link href="/returns-and-refunds" onClick={closeMenu}>Returns and Refunds</Link>
+              <Link href="/terms-and-conditions" onClick={closeMenu}>Terms & Conditions</Link>
+            </div>
+            <div className="m-footer-right">LOCAL TIME <span className="menu-local-time">{currentTime}</span></div>
           </div>
         </div>
       </div>

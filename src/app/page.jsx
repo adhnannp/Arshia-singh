@@ -1,11 +1,58 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import gsap from 'gsap';
 import Footer from '../components/Footer';
 
 export default function HomePage() {
+  const [stack, setStack] = useState([
+    { id: 1, src: "/assets/new_coll_1.jpg" },
+    { id: 2, src: "/assets/new_coll_3.png" },
+    { id: 3, src: "/assets/new_coll_5.JPG" },
+    { id: 4, src: "/assets/new_coll_7.jpg" },
+  ]);
+
+  const [startX, setStartX] = useState(null);
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
+
+  const cycleStack = () => {
+    setStack(prev => {
+      const next = [...prev];
+      const first = next.shift();
+      next.push(first);
+      return next;
+    });
+  };
+
+  const handleTouchStart = (e) => {
+    setStartX(e.touches[0].clientX);
+    setIsSwiping(true);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!startX) return;
+    const currentX = e.touches[0].clientX;
+    const diff = currentX - startX;
+    setSwipeOffset(diff);
+  };
+
+  const handleTouchEnd = () => {
+    if (Math.abs(swipeOffset) > 80) {
+      const flyDirection = swipeOffset > 0 ? 350 : -350;
+      setSwipeOffset(flyDirection);
+      setTimeout(() => {
+        cycleStack();
+        setSwipeOffset(0);
+      }, 300);
+    } else {
+      setSwipeOffset(0);
+    }
+    setStartX(null);
+    setIsSwiping(false);
+  };
+
   useEffect(() => {
     const { ScrollTrigger } = require('gsap/ScrollTrigger');
     gsap.registerPlugin(ScrollTrigger);
@@ -101,7 +148,7 @@ export default function HomePage() {
           <p className="hero-subtitle italic fade-up cinematic-subtitle">Where Craftsmanship Meets Consciousness.</p>
           <div className="hero-ctas fade-up cinematic-ctas">
             <Link href="/collections/matching-moods" className="btn-primary cinematic-btn">Enter the Collection</Link>
-            <Link href="/story" className="btn-secondary cinematic-btn-outline">Discover the Story</Link>
+            <Link href="/our-story" className="btn-secondary cinematic-btn-outline">Discover the Story</Link>
           </div>
         </div>
       </section>
@@ -133,6 +180,40 @@ export default function HomePage() {
             <div className="pcol-img-wrap"><img src="/assets/DSC_8402.jpg" alt="Look 12" /></div>
           </div></div>
         </div>
+
+        {/* Mobile View: Layered Stack of Images */}
+        <div
+          className="mood-mobile-stack"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          {stack.map((card, index) => {
+            const rotations = [-5, 4, -2, 1];
+            const translateXs = [-10, 8, -4, 0];
+            const translateYs = [-8, -4, 4, 10];
+
+            const isTopCard = index === stack.length - 1;
+            const currentTranslateX = isTopCard ? translateXs[index] + swipeOffset : translateXs[index];
+            const currentTranslateY = translateYs[index];
+            const currentRotation = isTopCard ? rotations[index] + (swipeOffset / 15) : rotations[index];
+
+            return (
+              <div
+                key={card.id}
+                className="mood-stack-card"
+                style={{
+                  zIndex: index,
+                  transform: `rotate(${currentRotation}deg) translate(${currentTranslateX}px, ${currentTranslateY}px)`,
+                  transition: isSwiping && isTopCard ? 'none' : 'transform 0.4s cubic-bezier(0.25, 1, 0.3, 1), z-index 0.4s ease',
+                }}
+              >
+                <img src={card.src} alt={`Look ${card.id}`} />
+              </div>
+            );
+          })}
+        </div>
+
         <div className="parallax-mood-body">
           <p className="italic">&ldquo;In a world that constantly shifts, what you choose to wear remains entirely yours. It is a personal decision, an individual expression, a quiet form of power.&rdquo;</p>
         </div>
@@ -186,9 +267,10 @@ export default function HomePage() {
           <div className="collection-badges">
             <span className="badge">Heritage Craft</span>
             <span className="badge">NEW IN</span>
-            <Link href="/collections/matching-moods" className="btn-primary" style={{ marginLeft: '20px', fontSize: '0.8rem', padding: '0.5rem 1rem' }}>Uncover the Details</Link>
+            <Link href="/collections/matching-moods" className="btn-primary ml-5 text-[0.8rem] py-2 px-4">Uncover the Details</Link>
           </div>
         </div>
+        <div className="collection-swipe-hint">SWIPE TO UNFOLD &gt;&gt;&gt;</div>
         <div className="editorial-grid">
           <div className="grid-item item-large" data-speed="0.9" data-index="01"><img src="/assets/new_coll_3.png" alt="Piece 1" loading="eager" /></div>
           <div className="grid-item item-small offset-down" data-speed="1.1" data-index="02"><img src="/assets/new_coll_4.jpeg" alt="Piece 2" loading="eager" /></div>
@@ -239,8 +321,8 @@ export default function HomePage() {
             <div className="founder-body italic fade-up">
               <p><span className="drop-cap">I</span>n a world that constantly shifts, what you choose to wear remains entirely yours. It is a personal decision, an individual expression, a quiet form of power. The ability to shape how you feel, how you present yourself, and how you move through the world.</p>
               <p>At the same time, what we create is as important as how we create it. We are a PETA-approved vegan brand, committed to using materials and processes that do not harm animals.</p>
-              <div className="philosophy-footer" style={{ columnSpan: 'all', marginTop: '60px' }}>
-                <p style={{ margin: 0 }}><strong>Where Craftsmanship Meets Consciousness</strong></p>
+              <div className="philosophy-footer mt-[60px]" style={{ columnSpan: 'all' }}>
+                <p className="m-0"><strong>Where Craftsmanship Meets Consciousness</strong></p>
               </div>
             </div>
           </div>

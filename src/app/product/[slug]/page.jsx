@@ -152,7 +152,7 @@ const PRODUCT_GALLERY_IMAGES = {
   ],
 };
 
-const SIZES = ['XS', 'S', 'M', 'L', 'XL'];
+const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL'];
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -165,6 +165,7 @@ export default function ProductDetailPage() {
   const [openAccordion, setOpenAccordion] = useState('details');
   const [showSizeModal, setShowSizeModal] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
+  const [withBlazer, setWithBlazer] = useState(false);
 
   // Find product by slug
   const product = products.find((p) => {
@@ -172,9 +173,22 @@ export default function ProductDetailPage() {
     return s === slug;
   });
 
+  const isBlockPrintPalazzo = product?.name === 'BLOCK PRINT PALAZZO CO-ORD';
+  const displayPrice = isBlockPrintPalazzo 
+    ? (withBlazer ? '10000/-' : '7000/-')
+    : product?.price;
+
   const images = product
     ? (PRODUCT_GALLERY_IMAGES[product.name.toUpperCase()] || PRODUCT_GALLERY_IMAGES[product.name] || [product.img])
     : [];
+
+  const handleMouseMove = (e) => {
+    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - left) / width) * 100;
+    const y = ((e.clientY - top) / height) * 100;
+    e.currentTarget.style.setProperty('--x', `${x}%`);
+    e.currentTarget.style.setProperty('--y', `${y}%`);
+  };
 
   useEffect(() => {
     if (!product) return;
@@ -192,9 +206,9 @@ export default function ProductDetailPage() {
 
   if (!product) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '70vh', fontFamily: 'var(--font-mono)', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.2em' }}>
+      <div className="flex flex-col items-center justify-center h-[70vh] font-mono text-[14px] uppercase tracking-[0.2em]">
         <p>Product not found.</p>
-        <Link href="/" style={{ marginTop: '20px', textDecoration: 'underline' }}>← Back to Home</Link>
+        <Link href="/" className="mt-5 underline">← Back to Home</Link>
       </div>
     );
   }
@@ -210,13 +224,17 @@ export default function ProductDetailPage() {
       setTimeout(() => setSizeError(false), 700);
       return;
     }
-    addToCart(product.name, selectedSize, product.price, images[0]);
+    const finalName = isBlockPrintPalazzo 
+      ? `${product.name} (${withBlazer ? 'With Blazer' : 'Without Blazer'})` 
+      : product.name;
+    addToCart(finalName, selectedSize, displayPrice, images[0]);
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2000);
   };
 
   const handleWhatsApp = () => {
-    const msg = `Hi! I'm interested in ${product.name} (Size: ${selectedSize || 'TBD'}) - ${formatPrice(product.price)}`;
+    const optionText = isBlockPrintPalazzo ? ` (${withBlazer ? 'With Blazer' : 'Without Blazer'})` : '';
+    const msg = `Hi! I'm interested in ${product.name}${optionText} (Size: ${selectedSize || 'TBD'}) - ${formatPrice(displayPrice)}`;
     window.open(`https://wa.me/919999999999?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
@@ -234,20 +252,46 @@ export default function ProductDetailPage() {
       <div className="pd-wrapper">
         {/* ─── LEFT: IMAGE GALLERY (SLIDER ON MOBILE, STACK ON DESKTOP) ─── */}
         <div className="pd-left-wrapper">
-          <div className="pd-left" onScroll={handleScroll}>
-            {images.map((img, i) => (
-              <div key={i} className="pd-image-slide">
-                <img src={img} alt={`${product.name} view ${i + 1}`} />
+          {/* Desktop/Carousel View */}
+          <div className="pd-left-desktop-container">
+            <div 
+              className="pd-main-image-zoom pd-zoom-container"
+              onMouseMove={handleMouseMove}
+            >
+              <img src={images[activeSlide]} alt={product.name} />
+            </div>
+            {images.length > 1 && (
+              <div className="pd-thumbnails-desktop">
+                {images.map((img, i) => (
+                  <div 
+                    key={i} 
+                    className={`pd-thumbnail-item ${i === activeSlide ? 'active' : ''}`}
+                    onClick={() => setActiveSlide(i)}
+                  >
+                    <img src={img} alt="thumbnail" />
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
-          {images.length > 1 && (
-            <div className="pd-slide-dots">
-              {images.map((_, i) => (
-                <span key={i} className={`pd-dot ${i === activeSlide ? 'active' : ''}`}></span>
+
+          {/* Mobile Swipe View */}
+          <div className="pd-left-mobile-container">
+            <div className="pd-left" onScroll={handleScroll}>
+              {images.map((img, i) => (
+                <div key={i} className="pd-image-slide">
+                  <img src={img} alt={`${product.name} view ${i + 1}`} />
+                </div>
               ))}
             </div>
-          )}
+            {images.length > 1 && (
+              <div className="pd-slide-dots">
+                {images.map((_, i) => (
+                  <span key={i} className={`pd-dot ${i === activeSlide ? 'active' : ''}`}></span>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
         {/* ─── RIGHT: STICKY INFO PANEL ─── */}
         <div className="pd-right">
@@ -258,7 +302,7 @@ export default function ProductDetailPage() {
           <h1 className="pd-title">{product.name}</h1>
 
           {/* Pricing */}
-          <div className="pd-price">{formatPrice(product.price)}</div>
+          <div className="pd-price">{formatPrice(displayPrice)}</div>
 
           {/* Editorial Description */}
           <div className="pd-description">{product.details}</div>
@@ -278,6 +322,29 @@ export default function ProductDetailPage() {
               <span className="pd-tag">Lined Edition</span>
             )}
           </div>
+
+          {/* Blazer Option Selection (Only for Block Print Palazzo Co-ord) */}
+          {isBlockPrintPalazzo && (
+            <div className="pd-size-section mb-[30px]">
+              <div className="pd-size-header">
+                <span className="pd-size-label">Select Blazer Option</span>
+              </div>
+              <div className="pd-option-grid">
+                <button
+                  className={`pd-option-btn ${!withBlazer ? 'active' : ''}`}
+                  onClick={() => setWithBlazer(false)}
+                >
+                  Without Blazer (₹7,000)
+                </button>
+                <button
+                  className={`pd-option-btn ${withBlazer ? 'active' : ''}`}
+                  onClick={() => setWithBlazer(true)}
+                >
+                  With Blazer (₹10,000)
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Size Selection Grid */}
           <div className="pd-size-section">
@@ -383,6 +450,9 @@ export default function ProductDetailPage() {
                 <tr><td>M</td><td>36</td><td>29</td><td>39</td></tr>
                 <tr><td>L</td><td>38</td><td>31</td><td>41</td></tr>
                 <tr><td>XL</td><td>40</td><td>33</td><td>43</td></tr>
+                <tr><td>XXL</td><td>42</td><td>35</td><td>45</td></tr>
+                <tr><td>3XL</td><td>44</td><td>37</td><td>47</td></tr>
+                <tr><td>4XL</td><td>46</td><td>39</td><td>49</td></tr>
               </tbody>
             </table>
             <p className="pd-modal-note">* Since all luxury pieces are individually bespoke tailored, custom measurements can be requested directly via WhatsApp support.</p>

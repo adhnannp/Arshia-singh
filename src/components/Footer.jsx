@@ -7,16 +7,23 @@ export default function Footer() {
         <h1 className="display footer-hero-text">WEAR<br />YOUR STORY</h1>
       </div>
 
-      <div style={{ marginTop: '-8vh', marginBottom: '12vh' }}>
+      <div className="mt-[-8vh] mb-[12vh]">
         <a
           href="https://www.instagram.com/arshia.singh.official?igsh=bWN5cXd1M2txNmsx"
           target="_blank"
           rel="noopener noreferrer"
-          className="footer-link"
-          style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', letterSpacing: '0.2em', textTransform: 'uppercase' }}
+          className="footer-link text-[12px] font-mono tracking-[0.2em] uppercase"
         >
           Instagram
         </a>
+      </div>
+
+      <div className="footer-links">
+        <Link href="/shipping-policy">Shipping Policy</Link>
+        <Link href="/privacy-policy">Privacy Policy</Link>
+        <Link href="/exchange-policy">Exchange Policy</Link>
+        <Link href="/returns-and-refunds">Returns & Refunds</Link>
+        <Link href="/terms-and-conditions">Terms & Conditions</Link>
       </div>
 
       <div className="footer-bottom">

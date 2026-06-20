@@ -8,66 +8,25 @@ export const metadata = {
 export default function InquiriesPage() {
   return (
     <>
-      <section style={{
-        minHeight: '80vh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '120px 40px 60px',
-        textAlign: 'center',
-      }}>
-        <span style={{
-          fontFamily: 'var(--font-mono)',
-          fontSize: '10px',
-          letterSpacing: '0.25em',
-          textTransform: 'uppercase',
-          color: '#8a8a8f',
-          display: 'block',
-          marginBottom: '20px',
-        }}>Connect</span>
+      <section className="min-h-[80vh] flex flex-col items-center justify-center px-10 pt-[120px] pb-[60px] text-center">
+        <span className="font-mono text-[10px] tracking-[0.25em] uppercase text-[#8a8a8f] block mb-5">
+          Connect
+        </span>
 
-        <h1 style={{
-          fontFamily: 'var(--font-display)',
-          fontSize: 'clamp(2.5rem, 6vw, 6rem)',
-          fontWeight: 400,
-          textTransform: 'uppercase',
-          letterSpacing: '0.02em',
-          color: '#1d1d1f',
-          lineHeight: 1,
-          marginBottom: '30px',
-        }}>Let&apos;s Create Together</h1>
+        <h1 className="font-display text-[clamp(2.5rem,6vw,6rem)] font-normal uppercase tracking-[0.02em] text-[#1d1d1f] leading-none mb-[30px]">
+          Let&apos;s Create Together
+        </h1>
 
-        <p style={{
-          fontFamily: 'var(--font-body)',
-          fontSize: '16px',
-          lineHeight: 1.75,
-          color: '#4a4a4f',
-          maxWidth: '520px',
-          marginBottom: '50px',
-          fontStyle: 'italic',
-        }}>For bespoke orders, custom design inquiries, bridal consultations, and collaborations, reach out directly via WhatsApp or Instagram.</p>
+        <p className="font-body text-base leading-[1.75] text-[#4a4a4f] max-w-[520px] mb-[50px] italic">
+          For bespoke orders, custom design inquiries, bridal consultations, and collaborations, reach out directly via WhatsApp or Instagram.
+        </p>
 
-        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
+        <div className="flex gap-4 flex-wrap justify-center">
           <a
             href="https://wa.me/919999999999"
             target="_blank"
             rel="noopener noreferrer"
-            style={{
-              padding: '18px 36px',
-              background: '#1d1d1f',
-              color: '#fff',
-              fontFamily: 'var(--font-mono)',
-              fontSize: '10px',
-              letterSpacing: '0.2em',
-              textTransform: 'uppercase',
-              textDecoration: 'none',
-              borderRadius: '3px',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '10px',
-              transition: 'background 0.3s',
-            }}
+            className="px-9 py-[18px] bg-[#1d1d1f] hover:bg-[#3a3a3f] text-white font-mono text-[10px] tracking-[0.2em] uppercase no-underline rounded-[3px] inline-flex items-center gap-2.5 transition-colors duration-300"
           >
             WhatsApp
           </a>
@@ -75,21 +34,7 @@ export default function InquiriesPage() {
             href="https://www.instagram.com/arshia.singh.official"
             target="_blank"
             rel="noopener noreferrer"
-            style={{
-              padding: '18px 36px',
-              background: 'transparent',
-              color: '#1d1d1f',
-              border: '1.5px solid rgba(0,0,0,0.18)',
-              fontFamily: 'var(--font-mono)',
-              fontSize: '10px',
-              letterSpacing: '0.2em',
-              textTransform: 'uppercase',
-              textDecoration: 'none',
-              borderRadius: '3px',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '10px',
-            }}
+            className="px-9 py-[18px] bg-transparent text-[#1d1d1f] border-[1.5px] border-black/18 font-mono text-[10px] tracking-[0.2em] uppercase no-underline rounded-[3px] inline-flex items-center gap-2.5 hover:bg-black/5 transition-colors duration-300"
           >
             Instagram @arshia.singh.official
           </a>

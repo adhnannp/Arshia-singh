@@ -1,6 +1,8 @@
 import { CartProvider } from '../components/CartContext';
 import CartDrawer from '../components/CartDrawer';
 import Navbar from '../components/Navbar';
+import SmoothScroll from '../components/SmoothScroll';
+import '../styles/globals.css';
 import '../styles/style-base.css';
 import '../styles/style-product.css';
 import '../styles/style-collection.css';
@@ -8,12 +10,6 @@ import '../styles/style-collection.css';
 export const metadata = {
   title: 'ARSHIA SINGH | Where Craftsmanship Meets Consciousness',
   description: 'Arshia Singh — PETA Vegan™ conscious luxury fashion brand from New Delhi. Phulkari, block print, hand embroidery — wearable art that honours Indian craft.',
-  icons: {
-    icon: [
-      { url: '/favicon.svg', type: 'image/svg+xml' },
-      { url: '/favicon.png', type: 'image/png' },
-    ],
-  },
 };
 
 export default function RootLayout({ children }) {
@@ -36,11 +32,9 @@ export default function RootLayout({ children }) {
         <CartProvider>
           <Navbar />
           <CartDrawer />
-          <main id="smooth-wrapper">
-            <div id="smooth-content">
-              {children}
-            </div>
-          </main>
+          <SmoothScroll>
+            {children}
+          </SmoothScroll>
         </CartProvider>
       </body>
     </html>
