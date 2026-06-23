@@ -9,36 +9,57 @@ export const metadata = {
 
 const ARTICLES = {
   '1': {
-    title: 'The Art of Slow Embroidery: Reviving Phulkari',
-    category: 'Heritage Craft',
-    date: 'June 18, 2026',
-    img: '/assets/13.jpg',
+    title: 'Fashion as a Reflection of Emotion',
+    category: 'Philosophy',
+    date: 'June 23, 2026',
+    img: '/assets/blog1.png',
     content: [
-      'Phulkari, which literally translates to “flower work,” is more than just an embroidery style; it is Punjab’s historical craft, woven into the fabric of regional culture and ceremony. Traditionally, it was stitched by women on hand-spun khaddar using untwisted silk thread (Pat), creating vibrant floral and geometric motifs from the reverse side of the fabric.',
-      'In a modern fast-fashion climate, this slow, meticulous craft faces the threat of dilution. Cheap machine imitations flood the market, lacking the depth, texture, and personal connection of hand-spun threads. At Arshia Singh, we believe in the preservation of the original hand-stitched Phulkari.',
-      'Our team works directly with artisan clusters in Punjab, ensuring that our Karigars are compensated ethically for their exceptional skills. By integrating these historic hand-stitched patterns into contemporary silhouettes like structured blazers, trench coats, and modern coord sets, we breathe new life into an ancient tradition, allowing you to wear history as an act of modern self-expression.'
+      'Fashion is often viewed as a form of self expression, but it is also a reflection of emotion. The clothes we choose each day can mirror how we feel, how we want to feel, or even who we are becoming.',
+      'Some days call for structured silhouettes that make us feel confident and powerful. Others invite soft fabrics, flowing shapes, and comfort. Whether consciously or unconsciously, we dress according to our moods, experiences, and aspirations. Clothing becomes an extension of our emotional landscape.',
+      'Research in psychology refers to this as "enclothed cognition", the idea that what we wear can influence how we think, feel, and behave. A well-loved garment can evoke confidence, nostalgia, joy, or a sense of belonging. Fashion is not simply about appearance; it is deeply connected to identity and emotion.',
+      'At ARSHIA SINGH, we believe clothing should move with the wearer through different moods, moments, and stages of life. Our collections are designed not only to be beautiful but also to create a feeling whether that feeling is strength, ease, celebration, or self-assurance.',
+      'Because fashion is at its most meaningful when it helps us feel more like ourselves'
     ]
   },
   '2': {
-    title: 'The Vegan Silk Revolution: Luxury Without Harm',
+    title: 'WHY VEGAN FASHION IS THE FUTURE OF LUXURY AND THE RIGHT INVESTMENT FOR YOUR WARDROBE?',
     category: 'Consciousness',
-    date: 'May 24, 2026',
-    img: '/assets/14.jpg',
+    date: 'June 20, 2026',
+    img: '/assets/blog2.png',
     content: [
-      'Conventional silk production (sericulture) is a process built on hidden violence. To harvest silk filaments without breaking them, silkworms are boiled alive inside their cocoons. It is a practice that stands directly in opposition to our core values at Arshia Singh.',
-      'We set out to prove that luxury does not require cruelty. Our PETA-approved vegan label is committed to using premium, animal-free alternatives that deliver the identical drape, touch, and luxurious sheen of conventional silk.',
-      'From advanced bio-based textiles to organic hemp and cotton blends, our fabrics are selected for both their sensory excellence and their environmental footprints. We believe that true luxury is conscious: it respects the life of all sentient beings, offering a sophisticated aesthetic that you can wear with pride and peace of mind.'
+      'Luxury has long been associated with rarity, craftsmanship, and exceptional quality. Traditionally, this often meant materials such as silk, leather, fur, and wool. Today, however, a new definition of luxury is emerging one that values conscious choices as much as exquisite design.',
+      'Vegan fashion represents this evolution. It challenges the idea that luxury must come at the expense of animals or the environment. Modern innovations in textiles have introduced fabrics that are not only beautiful and durable but also kinder to the planet. Materials such as hemp, Tencel™, and modal offer the softness, drape, and refinement expected from luxury garments while significantly reducing environmental impact.',
+      'Consumers are also becoming more mindful of how their clothing is made. They seek transparency, ethical production, and products that align with their values. This shift has transformed sustainability from a niche concern into a defining characteristic of modern luxury.',
+      'At ARSHIA SINGH, we believe true luxury lies in thoughtful craftsmanship. By combining premium vegan fabrics with traditional Indian artistry, we create garments that celebrate both style and responsibility. Luxury is no longer about excess it is about intention, quality, and a deeper connection to what we wear.',
+      'As fashion continues to evolve, vegan luxury is proving that elegance and ethics can coexist beautifully. The future of luxury is not only about looking good; it is about feeling good about the choices we make.'
     ]
   },
   '3': {
-    title: 'Dressing as Self-Expression: A Conversation with Arshia',
-    category: 'Philosophy',
-    date: 'April 12, 2026',
-    img: '/assets/founder.jpeg',
+    title: 'A Guide to Luxury Vegan Fabrics',
+    category: 'Fabrics',
+    date: 'June 18, 2026',
+    img: '/assets/blog3.png',
     content: [
-      '“Dressing up has never been about vanity for me,” says Arshia Singh. “It is an escape, an empowerment, an emotional shift. It is a quiet form of power.” In a world that constantly attempts to define us, what we choose to wear remains entirely within our control.',
-      'At Arshia Singh, we design garments that act as an armor for the soul. We believe that fashion is not about conformity, but about expressing your internal state—your mood, your intentions, and your philosophy.',
-      'Whether it’s a bold structured suit adorned with hand embroidery or a flowing organic patiala, every piece is made to support your personal transformation. When you choose to wear Arshia Singh, you are making an active decision to align your style with your consciousness.'
+      'Luxury begins with exceptional materials. The fabric of a garment determines not only how it looks but also how it feels, drapes, and endures over time. Today, luxury fashion is embracing innovative vegan fabrics that deliver sophistication without relying on animal-derived materials.',
+      'Hemp: Nature\'s Luxury Fibre\nHemp is one of the most sustainable fibres available. Known for its durability, breathability, and natural texture, it becomes softer with every wear while maintaining its strength. Hemp requires significantly less water than conventional crops and offers a timeless, effortless elegance.',
+      'Tencel™: Softness with Purpose\nDerived from responsibly sourced wood pulp, Tencel™ is celebrated for its silky touch and fluid drape. Lightweight and breathable, it offers exceptional comfort while being produced through environmentally conscious processes. It is an ideal choice for modern luxury garments.',
+      'Modal: Everyday Refinement\nModal is prized for its smooth texture, softness, and ability to retain colour beautifully. Comfortable against the skin and naturally breathable, it combines practicality with sophistication, making it a versatile fabric for contemporary wardrobes.',
+      'Vegan Silk Alternatives\nLuxury does not require traditional silk. Modern vegan alternatives offer the same elegant sheen and graceful movement while eliminating the need for animal-derived fibres. These innovative fabrics provide the beauty of silk with a more conscious approach.',
+      'Choosing Quality Over Quantity\nThe essence of luxury lies not in abundance but in thoughtful craftsmanship and enduring quality. Investing in garments made from premium vegan fabrics means choosing pieces designed to be worn, loved, and cherished for years to come.',
+      'At ARSHIA SINGH, our commitment to luxury begins with carefully selected vegan materials. By combining vegan fabrics with expert craftsmanship, we create garments that embody elegance, comfort, and conscious living. Because true luxury is not only about how a garment looks—it is about the story it tells and the values it represents'
+    ]
+  },
+  '4': {
+    title: 'The Art of Phulkari: A Celebration of Heritage and Craftsmanship',
+    category: 'Heritage Craft',
+    date: 'June 15, 2026',
+    img: '/assets/blog4.png',
+    content: [
+      'Phulkari, which translates to "flower work," is one of India\'s most cherished embroidery traditions. Originating in Punjab centuries ago, this intricate art form has been passed down through generations, carrying stories of culture, celebration, and identity within every stitch.',
+      'Traditionally, Phulkari was embroidered by women on handwoven fabrics for weddings, festivals, and special occasions. Each piece was unique, featuring vibrant geometric patterns, floral motifs, and symbolic designs that reflected personal experiences and community traditions. More than decoration, Phulkari represented love, patience, and the artistry of skilled hands.',
+      'In a world increasingly dominated by mass production, Phulkari stands as a reminder of the value of slow craftsmanship. Every embroidered motif requires time, precision, and an intimate understanding of the craft. The beauty of Phulkari lies not only in its visual richness but also in the stories woven into its creation.',
+      'At ARSHIA SINGH, we honour this heritage by reimagining Phulkari for the contemporary wardrobe. By integrating traditional embroidery into modern silhouettes, we create pieces that bridge the past and the present. Our designs celebrate the artistry of Indian craftsmanship while ensuring that these cultural traditions continue to thrive in a modern context.',
+      'Phulkari is more than an embellishment it is a living legacy. Every stitch connects us to generations of artisans who transformed fabric into storytelling, creating works of art that remain timeless.'
     ]
   }
 };

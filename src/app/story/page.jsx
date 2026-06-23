@@ -34,8 +34,8 @@ export default function StoryPage() {
       <div className="story-masterpiece">
         {/* TYPOGRAPHIC HERO */}
         <section className="story-hero">
-          <span className="story-hero-subtitle fade-up">Our Heritage</span>
-          <h1 className="story-hero-title fade-up">The Narrative</h1>
+          <span className="story-hero-subtitle fade-up">Where Craftsmanship Meets Consciousness</span>
+          <h1 className="story-hero-title fade-up">Our Story</h1>
           <div className="story-divider fade-up"></div>
         </section>
 
@@ -44,42 +44,41 @@ export default function StoryPage() {
           <section className="story-chapter fade-up">
             <div className="story-chapter-meta">
               <span className="story-chapter-num">Chapter I</span>
-              <h2 className="story-chapter-title">The Origin</h2>
+              <h2 className="story-chapter-title">The Philosophy</h2>
             </div>
             <div className="story-chapter-intro">
               <p>
-                Arshia Singh was born from a desire to bridge the gap between traditional Indian craftsmanship and modern conscious living. The label emerged not merely to produce garments, but to honor the quiet beauty of slow fashion—where every node, print, and cut carries a memory.
+                At its core, the brand is built on a simple belief that fashion is one of the few things in life you truly control.
               </p>
             </div>
             <div className="story-chapter-body">
               <p>
-                In a world that demands speed and excess, we choose patience and precision. We design for individuals who view dressing not as an act of vanity, but as a deliberate expression of identity and power.
+                In a world that constantly shifts, what you choose to wear remains entirely yours. It is a personal decision, an individual expression, a quiet form of power. The ability to shape how you feel, how you present yourself, and how you move through the world.
               </p>
             </div>
           </section>
 
-          {/* PULLQUOTE */}
+          {/* PULLQUOTE 1 */}
           <div className="story-pullquote fade-up">
             <h2 className="story-pullquote-text">
-              "Dressing up has never been vanity for me, it's escape, empowerment, emotional shift. It is transformation."
+              "This philosophy forms the foundation of the brand."
             </h2>
-            <span className="story-pullquote-author">— Arshia Singh, Founder</span>
           </div>
 
           {/* CHAPTER 2 */}
           <section className="story-chapter fade-up">
             <div className="story-chapter-meta">
               <span className="story-chapter-num">Chapter II</span>
-              <h2 className="story-chapter-title">The Vegan Promise</h2>
+              <h2 className="story-chapter-title">The Heritage</h2>
             </div>
             <div className="story-chapter-intro">
               <p>
-                Consciousness is not an afterthought for us; it is our foundation. Arshia Singh is a PETA-approved vegan brand, committed to creating luxury fashion that respects all life. We actively exclude any animal-derived materials from our sourcing.
+                We create contemporary clothing for men and women that blends Indian craftsmanship with modern design. Rooted in heritage yet designed for today, our pieces bring together intricate phulkari, block printing, and hand embroidery, reinterpreted through modern lenses and crafted into Indo-western and western silhouettes that are relevant, versatile, and timeless.
               </p>
             </div>
             <div className="story-chapter-body">
               <p>
-                Instead, we seek out and utilize organic cotton, hemp, and premium bio-based vegan silks. We prove that luxury can be cruelty-free, offering premium textures and silhouettes that speak to both sensory excellence and moral clarity.
+                From detailed artisanal techniques to thoughtfully developed digital prints, each garment reflects a balance of tradition and innovation where craft is not just preserved, but evolved.
               </p>
             </div>
           </section>
@@ -87,28 +86,59 @@ export default function StoryPage() {
           {/* PULLQUOTE 2 */}
           <div className="story-pullquote fade-up">
             <h2 className="story-pullquote-text">
-              "Luxury is not about excess. It is about intention."
+              "At the same time, what we create is as important as how we create it."
             </h2>
-            <span className="story-pullquote-author">— Conscious Luxury</span>
           </div>
 
           {/* CHAPTER 3 */}
           <section className="story-chapter fade-up">
             <div className="story-chapter-meta">
               <span className="story-chapter-num">Chapter III</span>
-              <h2 className="story-chapter-title">Legacy of the Karigar</h2>
+              <h2 className="story-chapter-title">The Consciousness</h2>
             </div>
             <div className="story-chapter-intro">
               <p>
-                At the core of our label is the Karigar—the artisan. By collaborating directly with master embroiderers in Punjab and block printers in Jaipur, we preserve ancestral techniques that face threat of dilution from industrial duplication.
+                We are a PETA-approved vegan brand, committed to using materials and processes that do not harm animals. Our choice to work with vegan fabrics is intentional. It is about responsibility, awareness, and building a future where fashion exists without compromise.
               </p>
             </div>
             <div className="story-chapter-body">
               <p>
-                By providing fair wages, safe working environments, and creative respect, our atelier in New Delhi keeps the heartbeat of heritage Indian craftsmanship alive. Each piece is a canvas of human dignity, time, and generational mastery.
+                Because true design is not only about how something looks or feels, it is also about what it stands for.
               </p>
             </div>
           </section>
+
+          {/* PULLQUOTE 3 */}
+          <div className="story-pullquote fade-up">
+            <h2 className="story-pullquote-text">
+              "This intersection of heritage craftsmanship and conscious creation is where the brand finds its identity."
+            </h2>
+          </div>
+
+          {/* CHAPTER 4 */}
+          <section className="story-chapter fade-up">
+            <div className="story-chapter-meta">
+              <span className="story-chapter-num">Chapter IV</span>
+              <h2 className="story-chapter-title">The Empowerment</h2>
+            </div>
+            <div className="story-chapter-intro">
+              <p>
+                Every piece is designed to do more than just dress you. It is created to empower, to offer a sense of confidence, ease, and individuality. To become a part of your everyday moments, your celebrations, and everything in between.
+              </p>
+            </div>
+            <div className="story-chapter-body">
+              <p>
+                Because when you feel good in what you wear, it reflects in everything you do.
+              </p>
+            </div>
+          </section>
+
+          {/* PULLQUOTE 4 */}
+          <div className="story-pullquote fade-up">
+            <h2 className="story-pullquote-text">
+              "Where Craftsmanship Meets Consciousness"
+            </h2>
+          </div>
         </div>
       </div>
       <Footer />

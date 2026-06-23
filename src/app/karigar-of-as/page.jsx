@@ -28,43 +28,46 @@ export default function KarigarPage() {
 
   return (
     <>
-      {/* SUBPAGE HERO */}
-      <section className="subpage-hero">
-        <div className="subpage-hero-bg" style={{ backgroundImage: "url('/assets/craft_detail_1_1777345251366.png')" }}></div>
-        <div className="subpage-hero-content">
-          <span className="subpage-hero-subtitle fade-up">The Hands Behind the Brand</span>
-          <h1 className="subpage-hero-title fade-up">Karigar of AS</h1>
+      <div className="story-masterpiece">
+        {/* HERO SECTION */}
+        <section className="story-hero">
+          <span className="story-hero-subtitle fade-up">The Hands Behind the Brand</span>
+          <h1 className="story-hero-title fade-up">Karigars of AS</h1>
+          <div className="story-divider fade-up"></div>
+        </section>
+
+        <div className="story-container">
+          {/* CONTENT SECTION 1 */}
+          <section className="story-chapter fade-up pb-10">
+            <div className="story-chapter-meta">
+              <span className="story-chapter-num">Legacy</span>
+              <h2 className="story-chapter-title">A Story of Dedication</h2>
+            </div>
+            <div className="story-chapter-intro">
+              <p>
+                Behind every hand-embroidered masterpiece is a story of dedication. Their skilled hands bring centuries-old techniques to life. Their craft is not just embroidery—it’s a living legacy woven into every stitch.
+              </p>
+            </div>
+          </section>
+
+          {/* PULLQUOTE */}
+          <div className="story-pullquote fade-up my-12">
+            <h2 className="story-pullquote-text">
+              "At the heart of our brand are artisans like Sarfaraz, Gurudas, Kundan, Hema, whose craftsmanship breathes life into our collections."
+            </h2>
+            <span className="story-pullquote-author">— The Karigars</span>
+          </div>
+
+          {/* CONTENT SECTION 2 */}
+          <section className="story-chapter fade-up pt-10">
+            <div className="story-chapter-intro text-center max-w-2xl mx-auto">
+              <p className="italic text-lg md:text-xl font-serif">
+                Every stitch tells a story, and every fabric carries the soul of its maker.
+              </p>
+            </div>
+          </section>
         </div>
-      </section>
-
-      {/* EDITORIAL BLOCK 1 */}
-      <section className="editorial-block">
-        <h2 className="editorial-title fade-up">Honouring Indian Artisans</h2>
-        <p className="editorial-text fade-up">
-          At Arshia Singh, we believe luxury lies not in the speed of production, but in the time dedicated to the craft. Every embroidery node, every print impression, and every stitch is made by the expert hands of our Karigars. By preserving heritage techniques like Phulkari and hand block printing, we honor their legacy while weaving a story of empowerment and conscious luxury.
-        </p>
-      </section>
-
-      {/* STORY VISUALS */}
-      <section className="masterclass-grid pt-0 pb-[10vh]">
-        <div className="masterclass-item fade-up">
-          <img src="/assets/13.jpg" alt="Phulkari Embroidery" className="w-full h-auto block" />
-          <div className="mt-5 font-mono text-[10px] tracking-[0.1em] uppercase opacity-50">Atelier // PHULKARI EMBROIDERY</div>
-        </div>
-        <div className="masterclass-item fade-up mt-[100px]">
-          <img src="/assets/craft_detail_2_1777345268074.png" alt="Hand Craft Detail" className="w-full h-auto block" />
-          <div className="mt-5 font-mono text-[10px] tracking-[0.1em] uppercase opacity-50">Detail // HANDCRAFTED EMBELLISHMENTS</div>
-        </div>
-      </section>
-
-      {/* DETAILED BIO SECTION */}
-      <section className="editorial-block bg-[var(--color-silver)] text-[var(--color-text)] py-[10vh] px-[8vw]">
-        <h2 className="editorial-title fade-up">Our Conscious Promise</h2>
-        <p className="editorial-text fade-up opacity-80">
-          Our workshop in New Delhi serves as a sanctuary for craftsmanship, where modern design meets generational skill. By ensuring fair wages, ethical working conditions, and a creative space that values human dignity, we keep the heartbeat of Indian textiles alive.
-        </p>
-      </section>
-
+      </div>
       <Footer />
     </>
   );
