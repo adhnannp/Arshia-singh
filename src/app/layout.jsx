@@ -10,6 +10,10 @@ import '../styles/style-collection.css';
 export const metadata = {
   title: 'ARSHIA SINGH | Where Craftsmanship Meets Consciousness',
   description: 'Arshia Singh — PETA Vegan™ conscious luxury fashion brand from New Delhi. Phulkari, block print, hand embroidery — wearable art that honours Indian craft.',
+  icons: [
+    { rel: 'icon', url: '/favicon.svg', type: 'image/svg+xml' },
+    { rel: 'icon', url: '/favicon.png', type: 'image/png' },
+  ],
 };
 
 export default function RootLayout({ children }) {
