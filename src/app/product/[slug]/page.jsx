@@ -154,6 +154,28 @@ const PRODUCT_GALLERY_IMAGES = {
 
 const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL'];
 
+const WOMEN_SIZE_DATA = [
+  { brand: 'XS', uk: '6', us: '2', eu: '34', bust_in: '32', waist_in: '25', hip_in: '35', bust_cm: '81', waist_cm: '64', hip_cm: '89' },
+  { brand: 'S', uk: '8', us: '4', eu: '36', bust_in: '34', waist_in: '27', hip_in: '37', bust_cm: '86', waist_cm: '69', hip_cm: '94' },
+  { brand: 'M', uk: '10', us: '6', eu: '38', bust_in: '36', waist_in: '29', hip_in: '39', bust_cm: '91', waist_cm: '74', hip_cm: '99' },
+  { brand: 'L', uk: '12', us: '8', eu: '40', bust_in: '38', waist_in: '31', hip_in: '41', bust_cm: '97', waist_cm: '79', hip_cm: '104' },
+  { brand: 'XL', uk: '14', us: '10', eu: '42', bust_in: '40', waist_in: '33', hip_in: '43', bust_cm: '102', waist_cm: '84', hip_cm: '109' },
+  { brand: '2XL', uk: '16', us: '12', eu: '44', bust_in: '42', waist_in: '36', hip_in: '46', bust_cm: '107', waist_cm: '91', hip_cm: '117' },
+  { brand: '3XL', uk: '18', us: '14', eu: '46', bust_in: '45', waist_in: '39', hip_in: '49', bust_cm: '114', waist_cm: '99', hip_cm: '124' },
+  { brand: '4XL', uk: '20', us: '16', eu: '48', bust_in: '48', waist_in: '42', hip_in: '52', bust_cm: '122', waist_cm: '107', hip_cm: '132' }
+];
+
+const MEN_SIZE_DATA = [
+  { brand: 'XS', uk: '34', us: '34', eu: '44', chest_in: '34', waist_in: '30', hip_in: '35', chest_cm: '86', waist_cm: '76', hip_cm: '89' },
+  { brand: 'S', uk: '36', us: '36', eu: '46', chest_in: '36', waist_in: '32', hip_in: '37', chest_cm: '91', waist_cm: '81', hip_cm: '94' },
+  { brand: 'M', uk: '38', us: '38', eu: '48', chest_in: '38', waist_in: '34', hip_in: '39', chest_cm: '97', waist_cm: '86', hip_cm: '99' },
+  { brand: 'L', uk: '40', us: '40', eu: '50', chest_in: '40', waist_in: '36', hip_in: '41', chest_cm: '102', waist_cm: '91', hip_cm: '104' },
+  { brand: 'XL', uk: '42', us: '42', eu: '52', chest_in: '42', waist_in: '38', hip_in: '43', chest_cm: '107', waist_cm: '97', hip_cm: '109' },
+  { brand: '2XL', uk: '44', us: '44', eu: '54', chest_in: '44', waist_in: '40', hip_in: '45', chest_cm: '112', waist_cm: '102', hip_cm: '114' },
+  { brand: '3XL', uk: '46', us: '46', eu: '56', chest_in: '46', waist_in: '43', hip_in: '48', chest_cm: '117', waist_cm: '109', hip_cm: '122' },
+  { brand: '4XL', uk: '48', us: '48', eu: '58', chest_in: '48', waist_in: '46', hip_in: '51', chest_cm: '122', waist_cm: '117', hip_cm: '130' }
+];
+
 export default function ProductDetailPage() {
   const params = useParams();
   const slug = params?.slug || '';
@@ -164,6 +186,7 @@ export default function ProductDetailPage() {
   const [addedToCart, setAddedToCart] = useState(false);
   const [openAccordion, setOpenAccordion] = useState('details');
   const [showSizeModal, setShowSizeModal] = useState(false);
+  const [sizeUnit, setSizeUnit] = useState('in');
   const [activeSlide, setActiveSlide] = useState(0);
   const [withBlazer, setWithBlazer] = useState(false);
 
@@ -172,6 +195,13 @@ export default function ProductDetailPage() {
     const s = p.name.toLowerCase().replace(/ /g, '-').replace(/'/g, '').replace(/[^a-z0-9-]/g, '');
     return s === slug;
   });
+
+  const isMens = product && (
+    product.category?.toLowerCase() === 'natural luxury' ||
+    product.category?.toLowerCase() === 'printed stories' ||
+    product.category?.toLowerCase() === 'modern classics' ||
+    product.name?.toLowerCase().includes("groom")
+  );
 
   const isBlockPrintPalazzo = product?.name === 'BLOCK PRINT PALAZZO CO-ORD';
   const displayPrice = isBlockPrintPalazzo 
@@ -399,7 +429,7 @@ export default function ProductDetailPage() {
               <div className="pd-accordion-content">
                 <div className="pd-spec-grid">
                   {product.fit && product.fit !== 'N/A' && <div className="pd-spec"><span className="pd-spec-label">Silhouette Fit</span><span className="pd-spec-val">{product.fit}</span></div>}
-                  {product.fabric && product.fabric !== 'N/A' && <div className="pd-spec"><span className="pd-spec-label">Material Composition</span><span className="pd-spec-val">{product.fabric}</span></div>}
+                  {product.fabric && product.fabric !== 'N/A' && <div className="pd-spec"><span className="pd-spec-label">PETA Vegan</span><span className="pd-spec-val">{product.fabric}</span></div>}
                   {product.textile && product.textile !== 'N/A' && <div className="pd-spec"><span className="pd-spec-label">Textile Craft</span><span className="pd-spec-val">{product.textile}</span></div>}
                   {product.print && product.print !== 'N/A' && <div className="pd-spec"><span className="pd-spec-label">Applied Print</span><span className="pd-spec-val">{product.print}</span></div>}
                   {product.components && product.components !== 'N/A' && <div className="pd-spec"><span className="pd-spec-label">Pieces Included</span><span className="pd-spec-val">{product.components} Set</span></div>}
@@ -441,21 +471,100 @@ export default function ProductDetailPage() {
         <div className="pd-modal-overlay" onClick={() => setShowSizeModal(false)}>
           <div className="pd-modal" onClick={(e) => e.stopPropagation()}>
             <button className="pd-modal-close" onClick={() => setShowSizeModal(false)}>&times;</button>
-            <h3 className="pd-modal-title">Garment Size Chart (inches)</h3>
-            <table className="pd-size-table">
-              <thead><tr><th>Size</th><th>Bust</th><th>Waist</th><th>Hip</th></tr></thead>
-              <tbody>
-                <tr><td>XS</td><td>32</td><td>25</td><td>35</td></tr>
-                <tr><td>S</td><td>34</td><td>27</td><td>37</td></tr>
-                <tr><td>M</td><td>36</td><td>29</td><td>39</td></tr>
-                <tr><td>L</td><td>38</td><td>31</td><td>41</td></tr>
-                <tr><td>XL</td><td>40</td><td>33</td><td>43</td></tr>
-                <tr><td>XXL</td><td>42</td><td>35</td><td>45</td></tr>
-                <tr><td>3XL</td><td>44</td><td>37</td><td>47</td></tr>
-                <tr><td>4XL</td><td>46</td><td>39</td><td>49</td></tr>
-              </tbody>
-            </table>
-            <p className="pd-modal-note">* Since all luxury pieces are individually bespoke tailored, custom measurements can be requested directly via WhatsApp support.</p>
+            <h3 className="pd-modal-title">{isMens ? "Men's Size Guide" : "Women's Size Guide"}</h3>
+            
+            <div className="pd-modal-content-wrapper">
+              {/* Column 1: How to Measure Image */}
+              <div className="pd-modal-col-left">
+                <h4 className="pd-modal-subtitle">{isMens ? "MEN HOW TO MEASURE" : "WOMEN HOW TO MEASURE"}</h4>
+                <div className="pd-measure-img-wrap">
+                  <img 
+                    src={isMens ? "/assets/size-chart/men-measure.jpg" : "/assets/size-chart/women-measure.jpg"} 
+                    alt="How to measure diagram" 
+                  />
+                </div>
+              </div>
+
+              {/* Column 2: Size Table & Details */}
+              <div className="pd-modal-col-middle">
+                <div className="pd-modal-table-header">
+                  <h4 className="pd-modal-subtitle">Size Conversion</h4>
+                  <div className="pd-unit-toggle">
+                    <button 
+                      className={`pd-unit-btn ${sizeUnit === 'in' ? 'active' : ''}`}
+                      onClick={() => setSizeUnit('in')}
+                    >
+                      IN
+                    </button>
+                    <span className="pd-unit-divider">/</span>
+                    <button 
+                      className={`pd-unit-btn ${sizeUnit === 'cm' ? 'active' : ''}`}
+                      onClick={() => setSizeUnit('cm')}
+                    >
+                      CM
+                    </button>
+                  </div>
+                </div>
+
+                <div className="pd-size-table-container">
+                  <table className="pd-size-table">
+                    <thead>
+                      <tr>
+                        <th>Brand</th>
+                        <th>UK</th>
+                        <th>US</th>
+                        <th>EU</th>
+                        <th>{isMens ? "Chest" : "Bust"}</th>
+                        <th>Waist</th>
+                        <th>Hip</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(isMens ? MEN_SIZE_DATA : WOMEN_SIZE_DATA).map((row) => (
+                        <tr key={row.brand}>
+                          <td><strong>{row.brand}</strong></td>
+                          <td>{row.uk}</td>
+                          <td>{row.us}</td>
+                          <td>{row.eu}</td>
+                          <td>{sizeUnit === 'in' ? (isMens ? row.chest_in : row.bust_in) : (isMens ? row.chest_cm : row.bust_cm)}</td>
+                          <td>{sizeUnit === 'in' ? row.waist_in : row.waist_cm}</td>
+                          <td>{sizeUnit === 'in' ? row.hip_in : row.hip_cm}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Column 3: Fit Guide, Website Note, and How to Measure */}
+              <div className="pd-modal-col-right">
+                <h4 className="pd-modal-subtitle">FIT & NOTES</h4>
+                <div className="pd-fit-guide-clean" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>
+                  <h5>Fit Guide</h5>
+                  <p><strong>Tailored Fit:</strong> Choose your regular size.</p>
+                  <p><strong>Relaxed Fit:</strong> Choose your regular size.</p>
+                  <p><strong>Oversized Fit:</strong> Designed with extra ease; choose your regular size.</p>
+                  <p><strong>Fitted/Corset Styles:</strong> If between sizes, size up.</p>
+                </div>
+                <div className="pd-fit-guide-clean">
+                  <h5>Website Note</h5>
+                  <p>
+                    Our size chart is based on body measurements, not garment measurements. Individual
+                    garments may vary depending on silhouette, fabric and intended fit. Refer to each
+                    product page for style-specific sizing. If between sizes, choose the larger size or
+                    contact our styling team.
+                  </p>
+                </div>
+                <div className="pd-fit-guide-clean">
+                  <h5>How to Measure</h5>
+                  {isMens ? (
+                    <p><strong>Men:</strong> Chest: fullest chest. Waist: natural waist. Hip: fullest part of seat.</p>
+                  ) : (
+                    <p><strong>Women:</strong> Bust: fullest part. Waist: natural waist. Hip: fullest part of hips.</p>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
