@@ -294,7 +294,7 @@ export const products = [
     "print": "N/A",
     "textile": "BLOCK PRINT",
     "fit": "SLIGHTLY FITTED",
-    "fabric": "MUL",
+    "fabric": "Mul, Cotton cutwork",
     "components": "2",
     "details": "Block print cropped blazer with shorts set",
     "category": "matching moods",
@@ -626,7 +626,7 @@ export const products = [
     "wash_care": "DRY CLEAN ONLY",
     "styling_tip": "N/A",
     "delivery": "20-25 DAYS",
-    "img": "/assets/DSC_8216.jpg"
+    "img": "/assets/RAAT_Page_43_Image_6.png"
   },
   {
     "name": "MARBLE 2.0 PATIALA SUIT SET AND NEHRU JACKET",
@@ -677,7 +677,7 @@ export const products = [
     "wash_care": "DRY CLEAN ONLY",
     "styling_tip": "N/A",
     "delivery": "3-4 MONTHS",
-    "img": "/assets/new_coll_6.jpg"
+    "img": "/assets/GULBERG_PRINT_KURTA_Page_46_Image_4.jpeg"
   },
   {
     "name": "SAGE GREEN AND BEIGE GROOM’S WEDDING OUTFIT",
@@ -813,7 +813,7 @@ export const products = [
     "wash_care": "DRY CLEAN ONLY",
     "styling_tip": "N/A",
     "delivery": "10-15 DAYS",
-    "img": "/assets/new_coll_6.jpg"
+    "img": "/assets/DROP_SHOULDER_HEMP_Page_55_Image_2.jpeg"
   },
   {
     "name": "BLOCK PRINT DROP SHOULDER SHIRT",

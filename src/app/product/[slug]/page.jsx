@@ -110,13 +110,23 @@ const PRODUCT_GALLERY_IMAGES = {
   'LIBAAS SAREE': ['/assets/LIBAAS_SAREE_Page_37_Image_1.png'],
   'RAVEL SAREE': ['/assets/RAVEL_SAREE_Page_38_Image_1.jpeg', '/assets/RAVEL_SAREE_Page_38_Image_2.jpeg'],
   'MARBLE PRINT SAREE': ['/assets/MARBLE_PRINT_SAREE_Page_39_Image_1.jpeg', '/assets/MARBLE_PRINT_SAREE_Page_39_Image_2.jpeg'],
-  'RED WHITE EMBROIDERED LENGHA SET': ['/assets/DSC_8216.jpg'],
+  'RED WHITE EMBROIDERED LENGHA SET': [
+    '/assets/RAAT_Page_43_Image_6.png',
+    '/assets/RAAT_Page_43_Image_7.png',
+    '/assets/RAAT_Page_43_Image_8.jpeg',
+    '/assets/RAAT_Page_43_Image_9.jpeg',
+  ],
   'GULBERG PRINT KURTA': [
     '/assets/GULBERG_PRINT_KURTA_Page_45_Image_1.jpeg',
     '/assets/GULBERG_PRINT_KURTA_Page_45_Image_2.jpeg',
     '/assets/GULBERG_PRINT_KURTA_Page_46_Image_4.jpeg',
   ],
-  'SAGE GREEN AND IVORY BRIDAL LENGHA': ['/assets/new_coll_6.jpg'],
+  'SAGE GREEN AND IVORY BRIDAL LENGHA': [
+    '/assets/GULBERG_PRINT_KURTA_Page_46_Image_4.jpeg',
+    '/assets/GULBERG_PRINT_KURTA_Page_46_Image_5.jpeg',
+    '/assets/GULBERG_PRINT_KURTA_Page_46_Image_6.jpeg',
+    '/assets/GULBERG_PRINT_KURTA_Page_46_Image_7.jpeg',
+  ],
   "SAGE GREEN AND BEIGE GROOM'S WEDDING OUTFIT": [
     '/assets/SAGE_GREEN_AND_BEIGE_Page_47_Image_1.jpeg',
     '/assets/SAGE_GREEN_AND_BEIGE_Page_47_Image_2.jpeg',
@@ -127,7 +137,11 @@ const PRODUCT_GALLERY_IMAGES = {
     '/assets/DROP_SHOULDER_HEMP_Page_55_Image_2.jpeg',
     '/assets/DROP_SHOULDER_HEMP_Page_55_Image_3.jpeg',
   ],
-  'DROP SHOULDER EMBROIDERED SHIRT': ['/assets/new_coll_6.jpg'],
+  'DROP SHOULDER EMBROIDERED SHIRT': [
+    '/assets/DROP_SHOULDER_HEMP_Page_55_Image_2.jpeg',
+    '/assets/DROP_SHOULDER_HEMP_Page_55_Image_3.jpeg',
+    '/assets/DROP_SHOULDER_HEMP_Page_55_Image_4.jpeg',
+  ],
   'MARBLE 2.0 DROP SHOULDER SHIRT': [
     '/assets/MARBLE_2_0_DROP_SHOULDER_SHIRT_Page_58_Image_1.jpeg',
     '/assets/MARBLE_2_0_DROP_SHOULDER_SHIRT_Page_58_Image_2.jpeg',
@@ -149,6 +163,103 @@ const PRODUCT_GALLERY_IMAGES = {
   'WHITE PEACH RED FLORAL SHIRT': [
     '/assets/WHITE_PEACH_RED_Page_65_Image_1.jpeg',
     '/assets/WHITE_PEACH_RED_Page_65_Image_2.jpeg',
+  ],
+  // ── Newly added products ──
+  'RAAT PRINT SKIRT JACKET SET': [
+    '/assets/RAAT_PRINT_SKIRT_JACKET_SET_Page_11_Image_1.jpeg',
+    '/assets/RAAT_PRINT_SKIRT_JACKET_SET_Page_11_Image_2.jpeg',
+    '/assets/RAAT_PRINT_SKIRT_JACKET_SET_Page_11_Image_3.jpeg',
+    '/assets/RAAT_PRINT_SKIRT_JACKET_SET_Page_11_Image_4.jpeg',
+  ],
+  'RAVEL PRINT DHOTI SKIRT BLAZER SET': [
+    '/assets/RAVEL_PRINT_DHOTI_SKIRT_Page_13_Image_1.png',
+  ],
+  '52 BAGH PHULKARI BLAZER SET': [
+    '/assets/52_BAGH_PHULKARI_BLAZER_SET_Page_14_Image_1.png',
+    '/assets/52_BAGH_PHULKARI_BLAZER_SET_Page_14_Image_2.png',
+    '/assets/52_BAGH_PHULKARI_BLAZER_SET_Page_14_Image_3.jpeg',
+  ],
+  'PASTEL EMBROIDERY WHITE BLAZER SET': [
+    '/assets/PASTEL_EMBROIDERY_WHITE_Page_15_Image_1.jpeg',
+    '/assets/PASTEL_EMBROIDERY_WHITE_Page_15_Image_2.jpeg',
+  ],
+  'MARBLE PRINT COORD SET': [
+    '/assets/MARBLE_PRINT_COORD_SET_Page_16_Image_1.jpeg',
+    '/assets/MARBLE_PRINT_COORD_SET_Page_16_Image_2.jpeg',
+    '/assets/MARBLE_PRINT_COORD_SET_Page_16_Image_3.jpeg',
+    '/assets/MARBLE_PRINT_COORD_SET_Page_16_Image_4.png',
+  ],
+  'BOHO STAR PRINT DHOTI CAPE SET': [
+    '/assets/BOHO_STAR_PRINT_DHOTI_CAPE_SET_Page_17_Image_1.jpeg',
+    '/assets/BOHO_STAR_PRINT_DHOTI_CAPE_SET_Page_17_Image_2.jpeg',
+  ],
+  'BLACK GEOMETRIC PHULKARI BLAZER SET': [
+    '/assets/BLACK_GEOMETRIC_PHULKARI_Page_18_Image_1.jpeg',
+    '/assets/BLACK_GEOMETRIC_PHULKARI_Page_18_Image_2.jpeg',
+  ],
+  'RAVEL PRINT DHOTI CAPE SET': [
+    '/assets/RAVEL_PRINT_DHOTI_CAPE_SET_Page_19_Image_1.jpeg',
+  ],
+  'CROPPED BLAZER WITH SHORTS SET': [
+    '/assets/CROPPED_BLAZER_WITH_SHORTS_Page_20_Image_1.jpeg',
+    '/assets/CROPPED_BLAZER_WITH_SHORTS_Page_20_Image_2.jpeg',
+  ],
+  'CUBE PRINT SHARARA SET': [
+    '/assets/CROPPED_BLAZER_WITH_SHORTS_Page_21_Image_3.jpeg',
+    '/assets/CROPPED_BLAZER_WITH_SHORTS_Page_21_Image_4.jpeg',
+    '/assets/CROPPED_BLAZER_WITH_SHORTS_Page_21_Image_5.jpeg',
+  ],
+  'RANGREZ PRINT KAFTAN': [
+    '/assets/LIBAAS_PRINT_CO-ORD_Page_25_Image_3.jpeg',
+    '/assets/LIBAAS_PRINT_CO-ORD_Page_25_Image_4.jpeg',
+    '/assets/LIBAAS_PRINT_CO-ORD_Page_25_Image_5.jpeg',
+    '/assets/LIBAAS_PRINT_CO-ORD_Page_25_Image_6.jpeg',
+  ],
+  'LEHER LENGHA SET': [
+    '/assets/LEHER_LENGHA_SET_Page_41_Image_1.jpeg',
+    '/assets/LEHER_LENGHA_SET_Page_41_Image_2.jpeg',
+    '/assets/LEHER_LENGHA_SET_Page_41_Image_3.jpeg',
+    '/assets/LEHER_LENGHA_SET_Page_41_Image_4.jpeg',
+  ],
+  'RAAT PRINT COUPLES SET': [
+    '/assets/RAAT_Page_42_Image_1.jpeg',
+    '/assets/RAAT_Page_42_Image_2.jpeg',
+    '/assets/RAAT_Page_42_Image_3.jpeg',
+    '/assets/RAAT_Page_42_Image_4.jpeg',
+    '/assets/RAAT_Page_42_Image_5.png',
+  ],
+  'MARBLE 2.0 PATIALA SUIT SET AND NEHRU JACKET': [
+    '/assets/MARBLE_2_0_PATIALA_Page_44_Image_1.jpeg',
+    '/assets/MARBLE_2_0_PATIALA_Page_44_Image_2.jpeg',
+    '/assets/MARBLE_2_0_PATIALA_Page_44_Image_3.jpeg',
+    '/assets/MARBLE_2_0_PATIALA_Page_44_Image_4.jpeg',
+  ],
+  'MARBLE PRINT LENGHA BLAZER': [
+    '/assets/MARBLE_PRINT_LENGHA_Page_48_Image_1.jpeg',
+    '/assets/MARBLE_PRINT_LENGHA_Page_48_Image_2.jpeg',
+    '/assets/MARBLE_PRINT_LENGHA_Page_48_Image_3.jpeg',
+    '/assets/MARBLE_PRINT_LENGHA_Page_48_Image_4.jpeg',
+  ],
+  'RANGREZ DHOTI KURTA SET': [
+    '/assets/RANGREZ_DHOTI_KURTA_Page_49_Image_1.png',
+    '/assets/RANGREZ_DHOTI_KURTA_Page_49_Image_2.png',
+  ],
+  'GULBERG LENGHA CAPE SET': [
+    '/assets/GULBERG_LENGHA_CAPE_SET_Page_50_Image_1.png',
+  ],
+  'MARBLE PRINT LENGHA SAREE FUSION': [
+    '/assets/MARBLE_PRINT_LENGHA_SAREE_FUSION_Page_51_Image_1.png',
+  ],
+  'RANGREZ PRINT SHORT DRESS': [
+    '/assets/RANGREZ_PRINT_SHORT_DRESS_Page_52_Image_1.jpeg',
+    '/assets/RANGREZ_PRINT_SHORT_DRESS_Page_52_Image_2.jpeg',
+  ],
+  'BLOCK PRINT DROP SHOULDER SHIRT': [
+    '/assets/BLOCK_PRINT_DROP_SHOULDER_Page_57_Image_1.jpeg',
+  ],
+  'WHITE AND GREEN PHULKARI SHIRT': [
+    '/assets/WHITE_AND_GREEN_PHULKARI_SHIRT_Page_64_Image_1.jpeg',
+    '/assets/WHITE_AND_GREEN_PHULKARI_SHIRT_Page_64_Image_2.jpeg',
   ],
 };
 
@@ -264,8 +375,9 @@ export default function ProductDetailPage() {
 
   const handleWhatsApp = () => {
     const optionText = isBlockPrintPalazzo ? ` (${withBlazer ? 'With Blazer' : 'Without Blazer'})` : '';
-    const msg = `Hi! I'm interested in ${product.name}${optionText} (Size: ${selectedSize || 'TBD'}) - ${formatPrice(displayPrice)}`;
-    window.open(`https://wa.me/919999999999?text=${encodeURIComponent(msg)}`, '_blank');
+    const productUrl = typeof window !== 'undefined' ? window.location.href : '';
+    const msg = `Hi! I'm interested in ${product.name}${optionText}\n(Size: ${selectedSize || 'TBD'}) - ${formatPrice(displayPrice)}.\nProduct link: ${productUrl}`;
+    window.open(`https://wa.me/919953275142?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
   const handleScroll = (e) => {
@@ -337,21 +449,7 @@ export default function ProductDetailPage() {
           {/* Editorial Description */}
           <div className="pd-description">{product.details}</div>
 
-          {/* Garment Highlights */}
-          <div className="pd-tags">
-            {product.fabric && product.fabric !== 'N/A' && (
-              <span className="pd-tag">{product.fabric}</span>
-            )}
-            {product.textile && product.textile !== 'N/A' && (
-              <span className="pd-tag">{product.textile}</span>
-            )}
-            {product.print && product.print !== 'N/A' && (
-              <span className="pd-tag">{product.print} Print</span>
-            )}
-            {product.lining && product.lining !== 'N/A' && product.lining !== 'NO' && (
-              <span className="pd-tag">Lined Edition</span>
-            )}
-          </div>
+
 
           {/* Blazer Option Selection (Only for Block Print Palazzo Co-ord) */}
           {isBlockPrintPalazzo && (

@@ -64,8 +64,9 @@ const ARTICLES = {
   }
 };
 
-export default function ArticlePage({ params }) {
-  const article = ARTICLES[params.id];
+export default async function ArticlePage({ params }) {
+  const { id } = await params;
+  const article = ARTICLES[id];
 
   if (!article) {
     return (
@@ -84,13 +85,13 @@ export default function ArticlePage({ params }) {
     <>
       <article className="article-page">
         <div className="article-container">
-          
+
           <Link href="/blog" className="article-back-link">
             &lt; Back to Journal
           </Link>
-          
+
           <h1 className="article-title">{article.title}</h1>
-          
+
           <div className="article-meta-grid">
             <div className="meta-item">
               <span className="meta-label">Published</span>
@@ -101,15 +102,15 @@ export default function ArticlePage({ params }) {
               <span className="meta-value">Arshia Singh Editorial</span>
             </div>
           </div>
-          
+
           <div className="article-hero-image-wrapper">
-            <img 
-              src={article.img} 
-              alt={article.title} 
+            <img
+              src={article.img}
+              alt={article.title}
               className="article-hero-image"
             />
           </div>
-          
+
           <div className="article-content font-body">
             {article.content.map((paragraph, index) => (
               <p key={index} className={index === 0 ? "article-lead" : "article-paragraph"}>
@@ -117,7 +118,7 @@ export default function ArticlePage({ params }) {
               </p>
             ))}
           </div>
-          
+
         </div>
       </article>
       <Footer />

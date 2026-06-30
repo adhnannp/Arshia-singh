@@ -23,7 +23,7 @@ export default function InquiriesPage() {
 
         <div className="flex gap-4 flex-wrap justify-center">
           <a
-            href="https://wa.me/919999999999"
+            href="https://wa.me/919953275142"
             target="_blank"
             rel="noopener noreferrer"
             className="px-9 py-[18px] bg-[#1d1d1f] hover:bg-[#3a3a3f] text-white font-mono text-[10px] tracking-[0.2em] uppercase no-underline rounded-[3px] inline-flex items-center gap-2.5 transition-colors duration-300"

@@ -246,16 +246,6 @@ export default function CollectionPage() {
         </div>
       </div>
 
-      {/* ─── NARRATIVE NUGGET BANNER ─── */}
-      <section className="collection-narrative">
-        <div className="narrative-inner">
-          <span className="narrative-label">CONSCIOUS CRAFT STORY</span>
-          <p className="narrative-quote">
-            "A conscious harmony of heritage handloom traditions, reimagined on modern canvases for standard luxury occasion styling."
-          </p>
-          <span className="narrative-author">Arshia Singh</span>
-        </div>
-      </section>
 
       {/* ─── PRODUCT GRID ─── */}
       <section className={`collection-products-grid grid-${layoutMode}`}>
@@ -274,9 +264,6 @@ export default function CollectionPage() {
                 className="product-card"
               >
                 <div className="product-card-image-wrap">
-                  {product.print && product.print !== 'N/A' && (
-                    <span className="card-badge">{product.print} Edition</span>
-                  )}
                   <img src={product.img} alt={product.name} loading="lazy" />
                   <div className="product-card-overlay">
                     <span className="btn-card-quick-view">
