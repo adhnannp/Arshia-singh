@@ -22,13 +22,11 @@
     "three": "^0.184.0"
   },
   "devDependencies": {
-    "@opennextjs/cloudflare": "^1.19.11",
     "autoprefixer": "^10.5.0",
     "eslint": "^8",
     "eslint-config-next": "14.2.29",
     "postcss": "^8.5.15",
     "sharp": "^0.35.2",
-    "tailwindcss": "^4.3.1",
-    "wrangler": "^4.101.0"
+    "tailwindcss": "^4.3.1"
   }
 }
