@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useCart } from './CartContext';
+import { useAuth } from './AuthContext';
+import { useWishlist } from './WishlistContext';
 import gsap from 'gsap';
 
 const WOMEN_LINKS = [
@@ -21,7 +23,7 @@ const MEN_LINKS = [
 
 const CONNECT_LINKS = [
   { label: 'Our Story', href: '/story', external: false },
-  { label: 'Inquiries', href: '/inquiries', external: false },
+  { label: 'Get in touch', href: '/inquiries', external: false },
   { label: 'Instagram', href: 'https://www.instagram.com/arshia.singh.official?igsh=bWN5cXd1M2txNmsx', external: true },
 ];
 
@@ -29,6 +31,9 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState('');
   const { cartItems, setIsCartOpen } = useCart();
+  const { user, logout, requireAuth } = useAuth();
+  const { wishlistItems, moveToCart, toggleWishlist } = useWishlist();
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const overlayRef = useRef(null);
 
   // Live clock
@@ -66,7 +71,79 @@ export default function Navbar() {
           <Link href="/story" className="nav-link-item">Our Story</Link>
           <Link href="/blog" className="nav-link-item">Blog</Link>
         </div>
-        <div className="nav-right">
+        <div className="nav-right" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          {/* PROFILE BUTTON & POPUP */}
+          <div className="profile-container">
+            <button
+              className="profile-toggle"
+              onClick={() => {
+                if (user) {
+                  setProfileDropdownOpen(!profileDropdownOpen);
+                } else {
+                  requireAuth(() => {});
+                }
+              }}
+              aria-label="Profile"
+            >
+              {user ? (
+                <img src={user.avatar} alt={user.name} className="nav-profile-avatar" />
+              ) : (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="profile-icon-svg" style={{ display: 'block' }}>
+                  <path d="M20 21C20 18.2386 16.4183 16 12 16C7.58172 16 4 18.2386 4 21M12 12C9.79086 12 8 10.2091 8 8C8 5.79086 9.79086 4 12 4C14.2091 4 16 5.79086 16 8C16 10.2091 14.2091 12 12 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
+            </button>
+            
+            {user && profileDropdownOpen && (
+              <div className="profile-dropdown">
+                <div className="profile-dropdown-header">
+                  <img src={user.avatar} alt={user.name} className="dropdown-avatar" />
+                  <div className="dropdown-user-info">
+                    <span className="dropdown-user-name">{user.name}</span>
+                    <span className="dropdown-user-email">{user.email}</span>
+                  </div>
+                </div>
+                
+                <div className="profile-dropdown-wishlist">
+                  <span className="wishlist-header">Wishlist ({wishlistItems.length})</span>
+                  {wishlistItems.length === 0 ? (
+                    <p className="wishlist-empty-text">Your wishlist is empty</p>
+                  ) : (
+                    <ul className="dropdown-wishlist-list">
+                      {wishlistItems.map((item) => (
+                        <li key={item.name} className="dropdown-wishlist-item">
+                          <img src={item.img} alt={item.name} className="wishlist-item-img" />
+                          <div className="wishlist-item-details">
+                            <span className="wishlist-item-name">{item.name}</span>
+                            <span className="wishlist-item-price">₹{item.price}</span>
+                          </div>
+                          <div className="wishlist-item-actions">
+                            <button className="wishlist-item-add" onClick={() => moveToCart(item)} title="Add to Cart">
+                              +
+                            </button>
+                            <button className="wishlist-item-remove" onClick={() => toggleWishlist(item)} title="Remove">
+                              &times;
+                            </button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <button
+                  className="logout-btn"
+                  onClick={() => {
+                    logout();
+                    setProfileDropdownOpen(false);
+                  }}
+                >
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
+
           <button
             className="cart-toggle"
             onClick={() => setIsCartOpen(true)}

@@ -225,10 +225,10 @@ export default function HomePage() {
         <img src="/assets/phulkari_pattern.png" className="floating-illustration phulkari-decor" alt="Phulkari Pattern" data-speed="0.8" />
         <div className="craft-container">
           <div className="craft-images">
-            <img src="/assets/new_coll_1.jpg" className="craft-img duotone-1" alt="Garment 1" />
-            <img src="/assets/new_coll_2.png" className="craft-img duotone-2" alt="Garment 2" />
-            <img src="/assets/new_coll_3.png" className="craft-img duotone-1" alt="Garment 3" />
-            <img src="/assets/new_coll_4.jpeg" className="craft-img duotone-2" alt="Garment 4" />
+            <img src="/assets/craft_new_1.jpg" className="craft-img duotone-1" alt="Garment 1" />
+            <img src="/assets/craft_new_2.jpg" className="craft-img duotone-2" alt="Garment 2" />
+            <img src="/assets/craft_new_3.jpg" className="craft-img duotone-1" alt="Garment 3" />
+            <img src="/assets/craft_new_4.jpg" className="craft-img duotone-2" alt="Garment 4" />
           </div>
           <div className="craft-text"><div className="craft-title">CRAFTED TO FEEL +</div></div>
         </div>

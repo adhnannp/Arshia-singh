@@ -8,6 +8,8 @@ import gsap from 'gsap';
 import Footer from '../../../components/Footer';
 import { useCart } from '../../../components/CartContext';
 import { products } from '../../../data/products-data';
+import { useAuth } from '../../../components/AuthContext';
+import { useWishlist } from '../../../components/WishlistContext';
 
 // Scraped image mapping for each product name
 const PRODUCT_GALLERY_IMAGES = {
@@ -291,6 +293,8 @@ export default function ProductDetailPage() {
   const params = useParams();
   const slug = params?.slug || '';
   const { addToCart } = useCart();
+  const { requireAuth } = useAuth();
+  const { toggleWishlist, isInWishlist } = useWishlist();
 
   const [selectedSize, setSelectedSize] = useState(null);
   const [sizeError, setSizeError] = useState(false);
@@ -362,15 +366,18 @@ export default function ProductDetailPage() {
   const handleAddToCart = () => {
     if (!selectedSize) {
       setSizeError(true);
+      setSizeError(true);
       setTimeout(() => setSizeError(false), 700);
       return;
     }
-    const finalName = isBlockPrintPalazzo 
-      ? `${product.name} (${withBlazer ? 'With Blazer' : 'Without Blazer'})` 
-      : product.name;
-    addToCart(finalName, selectedSize, displayPrice, images[0]);
-    setAddedToCart(true);
-    setTimeout(() => setAddedToCart(false), 2000);
+    requireAuth(() => {
+      const finalName = isBlockPrintPalazzo 
+        ? `${product.name} (${withBlazer ? 'With Blazer' : 'Without Blazer'})` 
+        : product.name;
+      addToCart(finalName, selectedSize, displayPrice, images[0]);
+      setAddedToCart(true);
+      setTimeout(() => setAddedToCart(false), 2000);
+    });
   };
 
   const handleWhatsApp = () => {
@@ -440,8 +447,34 @@ export default function ProductDetailPage() {
           {/* Category Tag */}
           <div className="pd-badge">{product.category.toUpperCase()}</div>
 
-          {/* Product Name */}
-          <h1 className="pd-title">{product.name}</h1>
+          {/* Product Name & Wishlist Heart */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '20px' }}>
+            <h1 className="pd-title" style={{ margin: 0 }}>{product.name}</h1>
+            <button
+              className={`wishlist-heart-btn-large ${isInWishlist(product.name) ? 'active' : ''}`}
+              onClick={() => {
+                requireAuth(() => {
+                  toggleWishlist(product);
+                });
+              }}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: isInWishlist(product.name) ? '#b00' : '#888',
+                transition: 'color 0.2s, transform 0.2s',
+              }}
+              title="Add to Wishlist"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill={isInWishlist(product.name) ? '#b00' : 'none'} stroke={isInWishlist(product.name) ? '#b00' : 'currentColor'} strokeWidth="2">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+              </svg>
+            </button>
+          </div>
 
           {/* Pricing */}
           <div className="pd-price">{formatPrice(displayPrice)}</div>
