@@ -4968,3 +4968,315 @@ a {
     gap: 20px;
   }
 }
+
+/* --- MUSEUM EXHIBITION GALLERY (STORY PAGE) --- */
+.museum-exhibition {
+  margin: 100px auto;
+  width: 100%;
+}
+
+.museum-gallery-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 120px;
+}
+
+.museum-item {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 80px;
+  align-items: center;
+}
+
+.museum-item.reverse {
+  grid-template-columns: 0.8fr 1.2fr;
+}
+
+.museum-frame {
+  background: #f4f3ef;
+  padding: 40px;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.04);
+  border: 1px solid rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.museum-image-container {
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: 4/5;
+  background: #e9e7e2;
+}
+
+.museum-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.museum-frame:hover .museum-img {
+  transform: scale(1.05);
+}
+
+.museum-label {
+  border-left: 2px solid #887a64;
+  padding-left: 30px;
+  max-width: 400px;
+}
+
+.museum-item.reverse .museum-label {
+  border-left: none;
+  border-right: 2px solid #887a64;
+  padding-left: 0;
+  padding-right: 30px;
+  text-align: right;
+  justify-self: end;
+}
+
+.museum-label-id {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #887a64;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.museum-label-title {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  text-transform: uppercase;
+  color: #111111;
+  margin-bottom: 8px;
+  font-weight: 400;
+}
+
+.museum-label-medium {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 20px;
+  display: block;
+}
+
+.museum-label-desc {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.7;
+  color: #444;
+}
+
+@media (max-width: 1024px) {
+  .museum-item, .museum-item.reverse {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  .museum-frame {
+    padding: 20px;
+  }
+  .museum-item.reverse .museum-label {
+    border-right: none;
+    border-left: 2px solid #887a64;
+    padding-right: 0;
+    padding-left: 30px;
+    text-align: left;
+    justify-self: start;
+  }
+}
+
+/* --- NAVBAR PROFILE CONTROLS --- */
+.profile-container {
+  position: relative;
+  display: inline-block;
+}
+
+.profile-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+  transition: opacity 0.2s;
+}
+
+.profile-toggle:hover {
+  opacity: 0.7;
+}
+
+.nav-profile-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.profile-dropdown {
+  position: absolute;
+  top: calc(100% + 15px);
+  right: -10px;
+  width: 320px;
+  background: #FAF9F6;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  padding: 24px;
+  z-index: 1000;
+  text-align: left;
+}
+
+.profile-dropdown-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  margin-bottom: 20px;
+}
+
+.dropdown-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.dropdown-user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.dropdown-user-name {
+  font-family: var(--font-display);
+  font-size: 16px;
+  text-transform: uppercase;
+  color: #111;
+}
+
+.dropdown-user-email {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #666;
+}
+
+.profile-dropdown-wishlist {
+  margin-bottom: 24px;
+}
+
+.wishlist-header {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #887a64;
+  display: block;
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+.wishlist-empty-text {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: #888;
+  margin: 0;
+}
+
+.dropdown-wishlist-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.dropdown-wishlist-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+.wishlist-item-img {
+  width: 36px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 2px;
+}
+
+.wishlist-item-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.wishlist-item-name {
+  font-family: var(--font-display);
+  font-size: 13px;
+  color: #222;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wishlist-item-price {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #666;
+}
+
+.wishlist-item-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.wishlist-item-add,
+.wishlist-item-remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  color: #666;
+  padding: 4px;
+  transition: color 0.2s;
+}
+
+.wishlist-item-add:hover {
+  color: #111;
+}
+
+.wishlist-item-remove:hover {
+  color: #b00;
+}
+
+.logout-btn {
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  border: 1px solid #111;
+  color: #111;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.logout-btn:hover {
+  background: #111;
+  color: #FAF9F6;
+}
+
+
