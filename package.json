@@ -23,9 +23,7 @@
     "three": "^0.184.0"
   },
   "devDependencies": {
-    "@ast-grep/napi-linux-x64-gnu": "^0.44.1",
-    "@ast-grep/napi-win32-x64-msvc": "0.40.5",
-    "@opennextjs/cloudflare": "^1.14.1",
+    "@opennextjs/cloudflare": "^1.20.1",
     "autoprefixer": "^10.5.0",
     "eslint": "^8",
     "eslint-config-next": "^16.2.10",
