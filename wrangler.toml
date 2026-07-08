@@ -1,7 +1,0 @@
-name = "arshia-singh"
-
-main = ".open-next/worker.js"
-
-compatibility_date = "2026-07-08"
-
-compatibility_flags = ["nodejs_compat"]

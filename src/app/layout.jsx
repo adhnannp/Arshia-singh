@@ -1,9 +1,6 @@
 import { CartProvider } from '../components/CartContext';
-import { AuthProvider } from '../components/AuthContext';
-import { WishlistProvider } from '../components/WishlistContext';
 import CartDrawer from '../components/CartDrawer';
 import Navbar from '../components/Navbar';
-import LoginModal from '../components/LoginModal';
 import SmoothScroll from '../components/SmoothScroll';
 import '../styles/globals.css';
 import '../styles/style-base.css';
@@ -37,16 +34,11 @@ export default function RootLayout({ children }) {
       </head>
       <body>
         <CartProvider>
-          <AuthProvider>
-            <WishlistProvider>
-              <Navbar />
-              <CartDrawer />
-              <LoginModal />
-              <SmoothScroll>
-                {children}
-              </SmoothScroll>
-            </WishlistProvider>
-          </AuthProvider>
+          <Navbar />
+          <CartDrawer />
+          <SmoothScroll>
+            {children}
+          </SmoothScroll>
         </CartProvider>
       </body>
     </html>

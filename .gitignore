@@ -7,7 +7,6 @@ out/
 
 # Production build
 dist/
-.open-next/
 
 # Logs
 logs/
@@ -29,7 +28,6 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
-.agents
 
 # Environment variables
 .env

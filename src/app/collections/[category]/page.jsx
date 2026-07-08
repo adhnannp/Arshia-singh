@@ -2,13 +2,11 @@
 
 export const runtime = "edge";
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import gsap from 'gsap';
 import Footer from '../../../components/Footer';
 import { products } from '../../../data/products-data';
-import { useAuth } from '../../../components/AuthContext';
-import { useWishlist } from '../../../components/WishlistContext';
 
 // Map URL slugs → product category strings & page metadata
 const CATEGORY_MAP = {
@@ -72,9 +70,6 @@ const CATEGORY_MAP = {
 
 export default function CollectionPage() {
   const params = useParams();
-  const router = useRouter();
-  const { requireAuth } = useAuth();
-  const { toggleWishlist, isInWishlist } = useWishlist();
   const slug = params?.category || '';
   const meta = CATEGORY_MAP[slug] || {
     title: slug.replace(/-/g, ' ').toUpperCase(),
@@ -264,7 +259,7 @@ export default function CollectionPage() {
             const productSlug = makeSlug(product.name);
             return (
               <Link 
-                href={`/product/${productSlug}`}
+                href={`/product/${productSlug}`} 
                 key={product.name} 
                 className="product-card"
               >
@@ -277,33 +272,7 @@ export default function CollectionPage() {
                   </div>
                 </div>
                 <div className="product-card-info">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <h3 className="product-card-name" style={{ margin: 0 }}>{product.name.toUpperCase()}</h3>
-                    <button
-                      className={`wishlist-heart-btn ${isInWishlist(product.name) ? 'active' : ''}`}
-                      onClick={(e) => {
-                        e.stopPropagation(); // prevent navigating to product detail
-                        requireAuth(() => {
-                          toggleWishlist(product);
-                        });
-                      }}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        padding: '4px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: isInWishlist(product.name) ? '#b00' : 'inherit',
-                        transition: 'transform 0.2s'
-                      }}
-                    >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill={isInWishlist(product.name) ? '#b00' : 'none'} stroke={isInWishlist(product.name) ? '#b00' : 'currentColor'} strokeWidth="2">
-                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                      </svg>
-                    </button>
-                  </div>
+                  <h3 className="product-card-name">{product.name.toUpperCase()}</h3>
                   <div className="product-card-meta">
                     <span className="product-card-fabric">{product.fabric?.toUpperCase() || 'PREMIUM'}</span>
                     <span className="product-card-price">{formatPrice(product.price)}</span>
