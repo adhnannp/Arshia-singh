@@ -65,22 +65,6 @@ export default function StoryPage() {
             </h2>
           </div>
 
-          {/* EXHIBIT I */}
-          <div className="museum-item fade-up" style={{ marginBottom: '140px' }}>
-            <div className="museum-frame">
-              <div className="museum-image-container">
-                <img src="/assets/art_museum_1.jpg" alt="The Sacred Archive" className="museum-img" />
-              </div>
-            </div>
-            <div className="museum-label">
-              <span className="museum-label-id">EXHIBIT I</span>
-              <h3 className="museum-label-title">The Sacred Archive</h3>
-              <span className="museum-label-medium">Tactile Heritage & Embossed Gold Bindings</span>
-              <p className="museum-label-desc">
-                A physical manifestation of storytelling. Woven archives of textures, patterns, and golden block-printed motifs that catalog the visual history of the brand.
-              </p>
-            </div>
-          </div>
 
           {/* CHAPTER 2 */}
           <section className="story-chapter fade-up">
@@ -107,39 +91,6 @@ export default function StoryPage() {
             </h2>
           </div>
 
-          {/* EXHIBIT II */}
-          <div className="museum-item reverse fade-up" style={{ marginBottom: '80px' }}>
-            <div className="museum-label">
-              <span className="museum-label-id">EXHIBIT II</span>
-              <h3 className="museum-label-title">The Desert Sentinel</h3>
-              <span className="museum-label-medium">Handcrafted Floral Cabinet & Salt Plain Contrast</span>
-              <p className="museum-label-desc">
-                An exploration of isolation and pattern. Our intricate floral prints standing resiliently against the minimalist, infinite salt flats of India.
-              </p>
-            </div>
-            <div className="museum-frame">
-              <div className="museum-image-container">
-                <img src="/assets/art_museum_3.jpg" alt="The Desert Sentinel" className="museum-img" />
-              </div>
-            </div>
-          </div>
-
-          {/* EXHIBIT III */}
-          <div className="museum-item fade-up" style={{ marginBottom: '140px' }}>
-            <div className="museum-frame">
-              <div className="museum-image-container">
-                <img src="/assets/art_museum_4.jpg" alt="Straw Weaver's Ascent" className="museum-img" />
-              </div>
-            </div>
-            <div className="museum-label">
-              <span className="museum-label-id">EXHIBIT III</span>
-              <h3 className="museum-label-title">Straw Weaver's Ascent</h3>
-              <span className="museum-label-medium">Woven Organic Fibers & Sculptural Form</span>
-              <p className="museum-label-desc">
-                Celebrating the organic structures of nature. A bird handcrafted entirely from woven geometric straw and natural dyes, taking flight as a symbol of conscious elevation.
-              </p>
-            </div>
-          </div>
 
           {/* CHAPTER 3 */}
           <section className="story-chapter fade-up">
@@ -166,22 +117,6 @@ export default function StoryPage() {
             </h2>
           </div>
 
-          {/* EXHIBIT IV */}
-          <div className="museum-item reverse fade-up" style={{ marginBottom: '140px' }}>
-            <div className="museum-label">
-              <span className="museum-label-id">EXHIBIT IV</span>
-              <h3 className="museum-label-title">Cloud Weaver Kaftan</h3>
-              <span className="museum-label-medium">Ethereal Silk & Atmospheric Light</span>
-              <p className="museum-label-desc">
-                Bridging the material and the atmosphere. A flowing silk kaftan with marble-like golden veins, dissolving seamlessly into sky and clouds to represent the lightness of conscious living.
-              </p>
-            </div>
-            <div className="museum-frame">
-              <div className="museum-image-container">
-                <img src="/assets/art_museum_2.jpg" alt="Cloud Weaver Kaftan" className="museum-img" />
-              </div>
-            </div>
-          </div>
 
           {/* CHAPTER 4 */}
           <section className="story-chapter fade-up">
@@ -208,22 +143,6 @@ export default function StoryPage() {
             </h2>
           </div>
 
-          {/* EXHIBIT V */}
-          <div className="museum-item fade-up" style={{ marginBottom: '140px' }}>
-            <div className="museum-frame">
-              <div className="museum-image-container">
-                <img src="/assets/art_museum_5.jpg" alt="Flowing River of Indigo" className="museum-img" />
-              </div>
-            </div>
-            <div className="museum-label">
-              <span className="museum-label-id">EXHIBIT V</span>
-              <h3 className="museum-label-title">Flowing River of Indigo</h3>
-              <span className="museum-label-medium">Draped Silk & Natural Mountain Valley</span>
-              <p className="museum-label-desc">
-                An installation depicting fabric as a force of nature. Rich indigo and green patterned silks flow through the rocks of a mountain valley, mimicking the life-giving nature of clean rivers.
-              </p>
-            </div>
-          </div>
         </div>
       </div>
       <Footer />

@@ -12,7 +12,6 @@ const WOMEN_LINKS = [
   { label: 'Flow State', href: '/collections/flow-state', img: '/assets/new_coll_5.JPG' },
   { label: 'Power Layers', href: '/collections/power-layers', img: '/assets/new_coll_3.png' },
   { label: 'Six Yards of Good', href: '/collections/six-yards-of-good', img: '/assets/new_coll_1.jpg' },
-  { label: 'Custom Made for Moments', href: '/collections/custom-made-for-moments', img: '/assets/new_coll_6.jpg' },
 ];
 
 const MEN_LINKS = [
@@ -220,11 +219,43 @@ export default function Navbar() {
               </ul>
             </div>
 
-            {/* Karigar of AS */}
-            <div className="nav-section karigar-section">
-              <span className="nav-section-title karigar-title">
+            {/* Ornate Buttons */}
+            <div className="nav-section karigar-section karigar-section-custom">
+              <span className="nav-section-title karigar-title karigar-title-custom">
                 <Link href="/karigar-of-as" onClick={closeMenu}>Karigar of AS</Link>
               </span>
+              <span className="nav-section-title karigar-title karigar-title-custom">
+                <Link href="/collections/custom-made-for-moments" onClick={closeMenu}>Made for Moments</Link>
+              </span>
+              <style>{`
+                .karigar-section-custom {
+                  display: flex !important;
+                  flex-direction: row !important;
+                  justify-content: center !important;
+                  align-items: center !important;
+                  gap: 30px 40px !important;
+                  flex-wrap: wrap !important;
+                  width: 100% !important;
+                  margin-top: 60px !important;
+                }
+                @media (min-width: 1025px) {
+                  .karigar-section-custom {
+                    grid-column: 1 / span 3 !important;
+                  }
+                }
+                @media (max-width: 1024px) {
+                  .karigar-section-custom {
+                    grid-column: span 1 !important;
+                    margin-top: 25px !important;
+                  }
+                }
+                .karigar-title-custom {
+                  display: inline-block !important;
+                  margin: 0 !important;
+                  padding: 0 !important;
+                  border: none !important;
+                }
+              `}</style>
             </div>
           </div>
 

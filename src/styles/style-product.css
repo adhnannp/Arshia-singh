@@ -349,6 +349,16 @@
   gap: 15px;
 }
 
+.pd-option-grid.three-cols {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 768px) {
+  .pd-option-grid.three-cols {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 480px) {
   .pd-option-grid {
     grid-template-columns: 1fr;

@@ -121,7 +121,7 @@ const PRODUCT_GALLERY_IMAGES = {
   'GULBERG PRINT KURTA': [
     '/assets/GULBERG_PRINT_KURTA_Page_45_Image_1.jpeg',
     '/assets/GULBERG_PRINT_KURTA_Page_45_Image_2.jpeg',
-    '/assets/GULBERG_PRINT_KURTA_Page_46_Image_4.jpeg',
+    '/assets/GULBERG_PRINT_KURTA_Page_45_Image_3.png',
   ],
   'SAGE GREEN AND IVORY BRIDAL LENGHA': [
     '/assets/GULBERG_PRINT_KURTA_Page_46_Image_4.jpeg',
@@ -304,6 +304,7 @@ export default function ProductDetailPage() {
   const [sizeUnit, setSizeUnit] = useState('in');
   const [activeSlide, setActiveSlide] = useState(0);
   const [withBlazer, setWithBlazer] = useState(false);
+  const [couplesOption, setCouplesOption] = useState('jacket'); // 'jacket', 'saree'
 
   // Find product by slug
   const product = products.find((p) => {
@@ -319,13 +320,40 @@ export default function ProductDetailPage() {
   );
 
   const isBlockPrintPalazzo = product?.name === 'BLOCK PRINT PALAZZO CO-ORD';
+  const isRaatCouplesSet = product?.name === 'RAAT PRINT COUPLES SET';
   const displayPrice = isBlockPrintPalazzo 
     ? (withBlazer ? '10000/-' : '7000/-')
-    : product?.price;
+    : isRaatCouplesSet
+      ? (couplesOption === 'jacket' ? '7000/-' : '16500/-')
+      : product?.price;
 
-  const images = product
-    ? (PRODUCT_GALLERY_IMAGES[product.name.toUpperCase()] || PRODUCT_GALLERY_IMAGES[product.name] || [product.img])
+  let images = product
+    ? (PRODUCT_GALLERY_IMAGES[product.name.toUpperCase()] || 
+       PRODUCT_GALLERY_IMAGES[product.name.toUpperCase().replace(/’/g, "'")] || 
+       PRODUCT_GALLERY_IMAGES[product.name] || 
+       PRODUCT_GALLERY_IMAGES[product.name.replace(/’/g, "'")] || 
+       [product.img])
     : [];
+
+  if (product?.name === 'BLOCK PRINT PALAZZO CO-ORD') {
+    if (withBlazer) {
+      images = [
+        '/assets/block_print_palazzo_co-ord_Page_6_Image_5.jpeg',
+        '/assets/block_print_palazzo_co-ord_Page_6_Image_4.jpeg',
+        '/assets/block_print_palazzo_co-ord_Page_6_Image_3.jpeg'
+      ];
+    } else {
+      images = [
+        '/assets/block_print_palazzo_co-ord_Page_6_Image_1.jpeg',
+        '/assets/block_print_palazzo_co-ord_Page_6_Image_2.jpeg',
+        '/assets/block_print_palazzo_co-ord_Page_6_Image_3.jpeg'
+      ];
+    }
+  }
+
+  useEffect(() => {
+    setActiveSlide(0);
+  }, [withBlazer]);
 
   const handleMouseMove = (e) => {
     const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
@@ -366,14 +394,15 @@ export default function ProductDetailPage() {
   const handleAddToCart = () => {
     if (!selectedSize) {
       setSizeError(true);
-      setSizeError(true);
       setTimeout(() => setSizeError(false), 700);
       return;
     }
     requireAuth(() => {
       const finalName = isBlockPrintPalazzo 
         ? `${product.name} (${withBlazer ? 'With Blazer' : 'Without Blazer'})` 
-        : product.name;
+        : isRaatCouplesSet
+          ? `${product.name} (${couplesOption === 'jacket' ? 'Nehru Jacket' : 'Saree'})`
+          : product.name;
       addToCart(finalName, selectedSize, displayPrice, images[0]);
       setAddedToCart(true);
       setTimeout(() => setAddedToCart(false), 2000);
@@ -381,7 +410,11 @@ export default function ProductDetailPage() {
   };
 
   const handleWhatsApp = () => {
-    const optionText = isBlockPrintPalazzo ? ` (${withBlazer ? 'With Blazer' : 'Without Blazer'})` : '';
+    const optionText = isBlockPrintPalazzo 
+      ? ` (${withBlazer ? 'With Blazer' : 'Without Blazer'})` 
+      : isRaatCouplesSet
+        ? ` (${couplesOption === 'jacket' ? 'Nehru Jacket' : 'Saree'})`
+        : '';
     const productUrl = typeof window !== 'undefined' ? window.location.href : '';
     const msg = `Hi! I'm interested in ${product.name}${optionText}\n(Size: ${selectedSize || 'TBD'}) - ${formatPrice(displayPrice)}.\nProduct link: ${productUrl}`;
     window.open(`https://wa.me/919953275142?text=${encodeURIComponent(msg)}`, '_blank');
@@ -502,6 +535,29 @@ export default function ProductDetailPage() {
                   onClick={() => setWithBlazer(true)}
                 >
                   With Blazer (₹10,000)
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Option Selection for Raat Print Couples Set */}
+          {isRaatCouplesSet && (
+            <div className="pd-size-section mb-[30px]">
+              <div className="pd-size-header">
+                <span className="pd-size-label">Select Outfit Option</span>
+              </div>
+              <div className="pd-option-grid">
+                <button
+                  className={`pd-option-btn ${couplesOption === 'jacket' ? 'active' : ''}`}
+                  onClick={() => setCouplesOption('jacket')}
+                >
+                  Nehru Jacket (₹7,000)
+                </button>
+                <button
+                  className={`pd-option-btn ${couplesOption === 'saree' ? 'active' : ''}`}
+                  onClick={() => setCouplesOption('saree')}
+                >
+                  Saree (₹16,500)
                 </button>
               </div>
             </div>

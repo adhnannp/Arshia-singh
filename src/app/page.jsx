@@ -5,6 +5,44 @@ import Link from 'next/link';
 import gsap from 'gsap';
 import Footer from '../components/Footer';
 
+const EXHIBITS = [
+  {
+    id: "EXHIBIT I",
+    title: "The Sacred Archive",
+    medium: "Tactile Heritage & Embossed Gold Bindings",
+    desc: "A physical manifestation of storytelling. Woven archives of textures, patterns, and golden block-printed motifs that catalog the visual history of the brand.",
+    img: "/assets/art_museum_1.jpg"
+  },
+  {
+    id: "EXHIBIT II",
+    title: "The Desert Sentinel",
+    medium: "Handcrafted Floral Cabinet & Salt Plain Contrast",
+    desc: "An exploration of isolation and pattern. Our intricate floral prints standing resiliently against the minimalist, infinite salt flats of India.",
+    img: "/assets/art_museum_3.jpg"
+  },
+  {
+    id: "EXHIBIT III",
+    title: "Straw Weaver's Ascent",
+    medium: "Woven Organic Fibers & Sculptural Form",
+    desc: "Celebrating the organic structures of nature. A bird handcrafted entirely from woven geometric straw and natural dyes, taking flight as a symbol of conscious elevation.",
+    img: "/assets/art_museum_4.jpg"
+  },
+  {
+    id: "EXHIBIT IV",
+    title: "Cloud Weaver Kaftan",
+    medium: "Ethereal Silk & Atmospheric Light",
+    desc: "Bridging the material and the atmosphere. A flowing silk kaftan with marble-like golden veins, dissolving seamlessly into sky and clouds to represent the lightness of conscious living.",
+    img: "/assets/art_museum_2.jpg"
+  },
+  {
+    id: "EXHIBIT V",
+    title: "Flowing River of Indigo",
+    medium: "Draped Silk & Natural Mountain Valley",
+    desc: "An installation depicting fabric as a force of nature. Rich indigo and green patterned silks flow through the rocks of a mountain valley, mimicking the life-giving nature of clean rivers.",
+    img: "/assets/art_museum_5.jpg"
+  }
+];
+
 export default function HomePage() {
   const [stack, setStack] = useState([
     { id: 1, src: "/assets/new_coll_1.jpg" },
@@ -16,6 +54,35 @@ export default function HomePage() {
   const [startX, setStartX] = useState(null);
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
+
+  const [activeExhibit, setActiveExhibit] = useState(0);
+  const [exhibitTouchStart, setExhibitTouchStart] = useState(null);
+
+  const nextExhibit = () => {
+    setActiveExhibit((prev) => (prev + 1) % EXHIBITS.length);
+  };
+
+  const prevExhibit = () => {
+    setActiveExhibit((prev) => (prev - 1 + EXHIBITS.length) % EXHIBITS.length);
+  };
+
+  const handleExhibitTouchStart = (e) => {
+    setExhibitTouchStart(e.touches[0].clientX);
+  };
+
+  const handleExhibitTouchMove = (e) => {
+    if (exhibitTouchStart === null) return;
+    const currentX = e.touches[0].clientX;
+    const diff = currentX - exhibitTouchStart;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) {
+        prevExhibit();
+      } else {
+        nextExhibit();
+      }
+      setExhibitTouchStart(null);
+    }
+  };
 
   const cycleStack = () => {
     setStack(prev => {
@@ -244,6 +311,81 @@ export default function HomePage() {
           <h2 className="quote-text italic fade-up">&ldquo;Dressing up has never been vanity for me, it&apos;s escape, empowerment, emotional shift. It is transformation.&rdquo;</h2>
         </div>
         <div className="peta-badge small fade-up">PETA VEGAN™</div>
+      </section>
+
+      {/* ─── THE ART EXHIBITS ─── */}
+      <section className="section art-exhibits-section" id="art-exhibits">
+        <div className="sidebar-label left">EXHIBITIONS</div>
+        <div className="art-exhibits-container">
+          <div className="art-exhibits-header fade-up">
+            <span className="art-exhibits-subtitle">CONCEPT CAMPAIGN</span>
+            <h2 className="display art-exhibits-title">THE ART EXHIBITS</h2>
+          </div>
+
+          <div 
+            className="art-exhibits-slider"
+            onTouchStart={handleExhibitTouchStart}
+            onTouchMove={handleExhibitTouchMove}
+            onTouchEnd={() => setExhibitTouchStart(null)}
+          >
+            {/* Left Column: Image with frame */}
+            <div className="exhibit-frame-col">
+              <div className="exhibit-frame">
+                <div className="exhibit-image-wrapper">
+                  {EXHIBITS.map((ex, idx) => (
+                    <img 
+                      key={ex.id}
+                      src={ex.img} 
+                      alt={ex.title} 
+                      className={`exhibit-img-slide ${idx === activeExhibit ? 'active' : ''}`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Museum Label Text */}
+            <div className="exhibit-label-col">
+              <div className="exhibit-label-card">
+                <div className="exhibit-label-content">
+                  <span className="exhibit-id">{EXHIBITS[activeExhibit].id}</span>
+                  <h3 className="exhibit-title">{EXHIBITS[activeExhibit].title}</h3>
+                  <span className="exhibit-medium">{EXHIBITS[activeExhibit].medium}</span>
+                  <p className="exhibit-desc">{EXHIBITS[activeExhibit].desc}</p>
+                </div>
+
+                {/* Slider Controls */}
+                <div className="exhibit-controls">
+                  <button onClick={prevExhibit} className="exhibit-nav-btn prev-btn" aria-label="Previous Exhibit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <path d="M19 12H5M5 12L12 19M5 12L12 5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
+                  
+                  <div className="exhibit-pagination">
+                    <span className="current-page">{String(activeExhibit + 1).padStart(2, '0')}</span>
+                    <span className="pagination-divider">/</span>
+                    <span className="total-pages">{String(EXHIBITS.length).padStart(2, '0')}</span>
+                  </div>
+
+                  <button onClick={nextExhibit} className="exhibit-nav-btn next-btn" aria-label="Next Exhibit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <path d="M5 12H19M19 12L12 5M19 12L12 19" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Progress bar indicator */}
+                <div className="exhibit-progress-bar">
+                  <div 
+                    className="exhibit-progress-fill" 
+                    style={{ width: `${((activeExhibit + 1) / EXHIBITS.length) * 100}%` }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* ─── CONSCIOUSNESS ─── */}
