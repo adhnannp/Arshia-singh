@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@tailwindcss/oxide-linux-x64-gnu':
+        specifier: ^4.3.2
+        version: 4.3.3
       '@tailwindcss/postcss':
         specifier: ^4.3.1
         version: 4.3.1
@@ -865,6 +868,12 @@ packages:
     cpu: [x64]
     os: [linux]
     libc: [glibc]
+
+  '@tailwindcss/oxide-linux-x64-gnu@4.3.3':
+    resolution: {integrity: sha512-tx7us1muwOKAKWao2v/GaafFeQboE6aj88vC6ziN2NCGcRm8gWUhwjzg+YdVB1e4boAtdtma4L43onunI6NS4w==}
+    engines: {node: '>= 20'}
+    cpu: [x64]
+    os: [linux]
 
   '@tailwindcss/oxide-linux-x64-musl@4.3.1':
     resolution: {integrity: sha512-M+P/91qJ6uILLw4k2G93GMDRAXj61SMvFQYt39AqvUqYgExXpLL5aepfns7sj4HiAQeolirQF9E0lzRvdf4zPQ==}
@@ -3345,6 +3354,8 @@ snapshots:
 
   '@tailwindcss/oxide-linux-x64-gnu@4.3.1':
     optional: true
+
+  '@tailwindcss/oxide-linux-x64-gnu@4.3.3': {}
 
   '@tailwindcss/oxide-linux-x64-musl@4.3.1':
     optional: true
