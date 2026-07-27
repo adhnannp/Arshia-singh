@@ -388,7 +388,7 @@ export const products = [
     "wash_care": "DRY CLEAN ONLY",
     "styling_tip": "N/A",
     "delivery": "7-10DAYS",
-    "img": "/assets/RAAT_PRINT_KAFTAN_Page_26_Image_1.jpeg"
+    "img": "/assets/RAAT_PRINT_KAFTAN_Page_26_Image_3.jpeg"
   },
   {
     "name": "LEHER PRINT OVER SIZED JACKET",

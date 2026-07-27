@@ -73,9 +73,9 @@ const PRODUCT_GALLERY_IMAGES = {
     '/assets/LIBAAS_PRINT_CO-ORD_Page_25_Image_3.jpeg',
   ],
   'RAAT PRINT KAFTAN': [
-    '/assets/RAAT_PRINT_KAFTAN_Page_26_Image_1.jpeg',
-    '/assets/RAAT_PRINT_KAFTAN_Page_26_Image_2.jpeg',
     '/assets/RAAT_PRINT_KAFTAN_Page_26_Image_3.jpeg',
+    '/assets/RAAT_PRINT_KAFTAN_Page_26_Image_2.jpeg',
+    '/assets/RAAT_PRINT_KAFTAN_Page_26_Image_1.jpeg',
     '/assets/RAAT_PRINT_KAFTAN_Page_26_Image_4.jpeg',
   ],
   'LEHER PRINT OVER SIZED JACKET': [

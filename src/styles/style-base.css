@@ -665,10 +665,15 @@ a {
   }
 
   .karigar-title a {
-    font-size: 1.3rem !important;
-    padding: 10px 25px !important;
+    font-size: 1.15rem !important;
+    padding: 10px 10px !important;
     border-width: 1.5px !important;
     white-space: nowrap !important;
+    width: 280px !important;
+    text-align: center !important;
+    display: inline-block !important;
+    box-sizing: border-box !important;
+    text-indent: 0.08em !important;
   }
   .karigar-title a::before {
     top: 4px !important;
@@ -2283,9 +2288,7 @@ a {
   }
 
   .nav-links {
-    display: flex;
-    align-items: center;
-    gap: 15px;
+    display: none;
   }
 
   .nav-link-item {
