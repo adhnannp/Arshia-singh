@@ -13,6 +13,25 @@ const VEGAN_BGS = [
   "/assets/art_museum_5.jpg"
 ];
 
+// Helper to match home screen assets to their correct product page route
+const getLinkForImage = (src) => {
+  if (src.includes('new_coll_1.jpg')) return '/product/rangrez-print-kaftan';
+  if (src.includes('new_coll_2.png')) return '/product/ravel-print-dhoti-skirt-blazer-set';
+  if (src.includes('new_coll_3.png')) return '/product/raat-print-skirt-jacket-set';
+  if (src.includes('new_coll_4.jpeg')) return '/product/pastel-embroidery-white-blazer-set';
+  if (src.includes('new_coll_5.JPG')) return '/product/52-bagh-phulkari-blazer-set';
+  if (src.includes('new_coll_6.jpg')) return '/product/libaas-drop-shoulder-shirt';
+  if (src.includes('new_coll_7.jpg')) return '/product/block-print-drop-shoulder-shirt';
+  
+  if (src.includes('DSC_8756.jpg')) return '/product/ravel-waist-coat-pant-set';
+  if (src.includes('DSC_8356.jpg')) return '/product/block-print-palazzo-co-ord';
+  if (src.includes('DSC_8473.jpg')) return '/product/block-print-palazzo-co-ord';
+  if (src.includes('DSC_8791.jpg')) return '/product/raat-print-skirt-jacket-set';
+  if (src.includes('DSC_8402.jpg')) return '/product/block-print-palazzo-co-ord';
+  
+  return '/discover';
+};
+
 export default function HomePage() {
   const [stack, setStack] = useState([
     { id: 1, src: "/assets/new_coll_1.jpg" },
@@ -177,24 +196,72 @@ export default function HomePage() {
         </div>
         <div className="parallax-gallery" id="parallax-gallery">
           <div className="parallax-col parallax-col-1" id="pcol1"><div className="pcol-inner">
-            <div className="pcol-img-wrap"><img src="/assets/new_coll_1.jpg" alt="Look 1" /></div>
-            <div className="pcol-img-wrap"><img src="/assets/new_coll_2.png" alt="Look 2" /></div>
-            <div className="pcol-img-wrap"><img src="/assets/DSC_8756.jpg" alt="Look 3" /></div>
+            <div className="pcol-img-wrap">
+              <Link href={getLinkForImage('/assets/new_coll_1.jpg')} style={{ display: 'block', width: '100%', height: '100%' }}>
+                <img src="/assets/new_coll_1.jpg" alt="Look 1" />
+              </Link>
+            </div>
+            <div className="pcol-img-wrap">
+              <Link href={getLinkForImage('/assets/new_coll_2.png')} style={{ display: 'block', width: '100%', height: '100%' }}>
+                <img src="/assets/new_coll_2.png" alt="Look 2" />
+              </Link>
+            </div>
+            <div className="pcol-img-wrap">
+              <Link href={getLinkForImage('/assets/DSC_8756.jpg')} style={{ display: 'block', width: '100%', height: '100%' }}>
+                <img src="/assets/DSC_8756.jpg" alt="Look 3" />
+              </Link>
+            </div>
           </div></div>
           <div className="parallax-col parallax-col-2" id="pcol2"><div className="pcol-inner">
-            <div className="pcol-img-wrap"><img src="/assets/new_coll_3.png" alt="Look 4" /></div>
-            <div className="pcol-img-wrap"><img src="/assets/new_coll_4.jpeg" alt="Look 5" /></div>
-            <div className="pcol-img-wrap"><img src="/assets/DSC_8356.jpg" alt="Look 6" /></div>
+            <div className="pcol-img-wrap">
+              <Link href={getLinkForImage('/assets/new_coll_3.png')} style={{ display: 'block', width: '100%', height: '100%' }}>
+                <img src="/assets/new_coll_3.png" alt="Look 4" />
+              </Link>
+            </div>
+            <div className="pcol-img-wrap">
+              <Link href={getLinkForImage('/assets/new_coll_4.jpeg')} style={{ display: 'block', width: '100%', height: '100%' }}>
+                <img src="/assets/new_coll_4.jpeg" alt="Look 5" />
+              </Link>
+            </div>
+            <div className="pcol-img-wrap">
+              <Link href={getLinkForImage('/assets/DSC_8356.jpg')} style={{ display: 'block', width: '100%', height: '100%' }}>
+                <img src="/assets/DSC_8356.jpg" alt="Look 6" />
+              </Link>
+            </div>
           </div></div>
           <div className="parallax-col parallax-col-3" id="pcol3"><div className="pcol-inner">
-            <div className="pcol-img-wrap"><img src="/assets/new_coll_5.JPG" alt="Look 7" /></div>
-            <div className="pcol-img-wrap"><img src="/assets/new_coll_6.jpg" alt="Look 8" /></div>
-            <div className="pcol-img-wrap"><img src="/assets/DSC_8473.jpg" alt="Look 9" /></div>
+            <div className="pcol-img-wrap">
+              <Link href={getLinkForImage('/assets/new_coll_5.JPG')} style={{ display: 'block', width: '100%', height: '100%' }}>
+                <img src="/assets/new_coll_5.JPG" alt="Look 7" />
+              </Link>
+            </div>
+            <div className="pcol-img-wrap">
+              <Link href={getLinkForImage('/assets/new_coll_6.jpg')} style={{ display: 'block', width: '100%', height: '100%' }}>
+                <img src="/assets/new_coll_6.jpg" alt="Look 8" />
+              </Link>
+            </div>
+            <div className="pcol-img-wrap">
+              <Link href={getLinkForImage('/assets/DSC_8473.jpg')} style={{ display: 'block', width: '100%', height: '100%' }}>
+                <img src="/assets/DSC_8473.jpg" alt="Look 9" />
+              </Link>
+            </div>
           </div></div>
           <div className="parallax-col parallax-col-4" id="pcol4"><div className="pcol-inner">
-            <div className="pcol-img-wrap"><img src="/assets/new_coll_7.jpg" alt="Look 10" /></div>
-            <div className="pcol-img-wrap"><img src="/assets/DSC_8791.jpg" alt="Look 11" /></div>
-            <div className="pcol-img-wrap"><img src="/assets/DSC_8402.jpg" alt="Look 12" /></div>
+            <div className="pcol-img-wrap">
+              <Link href={getLinkForImage('/assets/new_coll_7.jpg')} style={{ display: 'block', width: '100%', height: '100%' }}>
+                <img src="/assets/new_coll_7.jpg" alt="Look 10" />
+              </Link>
+            </div>
+            <div className="pcol-img-wrap">
+              <Link href={getLinkForImage('/assets/DSC_8791.jpg')} style={{ display: 'block', width: '100%', height: '100%' }}>
+                <img src="/assets/DSC_8791.jpg" alt="Look 11" />
+              </Link>
+            </div>
+            <div className="pcol-img-wrap">
+              <Link href={getLinkForImage('/assets/DSC_8402.jpg')} style={{ display: 'block', width: '100%', height: '100%' }}>
+                <img src="/assets/DSC_8402.jpg" alt="Look 12" />
+              </Link>
+            </div>
           </div></div>
         </div>
 
@@ -225,7 +292,9 @@ export default function HomePage() {
                   transition: isSwiping && isTopCard ? 'none' : 'transform 0.4s cubic-bezier(0.25, 1, 0.3, 1), z-index 0.4s ease',
                 }}
               >
-                <img src={card.src} alt={`Look ${card.id}`} />
+                <Link href={getLinkForImage(card.src)} style={{ display: 'block', width: '100%', height: '100%' }}>
+                  <img src={card.src} alt={`Look ${card.id}`} />
+                </Link>
               </div>
             );
           })}
@@ -242,10 +311,18 @@ export default function HomePage() {
         <img src="/assets/phulkari_pattern.png" className="floating-illustration phulkari-decor" alt="Phulkari Pattern" data-speed="0.8" />
         <div className="craft-container">
           <div className="craft-images">
-            <img src="/assets/craft_new_1.jpg" className="craft-img duotone-1" alt="Garment 1" />
-            <img src="/assets/craft_new_2.jpg" className="craft-img duotone-2" alt="Garment 2" />
-            <img src="/assets/craft_new_3.jpg" className="craft-img duotone-1" alt="Garment 3" />
-            <img src="/assets/craft_new_4.jpg" className="craft-img duotone-2" alt="Garment 4" />
+            <Link href="/product/multi-colored-phulkari-cape-co-ord-set" className="craft-img-link">
+              <img src="/assets/craft_new_1.jpg" className="craft-img duotone-1" alt="Garment 1" />
+            </Link>
+            <Link href="/product/drop-shoulder-hemp-shirt" className="craft-img-link">
+              <img src="/assets/craft_new_2.jpg" className="craft-img duotone-2" alt="Garment 2" />
+            </Link>
+            <Link href="/product/rangrez-blazer-set" className="craft-img-link">
+              <img src="/assets/craft_new_3.jpg" className="craft-img duotone-1" alt="Garment 3" />
+            </Link>
+            <Link href="/product/ravel-waist-coat-pant-set" className="craft-img-link">
+              <img src="/assets/craft_new_4.jpg" className="craft-img duotone-2" alt="Garment 4" />
+            </Link>
           </div>
           <div className="craft-text"><div className="craft-title">CRAFTED TO FEEL +</div></div>
         </div>
@@ -298,11 +375,31 @@ export default function HomePage() {
         </div>
         <div className="collection-swipe-hint">SWIPE TO UNFOLD &gt;&gt;&gt;</div>
         <div className="editorial-grid">
-          <div className="grid-item item-large" data-speed="0.9" data-index="01"><img src="/assets/new_coll_3.png" alt="Piece 1" loading="eager" /></div>
-          <div className="grid-item item-small offset-down" data-speed="1.1" data-index="02"><img src="/assets/new_coll_4.jpeg" alt="Piece 2" loading="eager" /></div>
-          <div className="grid-item item-medium" data-speed="1" data-index="03"><img src="/assets/new_coll_5.JPG" alt="Piece 3" loading="eager" /></div>
-          <div className="grid-item item-tall offset-up" data-speed="1.2" data-index="04"><img src="/assets/new_coll_6.jpg" alt="Piece 4" loading="eager" /></div>
-          <div className="grid-item item-wide" data-speed="0.8" data-index="05"><img src="/assets/new_coll_7.jpg" alt="Piece 5" loading="eager" /></div>
+          <div className="grid-item item-large" data-speed="0.9" data-index="01">
+            <Link href={getLinkForImage('/assets/new_coll_3.png')} className="grid-item-link">
+              <img src="/assets/new_coll_3.png" alt="Piece 1" loading="eager" />
+            </Link>
+          </div>
+          <div className="grid-item item-small offset-down" data-speed="1.1" data-index="02">
+            <Link href={getLinkForImage('/assets/new_coll_4.jpeg')} className="grid-item-link">
+              <img src="/assets/new_coll_4.jpeg" alt="Piece 2" loading="eager" />
+            </Link>
+          </div>
+          <div className="grid-item item-medium" data-speed="1" data-index="03">
+            <Link href={getLinkForImage('/assets/new_coll_5.JPG')} className="grid-item-link">
+              <img src="/assets/new_coll_5.JPG" alt="Piece 3" loading="eager" />
+            </Link>
+          </div>
+          <div className="grid-item item-tall offset-up" data-speed="1.2" data-index="04">
+            <Link href={getLinkForImage('/assets/new_coll_6.jpg')} className="grid-item-link">
+              <img src="/assets/new_coll_6.jpg" alt="Piece 4" loading="eager" />
+            </Link>
+          </div>
+          <div className="grid-item item-wide" data-speed="0.8" data-index="05">
+            <Link href={getLinkForImage('/assets/new_coll_7.jpg')} className="grid-item-link">
+              <img src="/assets/new_coll_7.jpg" alt="Piece 5" loading="eager" />
+            </Link>
+          </div>
         </div>
         <div className="collection-progress"><div className="progress-track"><div className="progress-bar"></div></div></div>
         <div className="collection-ticker"><div className="ticker-track">

@@ -21,6 +21,8 @@ const MEN_LINKS = [
 ];
 
 const CONNECT_LINKS = [
+  { label: 'Discover', href: '/discover', external: false },
+  { label: 'Blog', href: '/blog', external: false },
   { label: 'Our Story', href: '/story', external: false },
   { label: 'Get in touch', href: '/inquiries', external: false },
   { label: 'Instagram', href: 'https://www.instagram.com/arshia.singh.official?igsh=bWN5cXd1M2txNmsx', external: true },
@@ -69,6 +71,7 @@ export default function Navbar() {
         <div className="nav-links">
           <Link href="/story" className="nav-link-item">Our Story</Link>
           <Link href="/blog" className="nav-link-item">Blog</Link>
+          <Link href="/discover" className="nav-link-item">Discover</Link>
         </div>
         <div className="nav-right" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           {/* PROFILE BUTTON & POPUP */}
@@ -200,10 +203,10 @@ export default function Navbar() {
               </ul>
             </div>
 
-            {/* Connect */}
+            {/* Explore & Connect */}
             <div className="nav-section connect-section">
               <span className="nav-section-num">03</span>
-              <span className="nav-section-title">Connect</span>
+              <span className="nav-section-title">Explore & Connect</span>
               <ul className="nav-section-links connect-links">
                 {CONNECT_LINKS.map((link) => (
                   <li key={link.href}>
@@ -247,6 +250,10 @@ export default function Navbar() {
                   .karigar-section-custom {
                     grid-column: span 1 !important;
                     margin-top: 25px !important;
+                    flex-direction: column !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    gap: 25px !important;
                   }
                 }
                 .karigar-title-custom {
