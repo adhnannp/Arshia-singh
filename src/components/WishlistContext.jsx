@@ -3,7 +3,14 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useCart } from './CartContext';
 
-const WishlistContext = createContext();
+const defaultWishlist = {
+  wishlistItems: [],
+  isInWishlist: () => false,
+  toggleWishlist: () => {},
+  moveToCart: () => {}
+};
+
+const WishlistContext = createContext(defaultWishlist);
 
 export function WishlistProvider({ children }) {
   const [wishlistItems, setWishlistItems] = useState([]);
@@ -56,5 +63,6 @@ export function WishlistProvider({ children }) {
 }
 
 export function useWishlist() {
-  return useContext(WishlistContext);
+  const context = useContext(WishlistContext);
+  return context || defaultWishlist;
 }

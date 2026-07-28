@@ -36,8 +36,8 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body>
-        <CartProvider>
-          <AuthProvider>
+        <AuthProvider>
+          <CartProvider>
             <WishlistProvider>
               <Navbar />
               <CartDrawer />
@@ -46,8 +46,8 @@ export default function RootLayout({ children }) {
                 {children}
               </SmoothScroll>
             </WishlistProvider>
-          </AuthProvider>
-        </CartProvider>
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );
