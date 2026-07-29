@@ -1,159 +1,206 @@
 'use client';
 
 export const runtime = "edge";
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import gsap from 'gsap';
 import Footer from '../../../components/Footer';
-import { products } from '../../../data/products-data';
 import { useAuth } from '../../../components/AuthContext';
 import { useWishlist } from '../../../components/WishlistContext';
+import { fetchCollectionProducts } from '../../../lib/shopify/queries/products';
 
-// Map URL slugs → product category strings & page metadata
-const CATEGORY_MAP = {
-  'matching-moods': {
-    title: 'Matching Moods',
-    subtitle: 'Elegantly Tailored Co-ord & Blazer Sets',
-    heroImg: '/assets/new_coll_2.png',
-    categoryKey: 'matching moods',
-    description: 'Effortless coordination for every version of you. Thoughtfully designed co-ord sets that bring together comfort, confidence, and conscious luxury in perfect harmony.',
-  },
-  'flow-state': {
-    title: 'Flow State',
-    subtitle: 'Effortless Kaftans & Fluid Silhouettes',
-    heroImg: '/assets/new_coll_5.JPG',
-    categoryKey: 'flow state',
-    description: 'Designed to move with you. Our kaftans combine fluid silhouettes, breathable fabrics, and timeless elegance for moments of ease, travel, and everyday luxury.',
-  },
-  'power-layers': {
-    title: 'Power Layers',
-    subtitle: 'Statement Blazers & Outer Layers',
-    heroImg: '/assets/new_coll_3.png',
-    categoryKey: 'power layers',
-    description: 'Structured yet mindful. From tailored blazers to statement jackets, these versatile layers are crafted to elevate your wardrobe while reflecting conscious craftsmanship.',
-  },
-  'six-yards-of-good': {
-    title: 'Six Yards of Good',
-    subtitle: 'Printed & Embroidered Saree Editions',
-    heroImg: '/assets/new_coll_1.jpg',
-    categoryKey: '6 yards of good',
-    description: 'Traditional artistry meets modern values. Our sarees celebrate Indian heritage through handcrafted details, luxurious vegan fabrics, and timeless design.',
-  },
-  'custom-made-for-moments': {
-    title: 'Custom Made for Moments',
-    subtitle: 'Bespoke Bridal, Groom & Occasion Wear',
-    heroImg: '/assets/new_coll_6.jpg',
-    categoryKey: 'custom made',
-    description: 'Created exclusively for you. From personalised fits to bespoke designs, our custom-made pieces honour individuality while embracing conscious fashion.',
-  },
-  'natural-luxury': {
-    title: 'Natural Luxury',
-    subtitle: 'Hemp & Muslin Essentials for Him',
-    heroImg: '/assets/new_coll_6.jpg',
-    categoryKey: 'natural luxury',
-    description: 'Elevated essentials crafted from premium natural and vegan fabrics. Thoughtfully tailored shirts and separates designed for comfort, sophistication, and everyday refinement.',
-  },
-  'printed-stories': {
-    title: 'Printed Stories',
-    subtitle: 'Digital Print Drop-Shoulder Shirts',
-    heroImg: '/assets/new_coll_7.jpg',
-    categoryKey: 'printed stories',
-    description: 'Wearable narratives inspired by culture, craftsmanship, and creativity. Each printed shirt brings together artistic expression and conscious design.',
-  },
-  'modern-classics': {
-    title: 'Modern Classics',
-    subtitle: 'Phulkari Nehru Jackets & Heritage Shirts',
-    heroImg: '/assets/new_coll_3.png',
-    categoryKey: 'modern classics',
-    description: 'Timeless menswear reimagined. Featuring Nehru jackets and handcrafted Phulkari details, these pieces honour tradition while embracing a contemporary aesthetic.',
-  },
+// Helper: Normalize Shopify product node
+const normalizeProduct = (node, collectionCategory) => {
+  const metafieldMap = {};
+  if (Array.isArray(node.metafields)) {
+    node.metafields.forEach(m => {
+      if (m && m.key) {
+        metafieldMap[m.key] = m.value;
+      }
+    });
+  }
+
+  const rawPrice = parseFloat(node.priceRange?.minVariantPrice?.amount || '0');
+  const formattedPrice = rawPrice > 0
+    ? `₹${Math.round(rawPrice).toLocaleString('en-IN')}`
+    : 'Price on Request';
+
+  return {
+    id: node.id,
+    name: node.title,
+    title: node.title,
+    handle: node.handle,
+    price: formattedPrice,
+    rawPrice: rawPrice,
+    img: node.featuredImage?.url || '/assets/placeholder.jpg',
+    altText: node.featuredImage?.altText || node.title,
+    availableForSale: node.availableForSale,
+    fabric: metafieldMap.fabric || '',
+    components: metafieldMap.components || '',
+    category: collectionCategory || metafieldMap.category || 'Luxury Edit',
+    details: node.description || '',
+    metafields: metafieldMap,
+  };
 };
 
-export default function CollectionPage() {
+// Helper: Map sort selection to Storefront API parameters
+const getSortParams = (sortBy) => {
+  switch (sortBy) {
+    case 'price-low':
+      return { sortKey: 'PRICE', reverse: false };
+    case 'price-high':
+      return { sortKey: 'PRICE', reverse: true };
+    case 'alphabetical':
+      return { sortKey: 'TITLE', reverse: false };
+    case 'default':
+    default:
+      return { sortKey: 'COLLECTION_DEFAULT', reverse: false };
+  }
+};
+
+export default function CategoryPage() {
   const params = useParams();
-  const router = useRouter();
+  const slug = params?.category || '';
+
   const { requireAuth } = useAuth();
   const { toggleWishlist, isInWishlist } = useWishlist();
-  const slug = params?.category || '';
-  const meta = CATEGORY_MAP[slug] || {
-    title: slug.replace(/-/g, ' ').toUpperCase(),
-    subtitle: 'COLLECTION EDITION',
-    heroImg: '/assets/new_coll_3.png',
-    categoryKey: slug,
-    description: 'Explore our premium luxury garment edits, meticulously constructed with organic fabrics, artisanal details, and conscious vegan manufacturing.',
-  };
 
-  const filteredByCategory = products.filter(
-    (p) => p.category && p.category.toLowerCase() === meta.categoryKey.toLowerCase()
-  );
+  // Dynamic Shopify Collection State
+  const [collectionInfo, setCollectionInfo] = useState({ title: '', description: '', image: null });
+  const [productsList, setProductsList] = useState([]);
+  const [pageInfo, setPageInfo] = useState({ hasNextPage: false, endCursor: null });
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
-  // States
-  const [layoutMode, setLayoutMode] = useState('studio'); // 'studio' (3-col) vs 'editorial' (2-col)
+  // Layout & Filter States
+  const [layoutMode] = useState('studio'); // 'studio' (3-col)
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  
-  // Filter States
   const [selectedFabrics, setSelectedFabrics] = useState([]);
   const [selectedComponents, setSelectedComponents] = useState([]);
-  const [selectedPrints, setSelectedPrints] = useState([]);
   const [sortBy, setSortBy] = useState('default');
 
-  // Dynamic filter options extraction
-  const fabricsList = Array.from(new Set(filteredByCategory.map(p => p.fabric?.trim()).filter(Boolean)));
-  const componentsList = Array.from(new Set(filteredByCategory.map(p => p.components?.trim()).filter(Boolean)));
-  const printsList = Array.from(new Set(filteredByCategory.map(p => p.print?.trim()).filter(p => p && p !== 'N/A')));
+  const sentinelRef = useRef(null);
 
-  // Filter application
-  let displayProducts = filteredByCategory.filter(product => {
+  // Fetch initial collection data and products from Shopify
+  const loadInitialProducts = useCallback(async () => {
+    if (!slug) return;
+    setLoading(true);
+
+    const { sortKey, reverse } = getSortParams(sortBy);
+    const res = await fetchCollectionProducts({
+      handle: slug,
+      first: 20,
+      after: null,
+      sortKey,
+      reverse,
+    });
+
+    if (res.collection) {
+      setCollectionInfo({
+        title: res.collection.title,
+        description: res.collection.description,
+        image: res.collection.image?.url || null,
+      });
+    }
+
+    const categoryKey = res.collection?.title || slug;
+    const normalized = (res.products || []).map(p => normalizeProduct(p, categoryKey));
+    setProductsList(normalized);
+    setPageInfo(res.pageInfo || { hasNextPage: false, endCursor: null });
+    setLoading(false);
+  }, [slug, sortBy]);
+
+  useEffect(() => {
+    loadInitialProducts();
+  }, [loadInitialProducts]);
+
+  // Load next batch of products for auto-pagination with deduplication
+  const loadMoreProducts = useCallback(async () => {
+    if (loading || loadingMore || !pageInfo.hasNextPage || !pageInfo.endCursor) return;
+    setLoadingMore(true);
+
+    const { sortKey, reverse } = getSortParams(sortBy);
+    const res = await fetchCollectionProducts({
+      handle: slug,
+      first: 20,
+      after: pageInfo.endCursor,
+      sortKey,
+      reverse,
+    });
+
+    const categoryKey = collectionInfo.title || slug;
+    const normalized = (res.products || []).map(p => normalizeProduct(p, categoryKey));
+    setProductsList(prev => {
+      const existingIds = new Set(prev.map(p => p.id));
+      const newUnique = normalized.filter(p => !existingIds.has(p.id));
+      return [...prev, ...newUnique];
+    });
+    setPageInfo(res.pageInfo || { hasNextPage: false, endCursor: null });
+    setLoadingMore(false);
+  }, [slug, sortBy, collectionInfo.title, pageInfo, loading, loadingMore]);
+
+  // Intersection Observer for endless scrolling
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && pageInfo.hasNextPage && !loading && !loadingMore) {
+          loadMoreProducts();
+        }
+      },
+      { rootMargin: '300px' }
+    );
+
+    const currentSentinel = sentinelRef.current;
+    if (currentSentinel) {
+      observer.observe(currentSentinel);
+    }
+
+    return () => {
+      if (currentSentinel) {
+        observer.unobserve(currentSentinel);
+      }
+    };
+  }, [pageInfo.hasNextPage, loading, loadingMore, loadMoreProducts]);
+
+  // Extract dynamic filter lists from fetched collection products
+  const fabricsList = Array.from(new Set(productsList.map(p => p.fabric?.trim()).filter(Boolean))).sort();
+  const componentsList = Array.from(new Set(productsList.map(p => p.components?.trim()).filter(Boolean))).sort();
+
+  // Client-side filter application for Fabrics & Components
+  const displayProducts = productsList.filter(product => {
     if (selectedFabrics.length > 0 && !selectedFabrics.includes(product.fabric?.trim())) return false;
     if (selectedComponents.length > 0 && !selectedComponents.includes(product.components?.trim())) return false;
-    if (selectedPrints.length > 0 && !selectedPrints.includes(product.print?.trim())) return false;
     return true;
   });
 
-  // Price formatting and parsing helper
-  const parsePrice = (priceStr) => {
-    if (!priceStr || priceStr === 'N/A' || priceStr === 'Price on Request') return 0;
-    const sanitized = priceStr.replace(/[^\d]/g, '');
-    return parseInt(sanitized, 10) || 0;
-  };
-
-  const formatPrice = (price) => {
-    if (!price || price === 'N/A' || price === 'Price on Request') return 'Price on Request';
-    return `₹${price.replace('/-', '').replace('₹', '').replace(',', ',').trim()}`;
-  };
-
-  // Sorting application
-  if (sortBy === 'price-low') {
-    displayProducts.sort((a, b) => parsePrice(a.price) - parsePrice(b.price));
-  } else if (sortBy === 'price-high') {
-    displayProducts.sort((a, b) => parsePrice(b.price) - parsePrice(a.price));
-  } else if (sortBy === 'alphabetical') {
-    displayProducts.sort((a, b) => a.name.localeCompare(b.name));
-  }
-
-  // Animation triggers
+  // Animation triggers with GSAP
   useEffect(() => {
-    document.title = `${meta.title.toUpperCase()} | ARSHIA SINGH`;
-    
+    const displayCategoryName = collectionInfo.title || slug.replace(/-/g, ' ').toUpperCase();
+    document.title = `${displayCategoryName.toUpperCase()} | ARSHIA SINGH`;
+
     const { ScrollTrigger } = require('gsap/ScrollTrigger');
     gsap.registerPlugin(ScrollTrigger);
-
     gsap.config({ force3D: true });
-    
+
+    const tl = gsap.timeline();
+    tl.fromTo('.collection-hero-subtitle', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' })
+      .fromTo('.collection-hero-title', { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 1.0, ease: 'power3.out' }, '-=0.6')
+      .fromTo('.collection-hero-desc', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 1.0, ease: 'power3.out' }, '-=0.8');
+
     const cards = document.querySelectorAll('.product-card');
     if (cards.length > 0) {
-      gsap.fromTo(cards, 
-        { y: 50, opacity: 0 },
-        { 
-          y: 0, 
-          opacity: 1, 
-          duration: 1, 
-          stagger: 0.1, 
+      gsap.fromTo(cards,
+        { y: 40, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.8,
+          stagger: 0.08,
           ease: 'power3.out',
           scrollTrigger: {
             trigger: '.collection-products-grid',
-            start: 'top 90%',
+            start: 'top 95%',
           }
         }
       );
@@ -162,10 +209,7 @@ export default function CollectionPage() {
     return () => {
       ScrollTrigger.getAll().forEach(st => st.kill());
     };
-  }, [slug, selectedFabrics, selectedComponents, selectedPrints, sortBy, layoutMode]);
-
-  const makeSlug = (name) =>
-    name.toLowerCase().replace(/ /g, '-').replace(/'/g, '').replace(/[^a-z0-9-]/g, '');
+  }, [slug, collectionInfo.title, selectedFabrics, selectedComponents, sortBy, productsList.length]);
 
   const toggleFilter = (list, setList, item) => {
     if (list.includes(item)) {
@@ -178,21 +222,23 @@ export default function CollectionPage() {
   const clearAllFilters = () => {
     setSelectedFabrics([]);
     setSelectedComponents([]);
-    setSelectedPrints([]);
     setSortBy('default');
   };
 
-  const activeFiltersCount = selectedFabrics.length + selectedComponents.length + selectedPrints.length;
+  const activeFiltersCount = selectedFabrics.length + selectedComponents.length;
+  const displayTitle = collectionInfo.title || slug.replace(/-/g, ' ').toUpperCase();
 
   return (
     <>
-      {/* ─── MINIMALIST PREMIUM HERO ─── */}
+      {/* ─── TYPOGRAPHIC HERO ─── */}
       <section className="collection-hero">
         <div className="collection-hero-container">
           <div className="collection-hero-content">
-            <span className="collection-hero-subtitle">{meta.subtitle}</span>
-            <h1 className="collection-hero-title">{meta.title}</h1>
-            <p className="collection-hero-desc">{meta.description}</p>
+            <span className="collection-hero-subtitle">HERITAGE SILHOUETTES</span>
+            <h1 className="collection-hero-title">{displayTitle}</h1>
+            <p className="collection-hero-desc">
+              {collectionInfo.description || 'Consciously handcrafted luxury silhouettes, celebrating age-old artisanal techniques with PETA-approved vegan textiles.'}
+            </p>
           </div>
         </div>
       </section>
@@ -206,7 +252,7 @@ export default function CollectionPage() {
               <span className="filter-count">{activeFiltersCount}</span>
             ) : (
               <svg width="14" height="12" viewBox="0 0 14 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M1 2.5H13M3.5 6H10.5M5.5 9.5H8.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                <path d="M1 2.5H13M3.5 6H10.5M5.5 9.5H8.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
               </svg>
             )}
           </button>
@@ -221,14 +267,8 @@ export default function CollectionPage() {
               ))}
               {selectedComponents.map(c => (
                 <div key={c} className="active-filter-pill">
-                  <span>{c} Components</span>
+                  <span>{c} Piece Set</span>
                   <button onClick={() => toggleFilter(selectedComponents, setSelectedComponents, c)}>×</button>
-                </div>
-              ))}
-              {selectedPrints.map(p => (
-                <div key={p} className="active-filter-pill">
-                  <span>{p} Print</span>
-                  <button onClick={() => toggleFilter(selectedPrints, setSelectedPrints, p)}>×</button>
                 </div>
               ))}
               <button className="btn-clear-all" onClick={clearAllFilters}>Clear All</button>
@@ -237,12 +277,12 @@ export default function CollectionPage() {
         </div>
         <div className="controls-right">
           <div className="sort-select-wrapper">
-            <select 
+            <select
               className="sort-select"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
             >
-              <option value="default">Sort: Recommended</option>
+              <option value="default">Sort: Collection Order</option>
               <option value="price-low">Price: Low to High</option>
               <option value="price-high">Price: High to Low</option>
               <option value="alphabetical">Alphabetical: A-Z</option>
@@ -251,69 +291,82 @@ export default function CollectionPage() {
         </div>
       </div>
 
-
       {/* ─── PRODUCT GRID ─── */}
       <section className={`collection-products-grid grid-${layoutMode}`}>
-        {displayProducts.length === 0 ? (
-          <div className="collection-empty">
-            <p>No silhouettes match your current filter selections.</p>
-            <button className="btn-primary" onClick={clearAllFilters}>Reset Filters</button>
+        {loading ? (
+          <div className="collection-loading-state" style={{ gridColumn: '1 / -1', textTransform: 'uppercase', letterSpacing: '2px', textAlign: 'center', padding: '100px 0', fontSize: '13px', color: '#666' }}>
+            Loading Collection Silhouettes...
+          </div>
+        ) : displayProducts.length === 0 ? (
+          <div className="collection-empty" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '100px 0' }}>
+            <p style={{ textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '20px' }}>
+              No products found matching your selected filters.
+            </p>
+            <button className="btn-primary" onClick={clearAllFilters} style={{ padding: '12px 24px', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.2em' }}>
+              Reset Filters
+            </button>
           </div>
         ) : (
-          displayProducts.map((product) => {
-            const productSlug = makeSlug(product.name);
-            return (
-              <Link 
-                href={`/product/${productSlug}`}
-                key={product.name} 
-                className="product-card"
-              >
-                <div className="product-card-image-wrap">
-                  <img src={product.img} alt={product.name} loading="lazy" />
-                  <div className="product-card-overlay">
-                    <span className="btn-card-quick-view">
-                      View Silhouette
-                    </span>
-                  </div>
+          displayProducts.map((product, idx) => (
+            <Link
+              href={`/products/${product.handle}`}
+              key={product.id ? `${product.id}-${idx}` : `${product.handle}-${idx}`}
+              className="product-card"
+            >
+              <div className="product-card-image-wrap">
+                <img src={product.img} alt={product.altText || product.name} loading="lazy" />
+                <div className="product-card-overlay">
+                  <span className="btn-card-quick-view">
+                    View Silhouette
+                  </span>
                 </div>
-                <div className="product-card-info">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <h3 className="product-card-name" style={{ margin: 0 }}>{product.name.toUpperCase()}</h3>
-                    <button
-                      className={`wishlist-heart-btn ${isInWishlist(product.name) ? 'active' : ''}`}
-                      onClick={(e) => {
-                        e.stopPropagation(); // prevent navigating to product detail
-                        requireAuth(() => {
-                          toggleWishlist(product);
-                        });
-                      }}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        padding: '4px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: isInWishlist(product.name) ? '#b00' : 'inherit',
-                        transition: 'transform 0.2s'
-                      }}
-                    >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill={isInWishlist(product.name) ? '#b00' : 'none'} stroke={isInWishlist(product.name) ? '#b00' : 'currentColor'} strokeWidth="2">
-                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                      </svg>
-                    </button>
-                  </div>
-                  <div className="product-card-meta">
-                    <span className="product-card-fabric">{product.fabric?.toUpperCase() || 'PREMIUM'}</span>
-                    <span className="product-card-price">{formatPrice(product.price)}</span>
-                  </div>
+              </div>
+              <div className="product-card-info">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <h3 className="product-card-name" style={{ margin: 0 }}>{product.name.toUpperCase()}</h3>
+                  <button
+                    className={`wishlist-heart-btn ${isInWishlist(product.name) ? 'active' : ''}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      requireAuth(() => {
+                        toggleWishlist(product);
+                      });
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: isInWishlist(product.name) ? '#b00' : 'inherit',
+                      transition: 'transform 0.2s'
+                    }}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill={isInWishlist(product.name) ? '#b00' : 'none'} stroke={isInWishlist(product.name) ? '#b00' : 'currentColor'} strokeWidth="2">
+                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                    </svg>
+                  </button>
                 </div>
-              </Link>
-            );
-          })
+                <div className="product-card-meta">
+                  <span className="product-card-fabric">{product.fabric?.toUpperCase() || 'PREMIUM'}</span>
+                  <span className="product-card-price">{product.price}</span>
+                </div>
+              </div>
+            </Link>
+          ))
         )}
       </section>
+
+      {/* ─── ENDLESS SCROLL SENTINEL & AUTO-PAGINATION LOADER ─── */}
+      <div ref={sentinelRef} style={{ height: '20px', margin: '20px 0' }} />
+      {loadingMore && (
+        <div style={{ textAlign: 'center', padding: '20px 0', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '11px', color: '#888' }}>
+          Loading More Silhouettes...
+        </div>
+      )}
 
       {/* ─── LUXURY FILTERS SIDE DRAWER ─── */}
       <div className={`drawer-backdrop ${isFilterOpen ? 'show' : ''}`} onClick={() => setIsFilterOpen(false)}></div>
@@ -323,14 +376,15 @@ export default function CollectionPage() {
           <button className="btn-close-filters" onClick={() => setIsFilterOpen(false)}>×</button>
         </div>
         <div className="filters-body">
+          {/* Fabrics Filter */}
           {fabricsList.length > 0 && (
             <div className="filter-group">
               <div className="filter-group-title">Fabrics</div>
               <div className="filter-options">
                 {fabricsList.map(fabric => (
                   <label key={fabric} className="filter-label">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       checked={selectedFabrics.includes(fabric)}
                       onChange={() => toggleFilter(selectedFabrics, setSelectedFabrics, fabric)}
                     />
@@ -341,36 +395,19 @@ export default function CollectionPage() {
             </div>
           )}
 
+          {/* Components Filter */}
           {componentsList.length > 0 && (
             <div className="filter-group">
               <div className="filter-group-title">Garment Pieces</div>
               <div className="filter-options">
                 {componentsList.map(comp => (
                   <label key={comp} className="filter-label">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       checked={selectedComponents.includes(comp)}
                       onChange={() => toggleFilter(selectedComponents, setSelectedComponents, comp)}
                     />
-                    <span>{comp} Piece set</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {printsList.length > 0 && (
-            <div className="filter-group">
-              <div className="filter-group-title">Prints / Craft Styles</div>
-              <div className="filter-options">
-                {printsList.map(print => (
-                  <label key={print} className="filter-label">
-                    <input 
-                      type="checkbox" 
-                      checked={selectedPrints.includes(print)}
-                      onChange={() => toggleFilter(selectedPrints, setSelectedPrints, print)}
-                    />
-                    <span>{print} Print</span>
+                    <span>{comp} Piece Set</span>
                   </label>
                 ))}
               </div>

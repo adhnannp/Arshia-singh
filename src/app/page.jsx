@@ -15,20 +15,20 @@ const VEGAN_BGS = [
 
 // Helper to match home screen assets to their correct product page route
 const getLinkForImage = (src) => {
-  if (src.includes('new_coll_1.jpg')) return '/product/rangrez-print-kaftan';
-  if (src.includes('new_coll_2.png')) return '/product/ravel-print-dhoti-skirt-blazer-set';
-  if (src.includes('new_coll_3.png')) return '/product/raat-print-skirt-jacket-set';
-  if (src.includes('new_coll_4.jpeg')) return '/product/pastel-embroidery-white-blazer-set';
-  if (src.includes('new_coll_5.JPG')) return '/product/52-bagh-phulkari-blazer-set';
-  if (src.includes('new_coll_6.jpg')) return '/product/libaas-drop-shoulder-shirt';
-  if (src.includes('new_coll_7.jpg')) return '/product/block-print-drop-shoulder-shirt';
-  
-  if (src.includes('DSC_8756.jpg')) return '/product/ravel-waist-coat-pant-set';
-  if (src.includes('DSC_8356.jpg')) return '/product/block-print-palazzo-co-ord';
-  if (src.includes('DSC_8473.jpg')) return '/product/block-print-palazzo-co-ord';
-  if (src.includes('DSC_8791.jpg')) return '/product/raat-print-skirt-jacket-set';
-  if (src.includes('DSC_8402.jpg')) return '/product/block-print-palazzo-co-ord';
-  
+  if (src.includes('new_coll_1.jpg')) return '/products/rangrez-print-kaftan';
+  if (src.includes('new_coll_2.png')) return '/products/ravel-print-dhoti-skirt-blazer-set';
+  if (src.includes('new_coll_3.png')) return '/products/raat-print-skirt-jacket-set';
+  if (src.includes('new_coll_4.jpeg')) return '/products/pastel-embroidery-white-blazer-set';
+  if (src.includes('new_coll_5.JPG')) return '/products/52-bagh-phulkari-blazer-set';
+  if (src.includes('new_coll_6.jpg')) return '/products/libaas-drop-shoulder-shirt';
+  if (src.includes('new_coll_7.jpg')) return '/products/block-print-drop-shoulder-shirt';
+
+  if (src.includes('DSC_8756.jpg')) return '/products/ravel-waist-coat-pant-set';
+  if (src.includes('DSC_8356.jpg')) return '/products/block-print-palazzo-co-ord';
+  if (src.includes('DSC_8473.jpg')) return '/products/block-print-palazzo-co-ord';
+  if (src.includes('DSC_8791.jpg')) return '/products/raat-print-skirt-jacket-set';
+  if (src.includes('DSC_8402.jpg')) return '/products/block-print-palazzo-co-ord';
+
   return '/discover';
 };
 
@@ -311,16 +311,16 @@ export default function HomePage() {
         <img src="/assets/phulkari_pattern.png" className="floating-illustration phulkari-decor" alt="Phulkari Pattern" data-speed="0.8" />
         <div className="craft-container">
           <div className="craft-images">
-            <Link href="/product/multi-colored-phulkari-cape-co-ord-set" className="craft-img-link">
+            <Link href="/products/multi-colored-phulkari-cape-co-ord-set" className="craft-img-link">
               <img src="/assets/craft_new_1.jpg" className="craft-img duotone-1" alt="Garment 1" />
             </Link>
-            <Link href="/product/drop-shoulder-hemp-shirt" className="craft-img-link">
+            <Link href="/products/drop-shoulder-hemp-shirt" className="craft-img-link">
               <img src="/assets/craft_new_2.jpg" className="craft-img duotone-2" alt="Garment 2" />
             </Link>
-            <Link href="/product/rangrez-blazer-set" className="craft-img-link">
+            <Link href="/products/rangrez-blazer-set" className="craft-img-link">
               <img src="/assets/craft_new_3.jpg" className="craft-img duotone-1" alt="Garment 3" />
             </Link>
-            <Link href="/product/ravel-waist-coat-pant-set" className="craft-img-link">
+            <Link href="/products/ravel-waist-coat-pant-set" className="craft-img-link">
               <img src="/assets/craft_new_4.jpg" className="craft-img duotone-2" alt="Garment 4" />
             </Link>
           </div>

@@ -1,114 +1,218 @@
 'use client';
 
 export const runtime = "edge";
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import gsap from 'gsap';
 import Footer from '../../components/Footer';
-import { products } from '../../data/products-data';
 import { useAuth } from '../../components/AuthContext';
 import { useWishlist } from '../../components/WishlistContext';
+import { fetchShopifyProducts } from '../../lib/shopify/queries/products';
+import { fetchShopifyCollections } from '../../lib/shopify/queries/collections';
 
-// Filter out 'custom made' (Made for Moments) products as requested
-const filteredProducts = products.filter(p => p.category?.toLowerCase() !== 'custom made');
+// Helper: Normalize Shopify product node
+const normalizeDiscoverProduct = (node) => {
+  const metafieldMap = {};
+  if (Array.isArray(node.metafields)) {
+    node.metafields.forEach(m => {
+      if (m && m.key) {
+        metafieldMap[m.key] = m.value;
+      }
+    });
+  }
 
-// Map product category strings to section (men, women)
-const SECTION_MAP = {
-  'matching moods': 'women',
-  'flow state': 'women',
-  'power layers': 'women',
-  '6 yards of good': 'women',
-  'natural luxury': 'men',
-  'printed stories': 'men',
-  'modern classics': 'men'
+  const rawPrice = parseFloat(node.priceRange?.minVariantPrice?.amount || '0');
+  const formattedPrice = rawPrice > 0
+    ? `₹${Math.round(rawPrice).toLocaleString('en-IN')}`
+    : 'Price on Request';
+
+  const categoryKey = (metafieldMap.category || '').toLowerCase();
+
+  return {
+    id: node.id,
+    name: node.title,
+    title: node.title,
+    handle: node.handle,
+    price: formattedPrice,
+    rawPrice: rawPrice,
+    img: node.featuredImage?.url || '/assets/placeholder.jpg',
+    altText: node.featuredImage?.altText || node.title,
+    availableForSale: node.availableForSale,
+    fabric: metafieldMap.fabric || '',
+    components: metafieldMap.components || '',
+    category: categoryKey,
+    category2: metafieldMap.category2 || '',
+    details: node.description || '',
+    metafields: metafieldMap,
+  };
 };
 
-const CATEGORY_NAMES = {
-  'matching moods': 'Matching Moods (Women)',
-  'flow state': 'Flow State (Women)',
-  'power layers': 'Power Layers (Women)',
-  '6 yards of good': 'Six Yards of Good (Women)',
-  'natural luxury': 'Natural Luxury (Men)',
-  'printed stories': 'Printed Stories (Men)',
-  'modern classics': 'Modern Classics (Men)'
+// Helper: Map sort selection to Storefront API parameters
+const getSortParams = (sortBy) => {
+  switch (sortBy) {
+    case 'price-low':
+      return { sortKey: 'PRICE', reverse: false };
+    case 'price-high':
+      return { sortKey: 'PRICE', reverse: true };
+    case 'alphabetical':
+      return { sortKey: 'TITLE', reverse: false };
+    case 'default':
+    default:
+      return { sortKey: 'RELEVANCE', reverse: false };
+  }
 };
 
 export default function DiscoverPage() {
   const { requireAuth } = useAuth();
   const { toggleWishlist, isInWishlist } = useWishlist();
 
-  // Layout & UI States
-  const [layoutMode, setLayoutMode] = useState('studio'); // 'studio' (3-col) vs 'editorial' (2-col)
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  // Dynamic Collections & Products States
+  const [collectionsList, setCollectionsList] = useState([]);
+  const [productsList, setProductsList] = useState([]);
+  const [pageInfo, setPageInfo] = useState({ hasNextPage: false, endCursor: null });
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
-  // Active Filter States
+  // Search & Debounce States
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+
+  // Layout & Filter States
+  const [layoutMode] = useState('studio'); // 'studio' (3-col)
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedGenders, setSelectedGenders] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedFabrics, setSelectedFabrics] = useState([]);
   const [selectedComponents, setSelectedComponents] = useState([]);
-  const [selectedPrints, setSelectedPrints] = useState([]);
   const [sortBy, setSortBy] = useState('default');
 
-  // Dynamically extract option lists from filtered products for checkbox stability
-  const fabricsList = Array.from(new Set(filteredProducts.map(p => p.fabric?.trim()).filter(Boolean))).sort();
-  const componentsList = Array.from(new Set(filteredProducts.map(p => p.components?.trim()).filter(Boolean))).sort();
-  const printsList = Array.from(new Set(filteredProducts.map(p => p.print?.trim()).filter(p => p && p !== 'N/A'))).sort();
+  const sentinelRef = useRef(null);
 
-  // Filter application logic
-  let displayProducts = filteredProducts.filter(product => {
-    // 1. Search Query
-    if (searchQuery.trim() !== '') {
-      const query = searchQuery.toLowerCase();
-      const matchName = product.name?.toLowerCase().includes(query);
-      const matchDetails = product.details?.toLowerCase().includes(query);
-      const matchFabric = product.fabric?.toLowerCase().includes(query);
-      const matchCategory = product.category?.toLowerCase().includes(query);
-      const matchPrint = product.print?.toLowerCase().includes(query);
-      if (!matchName && !matchDetails && !matchFabric && !matchCategory && !matchPrint) return false;
+  // Fetch collections list dynamically from Shopify API
+  useEffect(() => {
+    fetchShopifyCollections().then(nodes => {
+      setCollectionsList(nodes || []);
+    });
+  }, []);
+
+  // Debounce search input by 300ms
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchInput);
+    }, 300);
+
+    return () => clearTimeout(handler);
+  }, [searchInput]);
+
+  // Fetch initial batch of products when debouncedSearchQuery or sortBy changes
+  const loadInitialProducts = useCallback(async () => {
+    setLoading(true);
+    const { sortKey, reverse } = getSortParams(sortBy);
+    const res = await fetchShopifyProducts({
+      query: debouncedSearchQuery,
+      first: 20,
+      after: null,
+      sortKey,
+      reverse,
+    });
+
+    const normalized = (res.products || []).map(normalizeDiscoverProduct);
+    setProductsList(normalized);
+    setPageInfo(res.pageInfo || { hasNextPage: false, endCursor: null });
+    setLoading(false);
+  }, [debouncedSearchQuery, sortBy]);
+
+  useEffect(() => {
+    loadInitialProducts();
+  }, [loadInitialProducts]);
+
+  // Load next batch of products for auto-pagination with deduplication
+  const loadMoreProducts = useCallback(async () => {
+    if (loading || loadingMore || !pageInfo.hasNextPage || !pageInfo.endCursor) return;
+    setLoadingMore(true);
+
+    const { sortKey, reverse } = getSortParams(sortBy);
+    const res = await fetchShopifyProducts({
+      query: debouncedSearchQuery,
+      first: 20,
+      after: pageInfo.endCursor,
+      sortKey,
+      reverse,
+    });
+
+    const normalized = (res.products || []).map(normalizeDiscoverProduct);
+    setProductsList(prev => {
+      const existingIds = new Set(prev.map(p => p.id));
+      const newUnique = normalized.filter(p => !existingIds.has(p.id));
+      return [...prev, ...newUnique];
+    });
+    setPageInfo(res.pageInfo || { hasNextPage: false, endCursor: null });
+    setLoadingMore(false);
+  }, [debouncedSearchQuery, sortBy, pageInfo, loading, loadingMore]);
+
+  // Intersection Observer for endless scrolling
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && pageInfo.hasNextPage && !loading && !loadingMore) {
+          loadMoreProducts();
+        }
+      },
+      { rootMargin: '300px' }
+    );
+
+    const currentSentinel = sentinelRef.current;
+    if (currentSentinel) {
+      observer.observe(currentSentinel);
     }
 
-    // 2. Gender / Section
+    return () => {
+      if (currentSentinel) {
+        observer.unobserve(currentSentinel);
+      }
+    };
+  }, [pageInfo.hasNextPage, loading, loadingMore, loadMoreProducts]);
+
+  // Helper to determine gender section for product
+  const isMensProduct = (p) => {
+    const cat = (p.category || '').toLowerCase();
+    const title = (p.title || '').toLowerCase();
+    return cat.includes('natural luxury') || cat.includes('printed stories') || cat.includes('modern classics') || cat.includes('men') || cat.includes('him') || title.includes('groom') || title.includes('men');
+  };
+
+  // Dynamically extract option lists from fetched products for filters
+  const fabricsList = Array.from(new Set(productsList.map(p => p.fabric?.trim()).filter(Boolean))).sort();
+  const componentsList = Array.from(new Set(productsList.map(p => p.components?.trim()).filter(Boolean))).sort();
+
+  // Client-side filter application for Gender, Category, Fabric, Pieces
+  const displayProducts = productsList.filter(product => {
+    // Filter out 'custom made' (Made for Moments) products
+    if (product.category === 'custom made') return false;
+
+    // Gender / Section
     if (selectedGenders.length > 0) {
-      const section = SECTION_MAP[product.category?.toLowerCase()];
+      const section = isMensProduct(product) ? 'men' : 'women';
       if (!selectedGenders.includes(section)) return false;
     }
 
-    // 3. Category / Collection
-    if (selectedCategories.length > 0 && !selectedCategories.includes(product.category?.toLowerCase())) return false;
+    // Category / Collection
+    if (selectedCategories.length > 0) {
+      const prodCat = product.category.toLowerCase();
+      const matchesCategory = selectedCategories.some(selectedCat => {
+        const s = selectedCat.toLowerCase();
+        return prodCat.includes(s) || s.includes(prodCat);
+      });
+      if (!matchesCategory) return false;
+    }
 
-    // 4. Fabric
+    // Fabric
     if (selectedFabrics.length > 0 && !selectedFabrics.includes(product.fabric?.trim())) return false;
 
-    // 5. Garment Pieces (Components)
+    // Garment Pieces (Components)
     if (selectedComponents.length > 0 && !selectedComponents.includes(product.components?.trim())) return false;
-
-    // 6. Prints / Craft Styles
-    if (selectedPrints.length > 0 && !selectedPrints.includes(product.print?.trim())) return false;
 
     return true;
   });
-
-  // Price parsing & formatting helpers
-  const parsePrice = (priceStr) => {
-    if (!priceStr || priceStr === 'N/A' || priceStr === 'Price on Request') return 0;
-    const sanitized = priceStr.replace(/[^\d]/g, '');
-    return parseInt(sanitized, 10) || 0;
-  };
-
-  const formatPrice = (price) => {
-    if (!price || price === 'N/A' || price === 'Price on Request') return 'Price on Request';
-    return `₹${price.replace('/-', '').replace('₹', '').replace(',', ',').trim()}`;
-  };
-
-  // Sorting logic
-  if (sortBy === 'price-low') {
-    displayProducts.sort((a, b) => parsePrice(a.price) - parsePrice(b.price));
-  } else if (sortBy === 'price-high') {
-    displayProducts.sort((a, b) => parsePrice(b.price) - parsePrice(a.price));
-  } else if (sortBy === 'alphabetical') {
-    displayProducts.sort((a, b) => a.name.localeCompare(b.name));
-  }
 
   // Animation triggers with GSAP
   useEffect(() => {
@@ -116,7 +220,6 @@ export default function DiscoverPage() {
 
     const { ScrollTrigger } = require('gsap/ScrollTrigger');
     gsap.registerPlugin(ScrollTrigger);
-
     gsap.config({ force3D: true });
 
     // Entrance animation for hero elements
@@ -129,13 +232,13 @@ export default function DiscoverPage() {
     // Staggered load for product cards
     const cards = document.querySelectorAll('.product-card');
     if (cards.length > 0) {
-      gsap.fromTo(cards, 
+      gsap.fromTo(cards,
         { y: 40, opacity: 0 },
-        { 
-          y: 0, 
-          opacity: 1, 
-          duration: 0.8, 
-          stagger: 0.08, 
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.8,
+          stagger: 0.08,
           ease: 'power3.out',
           scrollTrigger: {
             trigger: '.collection-products-grid',
@@ -148,10 +251,7 @@ export default function DiscoverPage() {
     return () => {
       ScrollTrigger.getAll().forEach(st => st.kill());
     };
-  }, [selectedGenders, selectedCategories, selectedFabrics, selectedComponents, selectedPrints, sortBy, layoutMode]);
-
-  const makeSlug = (name) =>
-    name.toLowerCase().replace(/ /g, '-').replace(/'/g, '').replace(/[^a-z0-9-]/g, '');
+  }, [selectedGenders, selectedCategories, selectedFabrics, selectedComponents, sortBy, productsList.length]);
 
   const toggleFilter = (list, setList, item) => {
     if (list.includes(item)) {
@@ -166,18 +266,16 @@ export default function DiscoverPage() {
     setSelectedCategories([]);
     setSelectedFabrics([]);
     setSelectedComponents([]);
-    setSelectedPrints([]);
     setSortBy('default');
-    setSearchQuery('');
+    setSearchInput('');
   };
 
-  const activeFiltersCount = 
-    selectedGenders.length + 
-    selectedCategories.length + 
-    selectedFabrics.length + 
-    selectedComponents.length + 
-    selectedPrints.length +
-    (searchQuery ? 1 : 0);
+  const activeFiltersCount =
+    selectedGenders.length +
+    selectedCategories.length +
+    selectedFabrics.length +
+    selectedComponents.length +
+    (searchInput ? 1 : 0);
 
   return (
     <>
@@ -200,8 +298,8 @@ export default function DiscoverPage() {
           <input
             type="text"
             placeholder="SEARCH SILHOUETTES, FABRICS, OR PRINTS..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             style={{
               width: '100%',
               padding: '16px 20px 16px 50px',
@@ -218,12 +316,12 @@ export default function DiscoverPage() {
             }}
             className="search-input-field"
           />
-          <svg 
-            width="16" 
-            height="16" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
             strokeWidth="2"
             style={{
               position: 'absolute',
@@ -236,9 +334,9 @@ export default function DiscoverPage() {
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
-          {searchQuery && (
+          {searchInput && (
             <button
-              onClick={() => setSearchQuery('')}
+              onClick={() => setSearchInput('')}
               style={{
                 position: 'absolute',
                 right: '20px',
@@ -267,28 +365,28 @@ export default function DiscoverPage() {
               <span className="filter-count">{activeFiltersCount}</span>
             ) : (
               <svg width="14" height="12" viewBox="0 0 14 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M1 2.5H13M3.5 6H10.5M5.5 9.5H8.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                <path d="M1 2.5H13M3.5 6H10.5M5.5 9.5H8.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
               </svg>
             )}
           </button>
 
           {activeFiltersCount > 0 && (
             <div className="active-filters-summary">
-              {searchQuery && (
+              {searchInput && (
                 <div className="active-filter-pill">
-                  <span>Search: "{searchQuery}"</span>
-                  <button onClick={() => setSearchQuery('')}>×</button>
+                  <span>Search: "{searchInput}"</span>
+                  <button onClick={() => setSearchInput('')}>×</button>
                 </div>
               )}
               {selectedGenders.map(g => (
                 <div key={g} className="active-filter-pill">
-                  <span>{g === 'women' ? 'Women' : g === 'men' ? 'Men' : 'Custom / Occasion'}</span>
+                  <span>{g === 'women' ? 'Womens wear' : 'Mens wear'}</span>
                   <button onClick={() => toggleFilter(selectedGenders, setSelectedGenders, g)}>×</button>
                 </div>
               ))}
               {selectedCategories.map(c => (
                 <div key={c} className="active-filter-pill">
-                  <span>{CATEGORY_NAMES[c] || c}</span>
+                  <span>{c}</span>
                   <button onClick={() => toggleFilter(selectedCategories, setSelectedCategories, c)}>×</button>
                 </div>
               ))}
@@ -304,46 +402,13 @@ export default function DiscoverPage() {
                   <button onClick={() => toggleFilter(selectedComponents, setSelectedComponents, c)}>×</button>
                 </div>
               ))}
-              {selectedPrints.map(p => (
-                <div key={p} className="active-filter-pill">
-                  <span>{p} Print</span>
-                  <button onClick={() => toggleFilter(selectedPrints, setSelectedPrints, p)}>×</button>
-                </div>
-              ))}
               <button className="btn-clear-all" onClick={clearAllFilters}>Clear All</button>
             </div>
           )}
         </div>
-        
-        <div className="controls-right" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <div className="layout-switchers" style={{ display: 'flex', alignItems: 'center', gap: '8px', borderRight: '1px solid rgba(0,0,0,0.1)', paddingRight: '16px' }}>
-            <button 
-              className={`btn-layout ${layoutMode === 'studio' ? 'active' : ''}`} 
-              onClick={() => setLayoutMode('studio')}
-              aria-label="Studio grid"
-              style={{ padding: '4px', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <rect x="2" y="2" width="5" height="20" rx="0.5" fill={layoutMode === 'studio' ? 'currentColor' : 'none'} />
-                <rect x="9.5" y="2" width="5" height="20" rx="0.5" fill={layoutMode === 'studio' ? 'currentColor' : 'none'} />
-                <rect x="17" y="2" width="5" height="20" rx="0.5" fill={layoutMode === 'studio' ? 'currentColor' : 'none'} />
-              </svg>
-            </button>
-            <button 
-              className={`btn-layout ${layoutMode === 'editorial' ? 'active' : ''}`} 
-              onClick={() => setLayoutMode('editorial')}
-              aria-label="Editorial grid"
-              style={{ padding: '4px', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <rect x="3" y="2" width="7" height="20" rx="0.5" fill={layoutMode === 'editorial' ? 'currentColor' : 'none'} />
-                <rect x="14" y="2" width="7" height="20" rx="0.5" fill={layoutMode === 'editorial' ? 'currentColor' : 'none'} />
-              </svg>
-            </button>
-          </div>
-
+        <div className="controls-right">
           <div className="sort-select-wrapper">
-            <select 
+            <select
               className="sort-select"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
@@ -359,75 +424,80 @@ export default function DiscoverPage() {
 
       {/* ─── PRODUCT GRID ─── */}
       <section className={`collection-products-grid grid-${layoutMode}`}>
-        {displayProducts.length === 0 ? (
-          <div className="collection-empty">
-            <p>No silhouettes match your search or filter selections.</p>
-            <button className="btn-primary" onClick={clearAllFilters} style={{ background: '#000', color: '#fff', border: '1px solid #000', fontFamily: 'var(--font-mono)', fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase', padding: '12px 24px', borderRadius: '40px', cursor: 'pointer', marginTop: '10px' }}>
+        {loading ? (
+          <div className="collection-loading-state" style={{ gridColumn: '1 / -1', textTransform: 'uppercase', letterSpacing: '2px', textAlign: 'center', padding: '100px 0', fontSize: '13px', color: '#666' }}>
+            Searching Archive...
+          </div>
+        ) : displayProducts.length === 0 ? (
+          <div className="collection-empty" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '100px 0' }}>
+            <p style={{ textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '20px' }}>
+              No silhouettes match your current search or filter selections.
+            </p>
+            <button className="btn-primary" onClick={clearAllFilters} style={{ padding: '12px 24px', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.2em' }}>
               Reset Filters
             </button>
           </div>
         ) : (
-          displayProducts.map((product) => {
-            const productSlug = makeSlug(product.name);
-            const productSection = SECTION_MAP[product.category?.toLowerCase()];
-            return (
-              <Link 
-                href={`/product/${productSlug}`}
-                key={product.name} 
-                className="product-card"
-              >
-                <div className="product-card-image-wrap">
-                  <img src={product.img} alt={product.name} loading="lazy" />
-                  {productSection && (
-                    <span className="card-badge">
-                      {productSection === 'women' ? "Women" : productSection === 'men' ? "Men" : "Custom"}
-                    </span>
-                  )}
-                  <div className="product-card-overlay">
-                    <span className="btn-card-quick-view">
-                      View Silhouette
-                    </span>
-                  </div>
+          displayProducts.map((product, idx) => (
+            <Link
+              href={`/products/${product.handle}`}
+              key={product.id ? `${product.id}-${idx}` : `${product.handle}-${idx}`}
+              className="product-card"
+            >
+              <div className="product-card-image-wrap">
+                <img src={product.img} alt={product.altText || product.name} loading="lazy" />
+                <div className="product-card-overlay">
+                  <span className="btn-card-quick-view">
+                    View Silhouette
+                  </span>
                 </div>
-                <div className="product-card-info">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <h3 className="product-card-name" style={{ margin: 0 }}>{product.name.toUpperCase()}</h3>
-                    <button
-                      className={`wishlist-heart-btn ${isInWishlist(product.name) ? 'active' : ''}`}
-                      onClick={(e) => {
-                        e.stopPropagation(); // prevent navigation
-                        e.preventDefault();  // prevent Link click trigger
-                        requireAuth(() => {
-                          toggleWishlist(product);
-                        });
-                      }}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        padding: '4px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: isInWishlist(product.name) ? '#b00' : 'inherit',
-                        transition: 'transform 0.2s'
-                      }}
-                    >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill={isInWishlist(product.name) ? '#b00' : 'none'} stroke={isInWishlist(product.name) ? '#b00' : 'currentColor'} strokeWidth="2">
-                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                      </svg>
-                    </button>
-                  </div>
-                  <div className="product-card-meta">
-                    <span className="product-card-fabric">{product.fabric?.toUpperCase() || 'PREMIUM'}</span>
-                    <span className="product-card-price">{formatPrice(product.price)}</span>
-                  </div>
+              </div>
+              <div className="product-card-info">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <h3 className="product-card-name" style={{ margin: 0 }}>{product.name.toUpperCase()}</h3>
+                  <button
+                    className={`wishlist-heart-btn ${isInWishlist(product.name) ? 'active' : ''}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      requireAuth(() => {
+                        toggleWishlist(product);
+                      });
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: isInWishlist(product.name) ? '#b00' : 'inherit',
+                      transition: 'transform 0.2s'
+                    }}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill={isInWishlist(product.name) ? '#b00' : 'none'} stroke={isInWishlist(product.name) ? '#b00' : 'currentColor'} strokeWidth="2">
+                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                    </svg>
+                  </button>
                 </div>
-              </Link>
-            );
-          })
+                <div className="product-card-meta">
+                  <span className="product-card-fabric">{product.fabric?.toUpperCase() || 'PREMIUM'}</span>
+                  <span className="product-card-price">{product.price}</span>
+                </div>
+              </div>
+            </Link>
+          ))
         )}
       </section>
+
+      {/* ─── ENDLESS SCROLL SENTINEL & AUTO-PAGINATION LOADER ─── */}
+      <div ref={sentinelRef} style={{ height: '20px', margin: '20px 0' }} />
+      {loadingMore && (
+        <div style={{ textAlign: 'center', padding: '20px 0', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '11px', color: '#888' }}>
+          Loading More Silhouettes...
+        </div>
+      )}
 
       {/* ─── LUXURY FILTERS SIDE DRAWER ─── */}
       <div className={`drawer-backdrop ${isFilterOpen ? 'show' : ''}`} onClick={() => setIsFilterOpen(false)}></div>
@@ -437,55 +507,61 @@ export default function DiscoverPage() {
           <button className="btn-close-filters" onClick={() => setIsFilterOpen(false)}>×</button>
         </div>
         <div className="filters-body">
-          {/* Section Filter */}
+          {/* Gender Filter */}
           <div className="filter-group">
-            <div className="filter-group-title">Section</div>
+            <div className="filter-group-title">Gender / Section</div>
             <div className="filter-options">
               <label className="filter-label">
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   checked={selectedGenders.includes('women')}
                   onChange={() => toggleFilter(selectedGenders, setSelectedGenders, 'women')}
                 />
-                <span>Women's Collections</span>
+                <span>Womens wear</span>
               </label>
               <label className="filter-label">
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   checked={selectedGenders.includes('men')}
                   onChange={() => toggleFilter(selectedGenders, setSelectedGenders, 'men')}
                 />
-                <span>Men's Collections</span>
+                <span>Mens wear</span>
               </label>
             </div>
           </div>
 
-          {/* Collection Specific Filters */}
-          <div className="filter-group">
-            <div className="filter-group-title">Collections</div>
-            <div className="filter-options">
-              {Object.entries(CATEGORY_NAMES).map(([key, value]) => (
-                <label key={key} className="filter-label">
-                  <input 
-                    type="checkbox" 
-                    checked={selectedCategories.includes(key)}
-                    onChange={() => toggleFilter(selectedCategories, setSelectedCategories, key)}
-                  />
-                  <span>{value}</span>
-                </label>
-              ))}
+          {/* Dynamic Collection Categories Filter from Shopify API */}
+          {collectionsList.length > 0 && (
+            <div className="filter-group">
+              <div className="filter-group-title">Collections</div>
+              <div className="filter-options">
+                {collectionsList.map(col => {
+                  const colTitle = col.title || '';
+                  const colKey = colTitle.toLowerCase();
+                  return (
+                    <label key={col.id || col.handle} className="filter-label">
+                      <input
+                        type="checkbox"
+                        checked={selectedCategories.includes(colKey)}
+                        onChange={() => toggleFilter(selectedCategories, setSelectedCategories, colKey)}
+                      />
+                      <span>{colTitle}</span>
+                    </label>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Fabric Filter */}
+          {/* Fabrics Filter */}
           {fabricsList.length > 0 && (
             <div className="filter-group">
               <div className="filter-group-title">Fabrics</div>
-              <div className="filter-options" style={{ maxHeight: '180px', overflowY: 'auto', paddingRight: '10px' }}>
+              <div className="filter-options">
                 {fabricsList.map(fabric => (
                   <label key={fabric} className="filter-label">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       checked={selectedFabrics.includes(fabric)}
                       onChange={() => toggleFilter(selectedFabrics, setSelectedFabrics, fabric)}
                     />
@@ -496,38 +572,19 @@ export default function DiscoverPage() {
             </div>
           )}
 
-          {/* Garment Pieces Filter */}
+          {/* Components Filter */}
           {componentsList.length > 0 && (
             <div className="filter-group">
               <div className="filter-group-title">Garment Pieces</div>
               <div className="filter-options">
                 {componentsList.map(comp => (
                   <label key={comp} className="filter-label">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       checked={selectedComponents.includes(comp)}
                       onChange={() => toggleFilter(selectedComponents, setSelectedComponents, comp)}
                     />
-                    <span>{comp} Piece Set</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Prints / Craft Styles Filter */}
-          {printsList.length > 0 && (
-            <div className="filter-group">
-              <div className="filter-group-title">Prints / Craft Styles</div>
-              <div className="filter-options" style={{ maxHeight: '180px', overflowY: 'auto', paddingRight: '10px' }}>
-                {printsList.map(print => (
-                  <label key={print} className="filter-label">
-                    <input 
-                      type="checkbox" 
-                      checked={selectedPrints.includes(print)}
-                      onChange={() => toggleFilter(selectedPrints, setSelectedPrints, print)}
-                    />
-                    <span>{print} Print</span>
+                    <span>{comp} Piece set</span>
                   </label>
                 ))}
               </div>

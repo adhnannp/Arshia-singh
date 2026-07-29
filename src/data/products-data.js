@@ -1,4 +1,4 @@
-export const products = [
+const products = [
   {
     "name": "RANGREZ BLAZER SET",
     "price": "10000/-",
