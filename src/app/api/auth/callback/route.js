@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import {
   exchangeCodeForTokens,
-  fetchCustomerAccountProfile,
+  getCustomerProfile,
 } from '../../../../lib/shopify/customer-account';
 
 export const runtime = 'edge';
@@ -42,13 +42,11 @@ export async function GET(request) {
     // 3. Exchange auth code + verifier for tokens
     const tokens = await exchangeCodeForTokens({ code, codeVerifier, redirectUri });
 
-    // 4. Fetch customer profile immediately
-    let customerProfile = null;
-    try {
-      customerProfile = await fetchCustomerAccountProfile(tokens.accessToken);
-    } catch (profileErr) {
-      console.warn('[callback] Could not fetch customer profile:', profileErr.message);
-    }
+    // 4. Resolve customer profile from ID token claims + Customer Account API
+    const customerProfile = await getCustomerProfile({
+      accessToken: tokens.accessToken,
+      idToken: tokens.idToken,
+    });
 
     // 5. Build session payload to store in HTTP-only cookie
     const session = {
