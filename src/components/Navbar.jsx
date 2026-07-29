@@ -32,7 +32,7 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState('');
   const { cartItems, setIsCartOpen } = useCart();
-  const { user, logout, requireAuth } = useAuth();
+  const { user, logout, requireAuth, setLoginModalOpen, setModalView } = useAuth();
   const { wishlistItems, moveToCart, toggleWishlist } = useWishlist();
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const overlayRef = useRef(null);
@@ -80,15 +80,31 @@ export default function Navbar() {
               className="profile-toggle"
               onClick={() => {
                 if (user) {
-                  setProfileDropdownOpen(!profileDropdownOpen);
+                  setModalView('profile');
+                  setLoginModalOpen(true);
                 } else {
-                  requireAuth(() => {});
+                  setModalView('login');
+                  setLoginModalOpen(true);
                 }
               }}
               aria-label="Profile"
             >
               {user ? (
-                <img src={user.avatar} alt={user.name} className="nav-profile-avatar" />
+                <div style={{
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: '#111',
+                  color: '#FAF9F6',
+                  fontSize: '11px',
+                  fontWeight: '600',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontFamily: 'var(--font-mono)'
+                }}>
+                  {user.firstName ? user.firstName.charAt(0).toUpperCase() : 'U'}
+                </div>
               ) : (
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="profile-icon-svg" style={{ display: 'block' }}>
                   <path d="M20 21C20 18.2386 16.4183 16 12 16C7.58172 16 4 18.2386 4 21M12 12C9.79086 12 8 10.2091 8 8C8 5.79086 9.79086 4 12 4C14.2091 4 16 5.79086 16 8C16 10.2091 14.2091 12 12 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -274,7 +290,7 @@ export default function Navbar() {
               <Link href="/privacy-policy" onClick={closeMenu}>Privacy Policy</Link>
               <Link href="/exchange-policy" onClick={closeMenu}>Exchange Policy</Link>
               <Link href="/returns-and-refunds" onClick={closeMenu}>Returns and Refunds</Link>
-              <Link href="/terms-and-conditions" onClick={closeMenu}>Terms & Conditions</Link>
+              <Link href="/terms-and-conditions" onClick={closeMenu}>Terms &amp; Conditions</Link>
             </div>
             <div className="m-footer-right">LOCAL TIME <span className="menu-local-time">{currentTime}</span></div>
           </div>
