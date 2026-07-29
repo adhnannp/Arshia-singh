@@ -1,5 +1,3 @@
-import crypto from 'crypto';
-
 // ─── Shopify Customer Account API Configuration ─────────────────────────────
 export const CA_CONFIG = {
   CLIENT_ID: 'f22d876c-2d19-4b39-8334-f8856fcb3412',
@@ -11,45 +9,75 @@ export const CA_CONFIG = {
   SCOPES: 'openid email customer-account-api:full',
 };
 
-// ─── PKCE Utilities ──────────────────────────────────────────────────────────
+// ─── Web Crypto Utilities (Edge Runtime compatible) ──────────────────────────
 
 /**
- * Generate a cryptographically secure code verifier (RFC 7636)
+ * Encode a Uint8Array to base64url string
+ */
+function base64UrlEncode(buffer) {
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary)
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+}
+
+/**
+ * Generate a cryptographically secure PKCE Code Verifier (RFC 7636)
+ * Uses Web Crypto API — Edge Runtime compatible
  */
 export function generateCodeVerifier() {
-  return crypto.randomBytes(32).toString('base64url');
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return base64UrlEncode(array);
 }
 
 /**
  * Compute S256 code challenge from a code verifier (RFC 7636)
+ * Uses Web Crypto API (crypto.subtle) — Edge Runtime compatible
+ * @returns {Promise<string>}
  */
-export function generateCodeChallenge(verifier) {
-  return crypto
-    .createHash('sha256')
-    .update(verifier)
-    .digest('base64url');
+export async function generateCodeChallenge(verifier) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(verifier);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return base64UrlEncode(digest);
 }
 
 /**
  * Generate a random state string (CSRF protection)
  */
 export function generateState() {
-  return crypto.randomBytes(16).toString('hex');
+  const array = new Uint8Array(16);
+  crypto.getRandomValues(array);
+  return Array.from(array)
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
 }
 
 /**
  * Generate a random nonce string (replay attack protection)
  */
 export function generateNonce() {
-  return crypto.randomBytes(16).toString('hex');
+  const array = new Uint8Array(16);
+  crypto.getRandomValues(array);
+  return Array.from(array)
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
 }
 
 // ─── OAuth 2.0 Flow Helpers ──────────────────────────────────────────────────
 
 /**
  * Build authorization URL to redirect user to Shopify login
+ * @returns {Promise<string>}
  */
-export function buildAuthorizationUrl({ redirectUri, state, nonce, codeChallenge }) {
+export async function buildAuthorizationUrl({ redirectUri, state, nonce, codeVerifier }) {
+  const codeChallenge = await generateCodeChallenge(codeVerifier);
   const params = new URLSearchParams({
     client_id: CA_CONFIG.CLIENT_ID,
     response_type: 'code',
@@ -65,6 +93,7 @@ export function buildAuthorizationUrl({ redirectUri, state, nonce, codeChallenge
 
 /**
  * Exchange authorization code + verifier for tokens
+ * @returns {Promise<{accessToken, refreshToken, idToken, expiresIn, expiresAt}>}
  */
 export async function exchangeCodeForTokens({ code, codeVerifier, redirectUri }) {
   const body = new URLSearchParams({
@@ -99,6 +128,7 @@ export async function exchangeCodeForTokens({ code, codeVerifier, redirectUri })
 
 /**
  * Refresh access token using refresh token
+ * @returns {Promise<{accessToken, refreshToken, idToken, expiresIn, expiresAt}>}
  */
 export async function refreshAccessToken(refreshToken) {
   const body = new URLSearchParams({
@@ -133,6 +163,7 @@ export async function refreshAccessToken(refreshToken) {
 
 /**
  * Fetch customer profile, addresses and recent orders from Customer Account API
+ * @returns {Promise<object|null>}
  */
 export async function fetchCustomerAccountProfile(accessToken) {
   const query = `

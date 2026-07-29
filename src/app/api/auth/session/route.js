@@ -4,6 +4,8 @@ import {
   fetchCustomerAccountProfile,
 } from '../../../../lib/shopify/customer-account';
 
+export const runtime = 'edge';
+
 export async function GET(request) {
   try {
     const sessionCookie = request.cookies.get('as_session')?.value;

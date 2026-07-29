@@ -1,18 +1,18 @@
 import { NextResponse } from 'next/server';
 import {
   generateCodeVerifier,
-  generateCodeChallenge,
   generateState,
   generateNonce,
   buildAuthorizationUrl,
   getRedirectUri,
 } from '../../../../lib/shopify/customer-account';
 
+export const runtime = 'edge';
+
 export async function GET(request) {
   try {
     // 1. Generate PKCE values
     const codeVerifier = generateCodeVerifier();
-    const codeChallenge = generateCodeChallenge(codeVerifier);
     const state = generateState();
     const nonce = generateNonce();
 
@@ -20,11 +20,11 @@ export async function GET(request) {
     const redirectUri = getRedirectUri(request.url);
 
     // 3. Build Shopify authorization URL
-    const authorizationUrl = buildAuthorizationUrl({
+    const authorizationUrl = await buildAuthorizationUrl({
       redirectUri,
       state,
       nonce,
-      codeChallenge,
+      codeVerifier,
     });
 
     // 4. Set secure HTTP-only cookies to persist verifier, state & nonce for callback

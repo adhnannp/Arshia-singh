@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { buildLogoutUrl } from '../../../../lib/shopify/customer-account';
 
+export const runtime = 'edge';
+
 export async function GET(request) {
   try {
     // Read session to get idToken for Shopify logout hint
