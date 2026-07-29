@@ -28,7 +28,6 @@ function base64UrlEncode(buffer) {
 
 /**
  * Generate a cryptographically secure PKCE Code Verifier (RFC 7636)
- * Uses Web Crypto API — Edge Runtime compatible
  */
 export function generateCodeVerifier() {
   const array = new Uint8Array(32);
@@ -38,8 +37,6 @@ export function generateCodeVerifier() {
 
 /**
  * Compute S256 code challenge from a code verifier (RFC 7636)
- * Uses Web Crypto API (crypto.subtle) — Edge Runtime compatible
- * @returns {Promise<string>}
  */
 export async function generateCodeChallenge(verifier) {
   const encoder = new TextEncoder();
@@ -70,11 +67,57 @@ export function generateNonce() {
     .join('');
 }
 
+// ─── JWT Parsing ─────────────────────────────────────────────────────────────
+
+/**
+ * Parse OIDC ID Token payload safely without external libraries
+ */
+export function parseIdToken(idToken) {
+  if (!idToken) return null;
+  try {
+    const parts = idToken.split('.');
+    if (parts.length < 2) return null;
+    let base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    while (base64.length % 4) {
+      base64 += '=';
+    }
+    const jsonString = atob(base64);
+    return JSON.parse(jsonString);
+  } catch (e) {
+    console.error('[CA] Failed to parse idToken:', e);
+    return null;
+  }
+}
+
+/**
+ * Build baseline customer profile from OIDC ID Token claims
+ */
+export function buildCustomerFromIdToken(idToken) {
+  const claims = parseIdToken(idToken);
+  if (!claims) return null;
+
+  const email = claims.email || '';
+  const firstName = claims.given_name || claims.name || (email ? email.split('@')[0] : 'Valued Customer');
+  const lastName = claims.family_name || '';
+  const name = `${firstName} ${lastName}`.trim() || email;
+
+  return {
+    id: claims.sub || 'customer',
+    firstName,
+    lastName,
+    name,
+    email,
+    phone: claims.phone_number || '',
+    avatar: `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(email || 'customer')}`,
+    defaultAddress: null,
+    orders: { edges: [] }
+  };
+}
+
 // ─── OAuth 2.0 Flow Helpers ──────────────────────────────────────────────────
 
 /**
  * Build authorization URL to redirect user to Shopify login
- * @returns {Promise<string>}
  */
 export async function buildAuthorizationUrl({ redirectUri, state, nonce, codeVerifier }) {
   const codeChallenge = await generateCodeChallenge(codeVerifier);
@@ -93,7 +136,6 @@ export async function buildAuthorizationUrl({ redirectUri, state, nonce, codeVer
 
 /**
  * Exchange authorization code + verifier for tokens
- * @returns {Promise<{accessToken, refreshToken, idToken, expiresIn, expiresAt}>}
  */
 export async function exchangeCodeForTokens({ code, codeVerifier, redirectUri }) {
   const body = new URLSearchParams({
@@ -128,7 +170,6 @@ export async function exchangeCodeForTokens({ code, codeVerifier, redirectUri })
 
 /**
  * Refresh access token using refresh token
- * @returns {Promise<{accessToken, refreshToken, idToken, expiresIn, expiresAt}>}
  */
 export async function refreshAccessToken(refreshToken) {
   const body = new URLSearchParams({
@@ -163,7 +204,6 @@ export async function refreshAccessToken(refreshToken) {
 
 /**
  * Fetch customer profile, addresses and recent orders from Customer Account API
- * @returns {Promise<object|null>}
  */
 export async function fetchCustomerAccountProfile(accessToken) {
   const query = `
@@ -199,14 +239,6 @@ export async function fetchCustomerAccountProfile(accessToken) {
                 amount
                 currencyCode
               }
-              lineItems(first: 5) {
-                edges {
-                  node {
-                    title
-                    quantity
-                  }
-                }
-              }
             }
           }
         }
@@ -214,6 +246,7 @@ export async function fetchCustomerAccountProfile(accessToken) {
     }
   `;
 
+  // Note: Customer Account API GraphQL accepts token in Authorization header
   const response = await fetch(CA_CONFIG.GRAPHQL_ENDPOINT, {
     method: 'POST',
     headers: {
@@ -232,7 +265,6 @@ export async function fetchCustomerAccountProfile(accessToken) {
   const result = await response.json();
   if (result.errors?.length) {
     console.error('[CA] GraphQL errors:', result.errors);
-    throw new Error(result.errors[0].message);
   }
 
   const raw = result?.data?.customer;
@@ -266,6 +298,36 @@ export async function fetchCustomerAccountProfile(accessToken) {
   };
 }
 
+/**
+ * Robust profile resolution: combines ID token claims + GraphQL API data
+ */
+export async function getCustomerProfile({ accessToken, idToken }) {
+  let customer = buildCustomerFromIdToken(idToken);
+
+  if (accessToken) {
+    try {
+      const apiCustomer = await fetchCustomerAccountProfile(accessToken);
+      if (apiCustomer) {
+        customer = {
+          ...customer,
+          ...apiCustomer,
+          firstName: apiCustomer.firstName || customer?.firstName || '',
+          lastName: apiCustomer.lastName || customer?.lastName || '',
+          name: apiCustomer.name || customer?.name || customer?.email || '',
+          email: apiCustomer.email || customer?.email || '',
+          phone: apiCustomer.phone || customer?.phone || '',
+          defaultAddress: apiCustomer.defaultAddress || customer?.defaultAddress || null,
+          orders: apiCustomer.orders?.edges?.length ? apiCustomer.orders : (customer?.orders || { edges: [] })
+        };
+      }
+    } catch (err) {
+      console.warn('[CA] GraphQL profile fetch notice (using ID token claims):', err.message);
+    }
+  }
+
+  return customer;
+}
+
 // ─── Logout ──────────────────────────────────────────────────────────────────
 
 /**
@@ -283,7 +345,6 @@ export function buildLogoutUrl({ idToken, postLogoutRedirectUri }) {
 
 /**
  * Detect the correct redirect URI from the incoming request origin.
- * Works for both localhost dev and production domain.
  */
 export function getRedirectUri(requestUrl) {
   const url = new URL(requestUrl);

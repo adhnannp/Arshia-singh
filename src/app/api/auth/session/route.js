@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import {
   refreshAccessToken,
-  fetchCustomerAccountProfile,
+  getCustomerProfile,
 } from '../../../../lib/shopify/customer-account';
 
 export const runtime = 'edge';
@@ -28,45 +28,49 @@ export async function GET(request) {
     const isExpired = !expiresAt || Date.now() > expiresAt - fiveMinutes;
 
     let currentAccessToken = accessToken;
+    let currentIdToken = idToken;
     let updatedSession = session;
 
     if (isExpired && refreshToken) {
       try {
         const refreshed = await refreshAccessToken(refreshToken);
         currentAccessToken = refreshed.accessToken;
+        if (refreshed.idToken) currentIdToken = refreshed.idToken;
         updatedSession = {
           ...session,
           accessToken: refreshed.accessToken,
           refreshToken: refreshed.refreshToken,
-          idToken: refreshed.idToken,
+          idToken: currentIdToken,
           expiresAt: refreshed.expiresAt,
         };
       } catch (refreshErr) {
         console.warn('[session] Token refresh failed, user must re-login:', refreshErr.message);
-        // Clear the invalid session
+        // Clear invalid session
         const response = NextResponse.json({ authenticated: false, customer: null });
         response.cookies.set('as_session', '', { httpOnly: true, maxAge: 0, path: '/' });
         return response;
       }
     }
 
-    // 2. Attempt to refresh customer profile from Customer Account API
-    let freshCustomer = customer;
-    try {
-      freshCustomer = await fetchCustomerAccountProfile(currentAccessToken);
-    } catch (profileErr) {
-      console.warn('[session] Could not refresh customer profile, using cached:', profileErr.message);
+    // 2. Resolve fresh customer profile using ID token claims + Customer Account API
+    let freshCustomer = await getCustomerProfile({
+      accessToken: currentAccessToken,
+      idToken: currentIdToken,
+    });
+
+    if (!freshCustomer) {
+      freshCustomer = customer;
     }
 
     updatedSession.customer = freshCustomer;
 
-    // 3. Build response with fresh session cookie and customer data
+    // 3. Build response with session status and customer profile
     const response = NextResponse.json({
-      authenticated: true,
+      authenticated: Boolean(freshCustomer),
       customer: freshCustomer,
     });
 
-    // Update session cookie with any refreshed tokens / fresh profile
+    // Update session cookie with fresh customer data & tokens
     response.cookies.set('as_session', JSON.stringify(updatedSession), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
