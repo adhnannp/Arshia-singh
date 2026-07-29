@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { useAuth } from './AuthContext';
 
 export default function LoginModal() {
@@ -8,100 +7,11 @@ export default function LoginModal() {
     user,
     loginModalOpen,
     setLoginModalOpen,
-    modalView,
-    setModalView,
     login,
-    register,
-    recoverPassword,
     logout
   } = useAuth();
 
-  // Login form state
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-
-  // Register form state
-  const [regFirstName, setRegFirstName] = useState('');
-  const [regLastName, setRegLastName] = useState('');
-  const [regEmail, setRegEmail] = useState('');
-  const [regPhone, setRegPhone] = useState('');
-  const [regPassword, setRegPassword] = useState('');
-  const [acceptsMarketing, setAcceptsMarketing] = useState(true);
-
-  // Forgot password state
-  const [forgotEmail, setForgotEmail] = useState('');
-
-  // Status & feedback
-  const [submitting, setSubmitting] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
-
   if (!loginModalOpen) return null;
-
-  const resetFeedback = () => {
-    setErrorMsg('');
-    setSuccessMsg('');
-  };
-
-  const handleLoginSubmit = async (e) => {
-    e.preventDefault();
-    resetFeedback();
-    if (!loginEmail || !loginPassword) {
-      setErrorMsg('Please enter both email and password');
-      return;
-    }
-
-    setSubmitting(true);
-    const res = await login(loginEmail, loginPassword);
-    setSubmitting(false);
-
-    if (!res.success) {
-      setErrorMsg(res.error || 'Invalid credentials');
-    }
-  };
-
-  const handleRegisterSubmit = async (e) => {
-    e.preventDefault();
-    resetFeedback();
-    if (!regFirstName || !regEmail || !regPassword) {
-      setErrorMsg('Please fill in all required fields');
-      return;
-    }
-
-    setSubmitting(true);
-    const res = await register({
-      firstName: regFirstName,
-      lastName: regLastName,
-      email: regEmail,
-      phone: regPhone,
-      password: regPassword,
-      acceptsMarketing
-    });
-    setSubmitting(false);
-
-    if (!res.success) {
-      setErrorMsg(res.error || 'Registration failed');
-    }
-  };
-
-  const handleRecoverSubmit = async (e) => {
-    e.preventDefault();
-    resetFeedback();
-    if (!forgotEmail) {
-      setErrorMsg('Please enter your email address');
-      return;
-    }
-
-    setSubmitting(true);
-    const res = await recoverPassword(forgotEmail);
-    setSubmitting(false);
-
-    if (!res.success) {
-      setErrorMsg(res.error || 'Failed to send recovery instructions');
-    } else {
-      setSuccessMsg('Reset instructions sent! Please check your email inbox.');
-    }
-  };
 
   return (
     <div className="login-modal-overlay" onClick={() => setLoginModalOpen(false)}>
@@ -173,203 +83,75 @@ export default function LoginModal() {
               className="logout-btn"
               onClick={async () => {
                 await logout();
-                setModalView('login');
               }}
             >
               Sign Out
             </button>
           </div>
         ) : (
-          /* LOGGED-OUT AUTHENTICATION VIEWS (LOGIN / REGISTER / FORGOT PASSWORD) */
+          /* LOGGED-OUT: OAuth 2.0 Sign-In View */
           <div className="auth-forms-container">
-            {/* View Selector Tabs */}
-            {modalView !== 'forgot_password' && (
-              <div className="auth-tab-selector">
-                <button
-                  type="button"
-                  className={`tab-btn ${modalView === 'login' ? 'active' : ''}`}
-                  onClick={() => { resetFeedback(); setModalView('login'); }}
-                >
-                  Sign In
-                </button>
-                <button
-                  type="button"
-                  className={`tab-btn ${modalView === 'register' ? 'active' : ''}`}
-                  onClick={() => { resetFeedback(); setModalView('register'); }}
-                >
-                  Create Account
-                </button>
+            <div className="auth-form">
+              <h2 className="login-modal-title">WELCOME BACK</h2>
+              <p className="login-modal-desc">
+                Sign in securely via your Arshia Singh account. Manage your orders,
+                addresses, and wishlist in one place.
+              </p>
+
+              {/* Shopify Customer Account OAuth Button */}
+              <button
+                id="shopify-oauth-signin-btn"
+                className="primary-auth-btn shopify-oauth-btn"
+                onClick={() => login()}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: '10px', flexShrink: 0 }}>
+                  <path d="M20 21C20 18.2386 16.4183 16 12 16C7.58172 16 4 18.2386 4 21M12 12C9.79086 12 8 10.2091 8 8C8 5.79086 9.79086 4 12 4C14.2091 4 16 5.79086 16 8C16 10.2091 14.2091 12 12 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                CONTINUE TO SIGN IN
+              </button>
+
+              <p className="oauth-info-text">
+                New to Arshia Singh? You can create an account on the secure sign-in page.
+              </p>
+
+              <div className="oauth-security-badge">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 22C12 22 4 18 4 11V5L12 2L20 5V11C20 18 12 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Secured by Shopify · OAuth 2.0 + PKCE
               </div>
-            )}
-
-            {/* ERROR / SUCCESS ALERTS */}
-            {errorMsg && <div className="auth-alert error-alert">{errorMsg}</div>}
-            {successMsg && <div className="auth-alert success-alert">{successMsg}</div>}
-
-            {/* LOGIN FORM */}
-            {modalView === 'login' && (
-              <form onSubmit={handleLoginSubmit} className="auth-form">
-                <h2 className="login-modal-title">WELCOME BACK</h2>
-                <p className="login-modal-desc">Access your orders, saved addresses, and tailored wishlist.</p>
-
-                <div className="form-group">
-                  <label className="input-label">EMAIL ADDRESS</label>
-                  <input
-                    type="email"
-                    required
-                    value={loginEmail}
-                    onChange={(e) => setLoginEmail(e.target.value)}
-                    placeholder="name@example.com"
-                    className="luxury-input"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <div className="label-row">
-                    <label className="input-label">PASSWORD</label>
-                    <button
-                      type="button"
-                      className="forgot-link"
-                      onClick={() => { resetFeedback(); setModalView('forgot_password'); }}
-                    >
-                      Forgot?
-                    </button>
-                  </div>
-                  <input
-                    type="password"
-                    required
-                    value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="luxury-input"
-                  />
-                </div>
-
-                <button type="submit" className="primary-auth-btn" disabled={submitting}>
-                  {submitting ? 'SIGNING IN...' : 'SIGN IN'}
-                </button>
-              </form>
-            )}
-
-            {/* REGISTRATION FORM */}
-            {modalView === 'register' && (
-              <form onSubmit={handleRegisterSubmit} className="auth-form">
-                <h2 className="login-modal-title">BECOME A MEMBER</h2>
-                <p className="login-modal-desc">Join our world of conscious luxury and exclusive privileges.</p>
-
-                <div className="form-row">
-                  <div className="form-group half">
-                    <label className="input-label">FIRST NAME *</label>
-                    <input
-                      type="text"
-                      required
-                      value={regFirstName}
-                      onChange={(e) => setRegFirstName(e.target.value)}
-                      placeholder="Arshia"
-                      className="luxury-input"
-                    />
-                  </div>
-                  <div className="form-group half">
-                    <label className="input-label">LAST NAME</label>
-                    <input
-                      type="text"
-                      value={regLastName}
-                      onChange={(e) => setRegLastName(e.target.value)}
-                      placeholder="Singh"
-                      className="luxury-input"
-                    />
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label className="input-label">EMAIL ADDRESS *</label>
-                  <input
-                    type="email"
-                    required
-                    value={regEmail}
-                    onChange={(e) => setRegEmail(e.target.value)}
-                    placeholder="name@example.com"
-                    className="luxury-input"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="input-label">MOBILE PHONE NUMBER</label>
-                  <input
-                    type="tel"
-                    value={regPhone}
-                    onChange={(e) => setRegPhone(e.target.value)}
-                    placeholder="+91 98765 43210"
-                    className="luxury-input"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="input-label">PASSWORD *</label>
-                  <input
-                    type="password"
-                    required
-                    minLength={5}
-                    value={regPassword}
-                    onChange={(e) => setRegPassword(e.target.value)}
-                    placeholder="At least 5 characters"
-                    className="luxury-input"
-                  />
-                </div>
-
-                <div className="checkbox-group">
-                  <label className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={acceptsMarketing}
-                      onChange={(e) => setAcceptsMarketing(e.target.checked)}
-                    />
-                    <span>Subscribe to our exclusive collection updates & private previews</span>
-                  </label>
-                </div>
-
-                <button type="submit" className="primary-auth-btn" disabled={submitting}>
-                  {submitting ? 'CREATING ACCOUNT...' : 'CREATE ACCOUNT'}
-                </button>
-              </form>
-            )}
-
-            {/* FORGOT PASSWORD FORM */}
-            {modalView === 'forgot_password' && (
-              <form onSubmit={handleRecoverSubmit} className="auth-form">
-                <h2 className="login-modal-title">RESET PASSWORD</h2>
-                <p className="login-modal-desc">Enter your email address and we'll send you reset instructions.</p>
-
-                <div className="form-group">
-                  <label className="input-label">EMAIL ADDRESS</label>
-                  <input
-                    type="email"
-                    required
-                    value={forgotEmail}
-                    onChange={(e) => setForgotEmail(e.target.value)}
-                    placeholder="name@example.com"
-                    className="luxury-input"
-                  />
-                </div>
-
-                <button type="submit" className="primary-auth-btn" disabled={submitting}>
-                  {submitting ? 'SENDING...' : 'SEND INSTRUCTIONS'}
-                </button>
-
-                <button
-                  type="button"
-                  className="back-to-login-btn"
-                  onClick={() => { resetFeedback(); setModalView('login'); }}
-                >
-                  ← Return to Sign In
-                </button>
-              </form>
-            )}
+            </div>
           </div>
         )}
       </div>
 
       <style jsx global>{`
+        .shopify-oauth-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 18px;
+        }
+        .oauth-info-text {
+          font-size: 11px;
+          color: #888;
+          text-align: center;
+          line-height: 1.6;
+          margin: 0 0 16px 0;
+        }
+        .oauth-security-badge {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          font-family: var(--font-mono, monospace);
+          font-size: 9px;
+          letter-spacing: 0.12em;
+          color: #aaa;
+          padding: 8px 0;
+          border-top: 1px solid #E5E2DC;
+        }
+
         @keyframes fadeIn {
           from { opacity: 0; }
           to { opacity: 1; }
