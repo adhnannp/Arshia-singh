@@ -302,7 +302,8 @@ a {
   justify-content: center;
   align-items: center;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* Ambient glow backdrops */
@@ -367,13 +368,13 @@ a {
 .menu-container {
   width: 90%;
   max-width: 1400px;
-  height: 85vh;
+  min-height: 85vh;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   box-sizing: border-box;
   z-index: 5;
-  padding: 60px 0 20px;
+  padding: 50px 0 20px;
 }
 
 /* Left Column: Visual Showcase Removed */

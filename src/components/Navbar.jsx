@@ -6,19 +6,10 @@ import { useCart } from './CartContext';
 import { useAuth } from './AuthContext';
 import { useWishlist } from './WishlistContext';
 import gsap from 'gsap';
+import { fetchShopifyCollections } from '../lib/shopify/queries/collections';
 
-const WOMEN_LINKS = [
-  { label: 'Matching Moods', href: '/collections/matching-moods', img: '/assets/new_coll_2.png' },
-  { label: 'Flow State', href: '/collections/flow-state', img: '/assets/new_coll_5.JPG' },
-  { label: 'Power Layers', href: '/collections/power-layers', img: '/assets/new_coll_3.png' },
-  { label: 'Six Yards of Good', href: '/collections/six-yards-of-good', img: '/assets/new_coll_1.jpg' },
-];
-
-const MEN_LINKS = [
-  { label: 'Natural Luxury', href: '/collections/natural-luxury', img: '/assets/new_coll_6.jpg' },
-  { label: 'Printed Stories', href: '/collections/printed-stories', img: '/assets/new_coll_7.jpg' },
-  { label: 'Modern Classics', href: '/collections/modern-classics', img: '/assets/new_coll_3.png' },
-];
+const WOMEN_HANDLES = ['matching-moods', 'flow-state', 'power-layers', 'six-yards-of-good'];
+const MEN_HANDLES = ['natural-luxury', 'printed-stories', 'modern-classics'];
 
 const CONNECT_LINKS = [
   { label: 'Discover', href: '/discover', external: false },
@@ -32,10 +23,54 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState('');
   const { cartItems, setIsCartOpen } = useCart();
-  const { user, logout, requireAuth, setLoginModalOpen, setModalView } = useAuth();
+  const { user, logout, setLoginModalOpen, setModalView } = useAuth();
   const { wishlistItems, moveToCart, toggleWishlist } = useWishlist();
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const overlayRef = useRef(null);
+
+  // Dynamic collections API integration (100% dynamic, no static link fallbacks)
+  const [womenLinks, setWomenLinks] = useState([]);
+  const [menLinks, setMenLinks] = useState([]);
+  const [madeForMomentsHref, setMadeForMomentsHref] = useState('/collections/custom-made-for-moments');
+
+  useEffect(() => {
+    async function loadCollections() {
+      try {
+        const nodes = await fetchShopifyCollections();
+        if (nodes && nodes.length > 0) {
+          const fetchedWomen = [];
+          const fetchedMen = [];
+          let customMomentsLink = '/collections/custom-made-for-moments';
+
+          nodes.forEach((node) => {
+            const metafieldVal = node.metafield?.value?.trim()?.toLowerCase() || '';
+            const handle = node.handle?.toLowerCase() || '';
+            const title = node.title?.toLowerCase() || '';
+            const item = {
+              label: node.title,
+              href: `/collections/${node.handle}`,
+              img: node.image?.url || '/assets/new_coll_3.png',
+            };
+
+            if (handle === 'custom-made-for-moments' || title.includes('custom made')) {
+              customMomentsLink = `/collections/${node.handle}`;
+            } else if (metafieldVal === 'women' || WOMEN_HANDLES.includes(handle)) {
+              fetchedWomen.push(item);
+            } else if (metafieldVal === 'men' || MEN_HANDLES.includes(handle)) {
+              fetchedMen.push(item);
+            }
+          });
+
+          setWomenLinks(fetchedWomen);
+          setMenLinks(fetchedMen);
+          setMadeForMomentsHref(customMomentsLink);
+        }
+      } catch (err) {
+        console.error('Error loading collections from Shopify API:', err);
+      }
+    }
+    loadCollections();
+  }, []);
 
   // Live clock
   useEffect(() => {
@@ -51,9 +86,9 @@ export default function Navbar() {
   useEffect(() => {
     if (!overlayRef.current) return;
     if (menuOpen) {
-      gsap.set('.nav-section-title, .nav-section-links li a, .connect-links li a', { opacity: 0, y: 30 });
+      gsap.set('.nav-section-title, .nav-section-links li a, .connect-links li a, .karigar-title a', { opacity: 0, y: 30 });
       gsap.to('.nav-section-title', { y: 0, opacity: 1, duration: 0.8, stagger: 0.05, ease: 'power3.out', delay: 0.25 });
-      gsap.to('.nav-section-links li a, .connect-links li a', { y: 0, opacity: 1, duration: 1.0, stagger: 0.02, ease: 'power4.out', delay: 0.35 });
+      gsap.to('.nav-section-links li a, .connect-links li a, .karigar-title a', { y: 0, opacity: 1, duration: 1.0, stagger: 0.02, ease: 'power4.out', delay: 0.35 });
     }
   }, [menuOpen]);
 
@@ -107,11 +142,11 @@ export default function Navbar() {
                 </div>
               ) : (
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="profile-icon-svg" style={{ display: 'block' }}>
-                  <path d="M20 21C20 18.2386 16.4183 16 12 16C7.58172 16 4 18.2386 4 21M12 12C9.79086 12 8 10.2091 8 8C8 5.79086 9.79086 4 12 4C14.2091 4 16 5.79086 16 8C16 10.2091 14.2091 12 12 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M20 21C20 18.2386 16.4183 16 12 16C7.58172 16 4 18.2386 4 21M12 12C9.79086 12 8 10.2091 8 8C8 5.79086 9.79086 4 12 4C14.2091 4 16 5.79086 16 8C16 10.2091 14.2091 12 12 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               )}
             </button>
-            
+
             {user && profileDropdownOpen && (
               <div className="profile-dropdown">
                 <div className="profile-dropdown-header">
@@ -121,7 +156,7 @@ export default function Navbar() {
                     <span className="dropdown-user-email">{user.email}</span>
                   </div>
                 </div>
-                
+
                 <div className="profile-dropdown-wishlist">
                   <span className="wishlist-header">Wishlist ({wishlistItems.length})</span>
                   {wishlistItems.length === 0 ? (
@@ -172,7 +207,7 @@ export default function Navbar() {
           </button>
           <button className="menu-toggle" onClick={() => setMenuOpen(true)} aria-label="Open Menu">
             <svg width="22" height="14" viewBox="0 0 22 14" fill="none" xmlns="http://www.w3.org/2000/svg" className="menu-icon-svg">
-              <path d="M1.5 2H20.5M1.5 7H20.5M1.5 12H20.5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+              <path d="M1.5 2H20.5M1.5 7H20.5M1.5 12H20.5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
             </svg>
           </button>
         </div>
@@ -194,7 +229,7 @@ export default function Navbar() {
               <span className="nav-section-num">01</span>
               <span className="nav-section-title">Women</span>
               <ul className="nav-section-links">
-                {WOMEN_LINKS.map((link) => (
+                {womenLinks.map((link) => (
                   <li key={link.href}>
                     <Link href={link.href} data-img={link.img} onClick={closeMenu}>
                       {link.label}
@@ -209,7 +244,7 @@ export default function Navbar() {
               <span className="nav-section-num">02</span>
               <span className="nav-section-title">Men</span>
               <ul className="nav-section-links">
-                {MEN_LINKS.map((link) => (
+                {menLinks.map((link) => (
                   <li key={link.href}>
                     <Link href={link.href} data-img={link.img} onClick={closeMenu}>
                       {link.label}
@@ -237,49 +272,51 @@ export default function Navbar() {
                 ))}
               </ul>
             </div>
+          </div>
 
-            {/* Ornate Buttons */}
-            <div className="nav-section karigar-section karigar-section-custom">
-              <span className="nav-section-title karigar-title karigar-title-custom">
-                <Link href="/karigar-of-as" onClick={closeMenu}>Karigar of AS</Link>
-              </span>
-              <span className="nav-section-title karigar-title karigar-title-custom">
-                <Link href="/collections/custom-made-for-moments" onClick={closeMenu}>Made for Moments</Link>
-              </span>
-              <style>{`
+          {/* Ornate Buttons Section - Cleanly positioned between grid and footer */}
+          <div className="karigar-section-custom">
+            <span className="nav-section-title karigar-title karigar-title-custom">
+              <Link href="/karigar-of-as" onClick={closeMenu}>Karigar of AS</Link>
+            </span>
+            <span className="nav-section-title karigar-title karigar-title-custom">
+              <Link href={madeForMomentsHref} onClick={closeMenu}>Made for Moments</Link>
+            </span>
+            <style>{`
+              .karigar-section-custom {
+                display: flex !important;
+                flex-direction: row !important;
+                justify-content: center !important;
+                align-items: center !important;
+                gap: 20px 30px !important;
+                flex-wrap: wrap !important;
+                width: 100% !important;
+                margin: 20px 0 !important;
+              }
+              .karigar-title-custom {
+                display: inline-block !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border: none !important;
+              }
+              .karigar-title-custom a {
+                font-size: 1.3rem !important;
+                padding: 12px 30px !important;
+                letter-spacing: 0.1em !important;
+                opacity: 1 !important;
+                color: #ffffff !important;
+              }
+              @media (max-width: 768px) {
                 .karigar-section-custom {
-                  display: flex !important;
-                  flex-direction: row !important;
-                  justify-content: center !important;
-                  align-items: center !important;
-                  gap: 30px 40px !important;
-                  flex-wrap: wrap !important;
-                  width: 100% !important;
-                  margin-top: 60px !important;
+                  flex-direction: column !important;
+                  gap: 15px !important;
                 }
-                @media (min-width: 1025px) {
-                  .karigar-section-custom {
-                    grid-column: 1 / span 3 !important;
-                  }
+                .karigar-title-custom a {
+                  font-size: 1.05rem !important;
+                  padding: 10px 20px !important;
                 }
-                @media (max-width: 1024px) {
-                  .karigar-section-custom {
-                    grid-column: span 1 !important;
-                    margin-top: 25px !important;
-                    flex-direction: column !important;
-                    align-items: center !important;
-                    justify-content: center !important;
-                    gap: 25px !important;
-                  }
-                }
-                .karigar-title-custom {
-                  display: inline-block !important;
-                  margin: 0 !important;
-                  padding: 0 !important;
-                  border: none !important;
-                }
-              `}</style>
-            </div>
+              }
+            `}</style>
           </div>
 
           {/* Menu Footer */}
@@ -299,3 +336,4 @@ export default function Navbar() {
     </>
   );
 }
+
