@@ -230,16 +230,23 @@ export default function ProductDetailPage() {
       return;
     }
 
-    requireAuth(() => {
-      const finalName = isBlockPrintPalazzo
-        ? `${product.name} (${withBlazer ? 'With Blazer' : 'Without Blazer'})`
-        : isRaatCouplesSet
-          ? `${product.name} (${couplesOption === 'jacket' ? 'Nehru Jacket' : 'Saree'})`
-          : product.name;
-      addToCart(finalName, selectedSize, displayPrice, images[0]);
-      setAddedToCart(true);
-      setTimeout(() => setAddedToCart(false), 2000);
+    const finalName = isBlockPrintPalazzo
+      ? `${product.name} (${withBlazer ? 'With Blazer' : 'Without Blazer'})`
+      : isRaatCouplesSet
+        ? `${product.name} (${couplesOption === 'jacket' ? 'Nehru Jacket' : 'Saree'})`
+        : product.name;
+
+    addToCart({
+      name: finalName,
+      size: selectedSize,
+      price: displayPrice,
+      img: images[0],
+      handle: product.handle,
+      variantId: selectedVariant?.id || null,
+      availableForSale: product.availableForSale !== false && !isSelectedSizeOutOfStock
     });
+    setAddedToCart(true);
+    setTimeout(() => setAddedToCart(false), 2000);
   };
 
   const handleWhatsApp = () => {
