@@ -32,61 +32,52 @@ export default function LoginModal() {
 
             <div className="profile-badge-header">
               <div className="avatar-circle">
-                {user.firstName ? user.firstName.charAt(0).toUpperCase() : 'U'}
+                {user.firstName
+                  ? user.firstName.charAt(0).toUpperCase()
+                  : user.email
+                  ? user.email.charAt(0).toUpperCase()
+                  : 'A'}
               </div>
               <div className="profile-badge-info">
                 <span className="profile-user-name">
-                  {user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'Valued Customer'}
+                  {user.firstName
+                    ? `${user.firstName} ${user.lastName || ''}`.trim()
+                    : user.email
+                    ? user.email.split('@')[0]
+                    : 'Valued Customer'}
                 </span>
                 <span className="profile-user-email">{user.email || 'No email registered'}</span>
               </div>
             </div>
 
-            <div className="profile-details-grid">
-              <div className="detail-card">
-                <span className="detail-label">CONTACT INFORMATION</span>
-                <p className="detail-value">{user.phone || 'Phone not added'}</p>
-                <p className="detail-subvalue">{user.email}</p>
-              </div>
+            <div className="profile-actions-container">
+              <a
+                href="https://account.arshiasinghofficial.com/profile"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="profile-action-btn primary"
+              >
+                VIEW ACCOUNT
+              </a>
 
-              <div className="detail-card">
-                <span className="detail-label">DEFAULT SHIPPING ADDRESS</span>
-                {user.defaultAddress ? (
-                  <p className="detail-value">
-                    {user.defaultAddress.address1}, {user.defaultAddress.city} {user.defaultAddress.zip}, {user.defaultAddress.country}
-                  </p>
-                ) : (
-                  <p className="detail-subvalue">No default address saved yet</p>
-                )}
-              </div>
+              <a
+                href="https://account.arshiasinghofficial.com/orders"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="profile-action-btn secondary"
+              >
+                ORDERS
+              </a>
 
-              {user.orders && user.orders.edges && user.orders.edges.length > 0 && (
-                <div className="detail-card full-width">
-                  <span className="detail-label">RECENT ORDERS</span>
-                  <div className="orders-list">
-                    {user.orders.edges.map(({ node }) => (
-                      <div key={node.id} className="order-row">
-                        <span className="order-num">#{node.orderNumber}</span>
-                        <span className="order-date">{new Date(node.processedAt).toLocaleDateString()}</span>
-                        <span className="order-status">{node.financialStatus}</span>
-                        <span className="order-total">
-                          {node.totalPrice?.currencyCode} ₹{node.totalPrice?.amount}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+              <button
+                className="profile-action-btn logout"
+                onClick={async () => {
+                  await logout();
+                }}
+              >
+                SIGN OUT
+              </button>
             </div>
-
-            <button
-              className="logout-btn"
-              onClick={async () => {
-                await logout();
-              }}
-            >
-              Sign Out
-            </button>
           </div>
         ) : (
           /* LOGGED-OUT: OAuth 2.0 Sign-In View */
@@ -435,76 +426,58 @@ export default function LoginModal() {
           color: #666;
         }
 
-        .profile-details-grid {
+        .profile-actions-container {
           display: flex;
           flex-direction: column;
-          gap: 16px;
-          margin-bottom: 24px;
-        }
-        .detail-card {
-          border: 1px solid #E5E2DC;
-          padding: 14px 16px;
-          border-radius: 2px;
-          background: #FFF;
-        }
-        .detail-card.full-width {
-          width: 100%;
-          box-sizing: border-box;
-        }
-        .detail-label {
-          font-family: var(--font-mono, monospace);
-          font-size: 9px;
-          letter-spacing: 0.15em;
-          color: #887a64;
-          display: block;
-          margin-bottom: 6px;
-        }
-        .detail-value {
-          font-size: 13px;
-          color: #111;
-          margin: 0;
-          font-weight: 500;
-        }
-        .detail-subvalue {
-          font-size: 12px;
-          color: #666;
-          margin: 4px 0 0 0;
+          gap: 12px;
         }
 
-        .orders-list {
+        .profile-action-btn {
           display: flex;
-          flex-direction: column;
-          gap: 8px;
-          margin-top: 8px;
-        }
-        .order-row {
-          display: flex;
-          justify-content: space-between;
-          font-size: 12px;
-          padding: 6px 0;
-          border-bottom: 1px dashed #E5E2DC;
-        }
-        .order-row:last-child {
-          border-bottom: none;
-        }
-        .order-num {
-          font-weight: 600;
-        }
-
-        .logout-btn {
+          align-items: center;
+          justify-content: center;
           width: 100%;
-          padding: 12px;
-          border: 1px solid #9B1C1C;
-          background: transparent;
-          color: #9B1C1C;
+          padding: 14px;
           font-family: var(--font-mono, monospace);
           font-size: 11px;
-          letter-spacing: 0.15em;
+          letter-spacing: 0.18em;
           text-transform: uppercase;
           cursor: pointer;
-          transition: background 0.2s, color 0.2s;
+          transition: all 0.2s ease;
+          border-radius: 2px;
+          text-decoration: none;
+          box-sizing: border-box;
         }
-        .logout-btn:hover {
+
+        .profile-action-btn.primary {
+          background: #111;
+          color: #FAF9F6;
+          border: 1px solid #111;
+        }
+
+        .profile-action-btn.primary:hover {
+          background: #333;
+          color: #FFF;
+        }
+
+        .profile-action-btn.secondary {
+          background: transparent;
+          color: #111;
+          border: 1px solid #111;
+        }
+
+        .profile-action-btn.secondary:hover {
+          background: #111;
+          color: #FFF;
+        }
+
+        .profile-action-btn.logout {
+          background: transparent;
+          color: #9B1C1C;
+          border: 1px solid #9B1C1C;
+        }
+
+        .profile-action-btn.logout:hover {
           background: #9B1C1C;
           color: #FFF;
         }
