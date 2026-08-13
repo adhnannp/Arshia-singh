@@ -5,12 +5,12 @@ import { useCart } from './CartContext';
 import { createShopifyCheckout } from '../lib/shopify/mutations/cart';
 
 export default function CartDrawer() {
-  const { cartItems, isCartOpen, setIsCartOpen, removeFromCart, revalidateCartItems, isValidatingCart } = useCart();
+  const { cartItems, isCartOpen, setIsCartOpen, removeFromCart, clearCart, revalidateCartItems, isValidatingCart } = useCart();
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState(null);
   const [checkoutNotice, setCheckoutNotice] = useState(null);
 
-  // Trigger inventory re-validation whenever cart drawer is opened
+  // Trigger inventory re-validation whenever cart drawer is opened & check for openCart query param
   useEffect(() => {
     if (isCartOpen) {
       setCheckoutError(null);
@@ -18,6 +18,19 @@ export default function CartDrawer() {
       revalidateCartItems();
     }
   }, [isCartOpen, revalidateCartItems]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('openCart') === 'true') {
+        setIsCartOpen(true);
+        params.delete('openCart');
+        const newSearch = params.toString();
+        const newUrl = window.location.pathname + (newSearch ? `?${newSearch}` : '');
+        window.history.replaceState(null, '', newUrl);
+      }
+    }
+  }, [setIsCartOpen]);
 
   const hasUnavailableItems = cartItems.some((item) => item.isUnavailable || item.availableForSale === false);
 
@@ -61,7 +74,8 @@ export default function CartDrawer() {
       }
 
       if (checkoutUrl) {
-        // Redirect customer directly to Shopify Web Checkout
+        // Clear local cart before redirecting customer to Shopify Web Checkout
+        clearCart();
         window.location.href = checkoutUrl;
       } else {
         setCheckoutError('Could not generate Shopify checkout URL. Please try again.');
