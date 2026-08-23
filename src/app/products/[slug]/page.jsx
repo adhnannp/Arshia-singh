@@ -1,7 +1,7 @@
 'use client';
 
 export const runtime = "edge";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import gsap from 'gsap';
@@ -34,6 +34,85 @@ const MEN_SIZE_DATA = [
   { brand: '3XL', uk: '46', us: '46', eu: '56', chest_in: '46', waist_in: '43', hip_in: '48', chest_cm: '117', waist_cm: '109', hip_cm: '122' },
   { brand: '4XL', uk: '48', us: '48', eu: '58', chest_in: '48', waist_in: '46', hip_in: '51', chest_cm: '122', waist_cm: '117', hip_cm: '130' }
 ];
+
+const cleanPrintValue = (val, title = '', metafields = {}) => {
+  const explicitPrint = metafields.print || metafields.applied_print;
+  if (explicitPrint && typeof explicitPrint === 'string' && !explicitPrint.includes('http') && !explicitPrint.includes('/')) {
+    const trimmed = explicitPrint.trim();
+    if (trimmed && trimmed.toLowerCase() !== 'n/a') return trimmed;
+  }
+
+  let raw = val;
+  if (!raw) raw = '';
+
+  if (typeof raw === 'string' && (raw.startsWith('[') || raw.startsWith('{'))) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        raw = parsed[0];
+      } else if (typeof parsed === 'object' && parsed !== null) {
+        raw = parsed.value || parsed.url || parsed.name || raw;
+      }
+    } catch (e) {}
+  }
+
+  if (typeof raw !== 'string') raw = String(raw || '');
+
+  const isUrlOrPath = raw.includes('http://') ||
+                      raw.includes('https://') ||
+                      raw.includes('gid://') ||
+                      raw.includes('cdn.shopify.com') ||
+                      raw.includes('/') ||
+                      /\.(png|jpe?g|webp|svg)/i.test(raw);
+
+  if (isUrlOrPath) {
+    try {
+      const cleanPath = raw.split('?')[0].split('#')[0];
+      const segments = cleanPath.split('/').filter(Boolean);
+      let filename = segments[segments.length - 1] || '';
+      filename = decodeURIComponent(filename);
+      filename = filename.replace(/\.(png|jpe?g|webp|svg|gif)$/i, '');
+      filename = filename.replace(/[_%-]+/g, ' ').trim();
+      filename = filename
+        .replace(/Page\s+\d+\s+Image\s+\d+/gi, '')
+        .replace(/\b(image|img|file|files|metaobject)\b/gi, '')
+        .trim();
+
+      if (filename && filename.toLowerCase() !== 'n/a' && filename.length > 1) {
+        raw = filename;
+      } else {
+        raw = '';
+      }
+    } catch (e) {
+      raw = '';
+    }
+  }
+
+  raw = raw.trim();
+
+  if (raw && raw.toLowerCase() !== 'n/a' && !raw.includes('http') && !raw.includes('/')) {
+    return raw;
+  }
+
+  if (title) {
+    const titleMatch = title.match(/([A-Za-z0-9\s]+)\s+PRINT\b/i);
+    if (titleMatch && titleMatch[1]) {
+      const extracted = titleMatch[1].trim();
+      if (extracted.toLowerCase() === 'block') return 'Block print';
+      if (extracted) return extracted.toUpperCase();
+    }
+
+    const upperTitle = title.toUpperCase();
+    const keywords = ['RANGREZ', 'RAAT', 'RAVEL', 'MARBLE', 'BOHO STAR', 'CUBE', 'GULZAAR', 'BLOCK PRINT', 'PHULKARI'];
+    for (const kw of keywords) {
+      if (upperTitle.includes(kw)) {
+        return kw === 'BLOCK PRINT' ? 'Block print' : kw;
+      }
+    }
+  }
+
+  return raw && raw !== 'N/A' ? raw : '';
+};
 
 // Helper: Normalize Shopify GraphQL product node to UI product structure
 const normalizeProductDetail = (node) => {
@@ -75,11 +154,16 @@ const normalizeProductDetail = (node) => {
     img: images[0] || '/assets/placeholder.jpg',
     images: images,
     availableForSale: node.availableForSale,
+    options: (node.options || []).map(o => ({
+      id: o.id,
+      name: o.name,
+      values: o.values || []
+    })),
     sizes: sizes,
     category: metafieldMap.category || 'Luxury Edit',
     fabric: metafieldMap.fabric || 'PETA Approved Vegan',
     components: metafieldMap.components || '',
-    print: metafieldMap.category2 || metafieldMap.category || '',
+    print: cleanPrintValue(metafieldMap.print || metafieldMap.applied_print || metafieldMap.category2 || metafieldMap.category || '', node.title, metafieldMap),
     fit: metafieldMap.fit || '',
     lining: metafieldMap.lining || '',
     pockets: metafieldMap.pockets || '',
@@ -91,6 +175,7 @@ const normalizeProductDetail = (node) => {
     metafields: metafieldMap,
   };
 };
+
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -105,6 +190,7 @@ export default function ProductDetailPage() {
 
   // UI Interactive States
   const [selectedSize, setSelectedSize] = useState(null);
+  const [selectedOptionsState, setSelectedOptionsState] = useState({});
   const [sizeError, setSizeError] = useState(false);
   const [stockMessage, setStockMessage] = useState('');
   const [addedToCart, setAddedToCart] = useState(false);
@@ -112,8 +198,6 @@ export default function ProductDetailPage() {
   const [showSizeModal, setShowSizeModal] = useState(false);
   const [sizeUnit, setSizeUnit] = useState('in');
   const [activeSlide, setActiveSlide] = useState(0);
-  const [withBlazer, setWithBlazer] = useState(false);
-  const [couplesOption, setCouplesOption] = useState('jacket'); // 'jacket', 'saree'
 
   // Fetch product dynamically from Shopify
   useEffect(() => {
@@ -126,14 +210,40 @@ export default function ProductDetailPage() {
     });
   }, [slug]);
 
-  // Helper: Find variant corresponding to a specific size
+  // Initialize non-size dynamic options when product loads
+  useEffect(() => {
+    if (product?.options) {
+      const initial = {};
+      product.options.forEach(opt => {
+        if (opt.name?.toLowerCase() !== 'size' && opt.values?.length > 0) {
+          initial[opt.name] = opt.values[0];
+        }
+      });
+      setSelectedOptionsState(initial);
+    }
+  }, [product]);
+
+  const handleSelectOption = (optionName, value) => {
+    setSelectedOptionsState(prev => ({ ...prev, [optionName]: value }));
+  };
+
+  // Helper: Find variant corresponding to selected options
   const getSizeVariant = (size) => {
     if (!product?.variants || product.variants.length === 0) return null;
-    return product.variants.find(v =>
-      v.selectedOptions?.some(
-        opt => opt.name?.toLowerCase() === 'size' && opt.value?.toUpperCase() === size.toUpperCase()
-      )
-    );
+    return product.variants.find(v => {
+      if (size) {
+        const matchesSize = v.selectedOptions?.some(
+          opt => opt.name?.toLowerCase() === 'size' && opt.value?.toUpperCase() === size.toUpperCase()
+        );
+        if (!matchesSize) return false;
+      }
+      return Object.entries(selectedOptionsState).every(([optName, optVal]) => {
+        if (!optVal || optName.toLowerCase() === 'size') return true;
+        return v.selectedOptions?.some(
+          so => so.name?.toLowerCase() === optName.toLowerCase() && so.value?.toLowerCase() === optVal.toLowerCase()
+        );
+      });
+    });
   };
 
   const handleSelectSize = (size) => {
@@ -151,7 +261,7 @@ export default function ProductDetailPage() {
   const selectedVariant = selectedSize ? getSizeVariant(selectedSize) : null;
   const isSelectedSizeOutOfStock = selectedSize && selectedVariant && !selectedVariant.availableForSale;
 
-  // Dynamic values
+  // Dynamic values & prices from API
   const isMens = product && (
     product.category?.toLowerCase() === 'natural luxury' ||
     product.category?.toLowerCase() === 'printed stories' ||
@@ -159,19 +269,21 @@ export default function ProductDetailPage() {
     product.name?.toLowerCase().includes("groom")
   );
 
-  const isBlockPrintPalazzo = product?.name === 'BLOCK PRINT PALAZZO CO-ORD';
-  const isRaatCouplesSet = product?.name === 'RAAT PRINT COUPLES SET';
-  const displayPrice = isBlockPrintPalazzo
-    ? (withBlazer ? '₹10,000/-' : '₹7,000/-')
-    : isRaatCouplesSet
-      ? (couplesOption === 'jacket' ? '₹7,000/-' : '₹16,500/-')
-      : product?.price;
+  const displayPrice = useMemo(() => {
+    if (selectedVariant?.price) {
+      const p = typeof selectedVariant.price === 'number'
+        ? selectedVariant.price
+        : parseFloat(selectedVariant.price?.amount || '0');
+      if (p > 0) return `₹${Math.round(p).toLocaleString('en-IN')}/-`;
+    }
+    return product?.price || 'Price on Request';
+  }, [selectedVariant, product]);
 
   const images = product?.images || ['/assets/placeholder.jpg'];
 
   useEffect(() => {
     setActiveSlide(0);
-  }, [withBlazer, product]);
+  }, [selectedOptionsState, product]);
 
   const handleMouseMove = (e) => {
     const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
@@ -230,17 +342,21 @@ export default function ProductDetailPage() {
       return;
     }
 
-    const finalName = isBlockPrintPalazzo
-      ? `${product.name} (${withBlazer ? 'With Blazer' : 'Without Blazer'})`
-      : isRaatCouplesSet
-        ? `${product.name} (${couplesOption === 'jacket' ? 'Nehru Jacket' : 'Saree'})`
-        : product.name;
+    const nonSizeSummary = Object.entries(selectedOptionsState)
+      .filter(([k]) => k.toLowerCase() !== 'size')
+      .map(([, v]) => v)
+      .filter(Boolean)
+      .join(', ');
+
+    const finalName = nonSizeSummary
+      ? `${product.name} (${nonSizeSummary})`
+      : product.name;
 
     addToCart({
       name: finalName,
       size: selectedSize,
       price: displayPrice,
-      img: images[0],
+      img: selectedVariant?.image?.url || images[0],
       handle: product.handle,
       variantId: selectedVariant?.id || null,
       availableForSale: product.availableForSale !== false && !isSelectedSizeOutOfStock
@@ -250,11 +366,12 @@ export default function ProductDetailPage() {
   };
 
   const handleWhatsApp = () => {
-    const optionText = isBlockPrintPalazzo
-      ? ` (${withBlazer ? 'With Blazer' : 'Without Blazer'})`
-      : isRaatCouplesSet
-        ? ` (${couplesOption === 'jacket' ? 'Nehru Jacket' : 'Saree'})`
-        : '';
+    const nonSizeSummary = Object.entries(selectedOptionsState)
+      .filter(([k]) => k.toLowerCase() !== 'size')
+      .map(([k, v]) => `${k}: ${v}`)
+      .filter(Boolean)
+      .join(', ');
+    const optionText = nonSizeSummary ? ` (${nonSizeSummary})` : '';
     const productUrl = typeof window !== 'undefined' ? window.location.href : '';
     const msg = `Hi! I'm interested in ${product.name}${optionText}\n(Size: ${selectedSize || 'TBD'}) - ${formatPrice(displayPrice)}.\nProduct link: ${productUrl}`;
     window.open(`https://wa.me/919953275142?text=${encodeURIComponent(msg)}`, '_blank');
@@ -356,51 +473,33 @@ export default function ProductDetailPage() {
           {/* Editorial Description */}
           <div className="pd-description">{product.details}</div>
 
-          {/* Blazer Option Selection (Only for Block Print Palazzo Co-ord) */}
-          {isBlockPrintPalazzo && (
-            <div className="pd-size-section mb-[30px]">
-              <div className="pd-size-header">
-                <span className="pd-size-label">Select Blazer Option</span>
-              </div>
-              <div className="pd-option-grid">
-                <button
-                  className={`pd-option-btn ${!withBlazer ? 'active' : ''}`}
-                  onClick={() => setWithBlazer(false)}
-                >
-                  Without Blazer (₹7,000)
-                </button>
-                <button
-                  className={`pd-option-btn ${withBlazer ? 'active' : ''}`}
-                  onClick={() => setWithBlazer(true)}
-                >
-                  With Blazer (₹10,000)
-                </button>
-              </div>
-            </div>
-          )}
+          {/* Dynamic Shopify Options Selection (e.g. Blazer, Outfit, Style, etc. from Shopify API) */}
+          {product.options?.map((option) => {
+            if (option.name?.toLowerCase() === 'size') return null;
+            if (!option.values || option.values.length <= 1) return null;
 
-          {/* Option Selection for Raat Print Couples Set */}
-          {isRaatCouplesSet && (
-            <div className="pd-size-section mb-[30px]">
-              <div className="pd-size-header">
-                <span className="pd-size-label">Select Outfit Option</span>
+            return (
+              <div key={option.id || option.name} className="pd-size-section mb-[30px]">
+                <div className="pd-size-header">
+                  <span className="pd-size-label">Select {option.name}</span>
+                </div>
+                <div className="pd-option-grid">
+                  {option.values.map((val) => {
+                    const isActive = selectedOptionsState[option.name] === val;
+                    return (
+                      <button
+                        key={val}
+                        className={`pd-option-btn ${isActive ? 'active' : ''}`}
+                        onClick={() => handleSelectOption(option.name, val)}
+                      >
+                        {val}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-              <div className="pd-option-grid">
-                <button
-                  className={`pd-option-btn ${couplesOption === 'jacket' ? 'active' : ''}`}
-                  onClick={() => setCouplesOption('jacket')}
-                >
-                  Nehru Jacket (₹7,000)
-                </button>
-                <button
-                  className={`pd-option-btn ${couplesOption === 'saree' ? 'active' : ''}`}
-                  onClick={() => setCouplesOption('saree')}
-                >
-                  Saree (₹16,500)
-                </button>
-              </div>
-            </div>
-          )}
+            );
+          })}
 
           {/* Size Selection Grid */}
           <div className="pd-size-section">
@@ -466,9 +565,8 @@ export default function ProductDetailPage() {
               <div className="pd-accordion-content">
                 <div className="pd-spec-grid">
                   {product.fit && product.fit !== 'N/A' && <div className="pd-spec"><span className="pd-spec-label">Silhouette Fit</span><span className="pd-spec-val">{product.fit}</span></div>}
-                  {product.fabric && product.fabric !== 'N/A' && <div className="pd-spec"><span className="pd-spec-label">PETA Vegan</span><span className="pd-spec-val">{product.fabric}</span></div>}
+                  {product.fabric && product.fabric !== 'N/A' && <div className="pd-spec"><span className="pd-spec-label">Fabric</span><span className="pd-spec-val">{product.fabric}</span></div>}
                   {product.textile && product.textile !== 'N/A' && <div className="pd-spec"><span className="pd-spec-label">Textile Craft</span><span className="pd-spec-val">{product.textile}</span></div>}
-                  {product.print && product.print !== 'N/A' && <div className="pd-spec"><span className="pd-spec-label">Applied Print</span><span className="pd-spec-val">{product.print}</span></div>}
                   {product.components && product.components !== 'N/A' && <div className="pd-spec"><span className="pd-spec-label">Pieces Included</span><span className="pd-spec-val">{product.components} Set</span></div>}
                   {product.lining && product.lining !== 'N/A' && <div className="pd-spec"><span className="pd-spec-label">Lining Support</span><span className="pd-spec-val">{product.lining}</span></div>}
                   {product.pockets && product.pockets !== 'N/A' && <div className="pd-spec"><span className="pd-spec-label">Pockets detailing</span><span className="pd-spec-val">{product.pockets}</span></div>}

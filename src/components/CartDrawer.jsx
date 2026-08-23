@@ -15,9 +15,21 @@ export default function CartDrawer() {
     if (isCartOpen) {
       setCheckoutError(null);
       setCheckoutNotice(null);
+      setCheckoutLoading(false);
       revalidateCartItems();
     }
   }, [isCartOpen, revalidateCartItems]);
+
+  // Handle pageshow event (e.g. browser back button restoration from BFCache)
+  useEffect(() => {
+    const handlePageShow = () => {
+      setCheckoutLoading(false);
+    };
+    window.addEventListener('pageshow', handlePageShow);
+    return () => {
+      window.removeEventListener('pageshow', handlePageShow);
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -74,9 +86,8 @@ export default function CartDrawer() {
       }
 
       if (checkoutUrl) {
-        // Clear local cart before redirecting customer to Shopify Web Checkout
-        clearCart();
         window.location.href = checkoutUrl;
+        setTimeout(() => setCheckoutLoading(false), 2000);
       } else {
         setCheckoutError('Could not generate Shopify checkout URL. Please try again.');
         setCheckoutLoading(false);
