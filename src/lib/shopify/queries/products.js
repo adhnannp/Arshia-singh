@@ -47,6 +47,8 @@ export const GET_COLLECTION_PRODUCTS_QUERY = `#graphql
           metafields(
             identifiers: [
               { namespace: "custom", key: "category2" }
+              { namespace: "custom", key: "print" }
+              { namespace: "custom", key: "applied_print" }
               { namespace: "custom", key: "wash_care" }
               { namespace: "custom", key: "fabric" }
               { namespace: "custom", key: "delivery" }
@@ -135,6 +137,8 @@ export const GET_PRODUCT_BY_HANDLE_QUERY = `#graphql
       metafields(
         identifiers: [
           { namespace: "custom", key: "category2" }
+          { namespace: "custom", key: "print" }
+          { namespace: "custom", key: "applied_print" }
           { namespace: "custom", key: "wash_care" }
           { namespace: "custom", key: "fabric" }
           { namespace: "custom", key: "delivery" }
