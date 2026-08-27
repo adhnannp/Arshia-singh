@@ -1628,14 +1628,39 @@ a {
   color: var(--color-dark);
 }
 
+.collection-badges {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .collection-badges .badge {
   font-family: var(--font-mono);
   font-size: 11px;
-  border: 1px solid var(--color-accent);
-  color: var(--color-accent);
-  padding: 5px 15px;
-  border-radius: 20px;
-  margin-left: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  color: var(--color-dark);
+  padding: 8px 18px;
+  border-radius: 30px;
+  background: transparent;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+}
+
+.collection-badges .badge:hover {
+  border-color: var(--color-dark);
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.collection-badges .btn-primary {
+  margin-left: 6px;
+  padding: 10px 24px !important;
+  font-size: 11px !important;
+  letter-spacing: 0.15em !important;
+  border-radius: 40px !important;
+  white-space: nowrap;
 }
 
 .collection-swipe-hint {
@@ -1714,7 +1739,7 @@ a {
 
 .item-tall {
   grid-column: 8 / 12;
-  margin-top: -5vh;
+  margin-top: 10vh;
 }
 
 .item-wide {
@@ -2383,6 +2408,11 @@ a {
 
 
 
+  /* Shared Section Mobile */
+  .section {
+    padding: 60px 24px !important;
+  }
+
   .hero-lottie-top,
   .hero-lottie-bottom {
     display: none !important;
@@ -2408,8 +2438,10 @@ a {
   .mood-mobile-stack {
     display: block;
     position: relative;
-    width: 280px;
-    height: 410px;
+    width: 82vw;
+    max-width: 320px;
+    aspect-ratio: 3 / 4.2;
+    height: auto;
     margin: 40px auto 60px;
     cursor: pointer;
   }
@@ -2604,17 +2636,23 @@ a {
 
   /* Founder Quote Mobile */
   .founder-quote {
-    min-height: 60vh;
-    padding: 80px 24px;
+    min-height: auto;
+    padding: 60px 24px !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
   }
 
   .quote-container {
-    padding: 40px 0;
+    padding: 0;
+    margin: 0 auto;
     width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 30px;
+    justify-content: center;
+    gap: 20px;
   }
 
   .quote-text {
@@ -2847,8 +2885,9 @@ a {
   .grid-item img {
     width: 100% !important;
     height: auto !important;
-    aspect-ratio: 3/4;
-    object-fit: cover !important;
+    aspect-ratio: auto;
+    max-height: 70vh;
+    object-fit: contain !important;
     object-position: top center !important;
     border-radius: 0;
     filter: none;

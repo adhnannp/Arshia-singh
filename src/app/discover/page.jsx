@@ -110,7 +110,7 @@ export default function DiscoverPage() {
     const { sortKey, reverse } = getSortParams(sortBy);
     const res = await fetchShopifyProducts({
       query: debouncedSearchQuery,
-      first: 20,
+      first: 250,
       after: null,
       sortKey,
       reverse,
@@ -134,7 +134,7 @@ export default function DiscoverPage() {
     const { sortKey, reverse } = getSortParams(sortBy);
     const res = await fetchShopifyProducts({
       query: debouncedSearchQuery,
-      first: 20,
+      first: 250,
       after: pageInfo.endCursor,
       sortKey,
       reverse,
@@ -186,8 +186,7 @@ export default function DiscoverPage() {
 
   // Client-side filter application for Gender, Category, Fabric, Pieces
   const displayProducts = productsList.filter(product => {
-    // Filter out 'custom made' (Made for Moments) products
-    if (product.category === 'custom made') return false;
+    // Gender / Section
 
     // Gender / Section
     if (selectedGenders.length > 0) {
@@ -481,10 +480,7 @@ export default function DiscoverPage() {
                     </svg>
                   </button>
                 </div>
-                <div className="product-card-meta">
-                  <span className="product-card-fabric">{product.fabric?.toUpperCase() || 'PREMIUM'}</span>
-                  <span className="product-card-price">{product.price}</span>
-                </div>
+                <div className="product-card-price">{product.price}</div>
               </div>
             </Link>
           ))

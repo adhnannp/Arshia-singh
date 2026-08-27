@@ -35,9 +35,17 @@ const getLinkForImage = (src) => {
 export default function HomePage() {
   const [stack, setStack] = useState([
     { id: 1, src: "/assets/new_coll_1.jpg" },
-    { id: 2, src: "/assets/new_coll_3.png" },
-    { id: 3, src: "/assets/new_coll_5.JPG" },
-    { id: 4, src: "/assets/new_coll_7.jpg" },
+    { id: 2, src: "/assets/new_coll_2.png" },
+    { id: 3, src: "/assets/new_coll_3.png" },
+    { id: 4, src: "/assets/new_coll_4.jpeg" },
+    { id: 5, src: "/assets/new_coll_5.JPG" },
+    { id: 6, src: "/assets/new_coll_6.jpg" },
+    { id: 7, src: "/assets/new_coll_7.jpg" },
+    { id: 8, src: "/assets/DSC_8756.jpg" },
+    { id: 9, src: "/assets/DSC_8356.jpg" },
+    { id: 10, src: "/assets/DSC_8473.jpg" },
+    { id: 11, src: "/assets/DSC_8791.jpg" },
+    { id: 12, src: "/assets/DSC_8402.jpg" },
   ]);
 
   const [startX, setStartX] = useState(null);
@@ -118,15 +126,16 @@ export default function HomePage() {
 
     // Founder quote word animation
     const quote = document.querySelector('.quote-text');
-    if (quote) {
-      const wordsText = quote.innerText.split(' ');
+    if (quote && !quote.dataset.split) {
+      quote.dataset.split = 'true';
+      const rawText = quote.innerText;
+      const wordsText = rawText.trim().split(/\s+/);
       quote.innerHTML = '';
-      wordsText.forEach(word => {
+      wordsText.forEach((word) => {
         const span = document.createElement('span');
-        span.innerText = word;
-        span.style.opacity = 0;
+        span.innerText = word + '\u00A0';
+        span.style.opacity = '0';
         span.style.display = 'inline-block';
-        span.style.marginRight = '0.25em';
         span.style.transform = 'translateY(10px)';
         quote.appendChild(span);
       });
@@ -273,14 +282,18 @@ export default function HomePage() {
           onTouchEnd={handleTouchEnd}
         >
           {stack.map((card, index) => {
-            const rotations = [-5, 4, -2, 1];
-            const translateXs = [-10, 8, -4, 0];
-            const translateYs = [-8, -4, 4, 10];
+            const rotations = [-5, 4, -2, 1, -4, 3, -1, 5, -3, 2, -6, 4];
+            const translateXs = [-10, 8, -4, 0, -6, 5, -2, 7, -8, 4, -5, 6];
+            const translateYs = [-8, -4, 4, 10, -6, 2, 8, -5, 6, -3, 5, -7];
+
+            const rotVal = rotations[index % rotations.length];
+            const posXVal = translateXs[index % translateXs.length];
+            const posYVal = translateYs[index % translateYs.length];
 
             const isTopCard = index === stack.length - 1;
-            const currentTranslateX = isTopCard ? translateXs[index] + swipeOffset : translateXs[index];
-            const currentTranslateY = translateYs[index];
-            const currentRotation = isTopCard ? rotations[index] + (swipeOffset / 15) : rotations[index];
+            const currentTranslateX = isTopCard ? posXVal + swipeOffset : posXVal;
+            const currentTranslateY = posYVal;
+            const currentRotation = isTopCard ? rotVal + (swipeOffset / 15) : rotVal;
 
             return (
               <div
@@ -370,19 +383,19 @@ export default function HomePage() {
           <div className="collection-badges">
             <span className="badge">Heritage Craft</span>
             <span className="badge">NEW IN</span>
-            <Link href="/collections/matching-moods" className="btn-primary ml-5 text-[0.8rem] py-2 px-4">Uncover the Details</Link>
+            <Link href="/collections/matching-moods" className="btn-primary">Uncover the Details</Link>
           </div>
         </div>
         <div className="collection-swipe-hint">SWIPE TO UNFOLD &gt;&gt;&gt;</div>
         <div className="editorial-grid">
           <div className="grid-item item-large" data-speed="0.9" data-index="01">
-            <Link href={getLinkForImage('/assets/new_coll_3.png')} className="grid-item-link">
-              <img src="/assets/new_coll_3.png" alt="Piece 1" loading="eager" />
+            <Link href={getLinkForImage('/assets/new_coll_7.jpg')} className="grid-item-link">
+              <img src="/assets/new_coll_7.jpg" alt="Piece 1" loading="eager" />
             </Link>
           </div>
           <div className="grid-item item-small offset-down" data-speed="1.1" data-index="02">
-            <Link href={getLinkForImage('/assets/new_coll_4.jpeg')} className="grid-item-link">
-              <img src="/assets/new_coll_4.jpeg" alt="Piece 2" loading="eager" />
+            <Link href={getLinkForImage('/assets/new_coll_6.jpg')} className="grid-item-link">
+              <img src="/assets/new_coll_6.jpg" alt="Piece 2" loading="eager" />
             </Link>
           </div>
           <div className="grid-item item-medium" data-speed="1" data-index="03">
@@ -390,14 +403,14 @@ export default function HomePage() {
               <img src="/assets/new_coll_5.JPG" alt="Piece 3" loading="eager" />
             </Link>
           </div>
-          <div className="grid-item item-tall offset-up" data-speed="1.2" data-index="04">
-            <Link href={getLinkForImage('/assets/new_coll_6.jpg')} className="grid-item-link">
-              <img src="/assets/new_coll_6.jpg" alt="Piece 4" loading="eager" />
+          <div className="grid-item item-tall offset-down" data-speed="1.2" data-index="04">
+            <Link href={getLinkForImage('/assets/new_coll_4.jpeg')} className="grid-item-link">
+              <img src="/assets/new_coll_4.jpeg" alt="Piece 4" loading="eager" />
             </Link>
           </div>
           <div className="grid-item item-wide" data-speed="0.8" data-index="05">
-            <Link href={getLinkForImage('/assets/new_coll_7.jpg')} className="grid-item-link">
-              <img src="/assets/new_coll_7.jpg" alt="Piece 5" loading="eager" />
+            <Link href={getLinkForImage('/assets/new_coll_3.png')} className="grid-item-link">
+              <img src="/assets/new_coll_3.png" alt="Piece 5" loading="eager" />
             </Link>
           </div>
         </div>

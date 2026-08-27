@@ -71,13 +71,15 @@ export default function CategoryPage() {
   const [productsList, setProductsList] = useState([]);
   const [pageInfo, setPageInfo] = useState({ hasNextPage: false, endCursor: null });
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-
-  // Layout & Filter States
+  const [loadingMore, setLoadingMore] = useState(false);  // Layout & Filter States
   const [layoutMode] = useState('studio'); // 'studio' (3-col)
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [selectedFabrics, setSelectedFabrics] = useState([]);
-  const [selectedComponents, setSelectedComponents] = useState([]);
+  const [selectedPrices, setSelectedPrices] = useState([]);
+  const [selectedOccasions, setSelectedOccasions] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedColors, setSelectedColors] = useState([]);
+  const [selectedCrafts, setSelectedCrafts] = useState([]);
+  const [selectedToggles, setSelectedToggles] = useState([]);
   const [sortBy, setSortBy] = useState('default');
 
   const sentinelRef = useRef(null);
@@ -163,14 +165,129 @@ export default function CategoryPage() {
     };
   }, [pageInfo.hasNextPage, loading, loadingMore, loadMoreProducts]);
 
-  // Extract dynamic filter lists from fetched collection products
-  const fabricsList = Array.from(new Set(productsList.map(p => p.fabric?.trim()).filter(Boolean))).sort();
-  const componentsList = Array.from(new Set(productsList.map(p => p.components?.trim()).filter(Boolean))).sort();
+  const toggleFilter = (list, setList, item) => {
+    if (list.includes(item)) {
+      setList(list.filter(x => x !== item));
+    } else {
+      setList([...list, item]);
+    }
+  };
 
-  // Client-side filter application for Fabrics & Components
+  const clearAllFilters = () => {
+    setSelectedPrices([]);
+    setSelectedOccasions([]);
+    setSelectedCategories([]);
+    setSelectedColors([]);
+    setSelectedCrafts([]);
+    setSelectedToggles([]);
+    setSortBy('default');
+  };
+
+  const activeFiltersCount =
+    selectedPrices.length +
+    selectedOccasions.length +
+    selectedCategories.length +
+    selectedColors.length +
+    selectedCrafts.length +
+    selectedToggles.length;
+
+  const displayTitle = collectionInfo.title || slug.replace(/-/g, ' ').toUpperCase();
+
+  // Color option definitions
+  const colorOptions = [
+    { label: 'Neutral & Ivory', color: '#f5f2eb' },
+    { label: 'Earthy Browns & Terracotta', color: '#8c593b' },
+    { label: 'Deep Midnight / Raat Black', color: '#1a1a1a' },
+    { label: 'Pastel Blues & Muted Greens', color: '#a3b899' },
+    { label: 'Multi / Heritage Print', color: 'linear-gradient(135deg, #d4af37, #c85a32, #2c4a3e)' }
+  ];
+
+  // Client-side filter evaluation across all 6 luxury filter categories
   const displayProducts = productsList.filter(product => {
-    if (selectedFabrics.length > 0 && !selectedFabrics.includes(product.fabric?.trim())) return false;
-    if (selectedComponents.length > 0 && !selectedComponents.includes(product.components?.trim())) return false;
+    // 1. Price Range evaluation
+    if (selectedPrices.length > 0) {
+      const price = product.rawPrice || 0;
+      const matchesPrice = selectedPrices.some(range => {
+        if (range === 'Under ₹10,000') return price < 10000;
+        if (range === '₹10,000 – ₹25,000') return price >= 10000 && price <= 25000;
+        if (range === '₹25,000 – ₹50,000') return price >= 25000 && price <= 50000;
+        if (range === '₹50,000+') return price > 50000;
+        return true;
+      });
+      if (!matchesPrice) return false;
+    }
+
+    // 2. Occasion & Mood
+    if (selectedOccasions.length > 0) {
+      const text = (product.name + ' ' + product.details + ' ' + product.category).toLowerCase();
+      const matchesOccasion = selectedOccasions.some(occ => {
+        const key = occ.toLowerCase();
+        if (key.includes('resort')) return text.includes('kaftan') || text.includes('shirt') || text.includes('co-ord') || text.includes('print');
+        if (key.includes('festive')) return text.includes('phulkari') || text.includes('embroidery') || text.includes('skirt') || text.includes('blazer');
+        if (key.includes('cocktail')) return text.includes('jacket') || text.includes('blazer') || text.includes('kaftan') || text.includes('set');
+        if (key.includes('everyday')) return text.includes('shirt') || text.includes('top') || text.includes('dhoti') || text.includes('co-ord');
+        if (key.includes('office')) return text.includes('blazer') || text.includes('waistcoat') || text.includes('pant') || text.includes('shirt');
+        return true;
+      });
+      if (!matchesOccasion) return false;
+    }
+
+    // 3. Silhouette & Category Type
+    if (selectedCategories.length > 0) {
+      const text = (product.name + ' ' + product.details + ' ' + product.category).toLowerCase();
+      const matchesCategory = selectedCategories.some(cat => {
+        const key = cat.toLowerCase();
+        if (key.includes('co-ord')) return text.includes('co-ord') || text.includes('set');
+        if (key.includes('cape')) return text.includes('cape') || text.includes('drape');
+        if (key.includes('blazer')) return text.includes('blazer') || text.includes('waistcoat') || text.includes('jacket');
+        if (key.includes('shirt')) return text.includes('shirt') || text.includes('top');
+        if (key.includes('skirt')) return text.includes('skirt') || text.includes('dhoti') || text.includes('palazzo');
+        if (key.includes('kaftan')) return text.includes('kaftan') || text.includes('dress');
+        return true;
+      });
+      if (!matchesCategory) return false;
+    }
+
+    // 4. Color Palette Swatches
+    if (selectedColors.length > 0) {
+      const text = (product.name + ' ' + product.details).toLowerCase();
+      const matchesColor = selectedColors.some(col => {
+        const key = col.toLowerCase();
+        if (key.includes('neutral') || key.includes('ivory')) return text.includes('white') || text.includes('ivory') || text.includes('cream') || text.includes('pastel');
+        if (key.includes('earthy') || key.includes('brown') || key.includes('terracotta')) return text.includes('brown') || text.includes('gold') || text.includes('ravel');
+        if (key.includes('midnight') || key.includes('black')) return text.includes('raat') || text.includes('black') || text.includes('dark');
+        if (key.includes('blue') || key.includes('green')) return text.includes('rangrez') || text.includes('green') || text.includes('blue');
+        if (key.includes('multi') || key.includes('print')) return text.includes('print') || text.includes('phulkari') || text.includes('bagh');
+        return true;
+      });
+      if (!matchesColor) return false;
+    }
+
+    // 5. Artisanal Craft
+    if (selectedCrafts.length > 0) {
+      const text = (product.name + ' ' + product.details + ' ' + (product.fabric || '')).toLowerCase();
+      const matchesCraft = selectedCrafts.some(craft => {
+        const key = craft.toLowerCase();
+        if (key.includes('embroidered') || key.includes('phulkari')) return text.includes('phulkari') || text.includes('embroidery');
+        if (key.includes('block print') || key.includes('rangrez')) return text.includes('print') || text.includes('rangrez') || text.includes('block');
+        if (key.includes('vegan silk')) return text.includes('silk') || text.includes('satin') || text.includes('vegan');
+        if (key.includes('solid') || key.includes('minimalist')) return !text.includes('print') && !text.includes('phulkari');
+        return true;
+      });
+      if (!matchesCraft) return false;
+    }
+
+    // 6. Availability & Quick Toggles
+    if (selectedToggles.length > 0) {
+      const matchesToggle = selectedToggles.every(tog => {
+        if (tog === 'In Stock Only') return product.availableForSale !== false;
+        if (tog === 'Ships Next Day (Ready to Ship)') return product.availableForSale !== false;
+        if (tog === 'Custom Order Available') return true;
+        return true;
+      });
+      if (!matchesToggle) return false;
+    }
+
     return true;
   });
 
@@ -209,24 +326,7 @@ export default function CategoryPage() {
     return () => {
       ScrollTrigger.getAll().forEach(st => st.kill());
     };
-  }, [slug, collectionInfo.title, selectedFabrics, selectedComponents, sortBy, productsList.length]);
-
-  const toggleFilter = (list, setList, item) => {
-    if (list.includes(item)) {
-      setList(list.filter(x => x !== item));
-    } else {
-      setList([...list, item]);
-    }
-  };
-
-  const clearAllFilters = () => {
-    setSelectedFabrics([]);
-    setSelectedComponents([]);
-    setSortBy('default');
-  };
-
-  const activeFiltersCount = selectedFabrics.length + selectedComponents.length;
-  const displayTitle = collectionInfo.title || slug.replace(/-/g, ' ').toUpperCase();
+  }, [slug, collectionInfo.title, sortBy, productsList.length]);
 
   return (
     <>
@@ -245,7 +345,7 @@ export default function CategoryPage() {
 
       {/* ─── DYNAMIC UTILITY CONTROLS BAR ─── */}
       <div className="collection-controls-bar">
-        <div className="controls-left">
+        <div className="controls-top-row">
           <button className="btn-filter-trigger" onClick={() => setIsFilterOpen(true)}>
             <span>Filters</span>
             {activeFiltersCount > 0 ? (
@@ -257,106 +357,111 @@ export default function CategoryPage() {
             )}
           </button>
 
-          {activeFiltersCount > 0 && (
-            <div className="active-filters-summary">
-              {selectedFabrics.map(f => (
-                <div key={f} className="active-filter-pill">
-                  <span>{f}</span>
-                  <button onClick={() => toggleFilter(selectedFabrics, setSelectedFabrics, f)}>×</button>
-                </div>
-              ))}
-              {selectedComponents.map(c => (
-                <div key={c} className="active-filter-pill">
-                  <span>{c} Piece Set</span>
-                  <button onClick={() => toggleFilter(selectedComponents, setSelectedComponents, c)}>×</button>
-                </div>
-              ))}
-              <button className="btn-clear-all" onClick={clearAllFilters}>Clear All</button>
-            </div>
-          )}
-        </div>
-        <div className="controls-right">
           <div className="sort-select-wrapper">
             <select
-              className="sort-select"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
+              className="sort-select"
             >
-              <option value="default">Sort: Collection Order</option>
+              <option value="default">Sort: Featured</option>
               <option value="price-low">Price: Low to High</option>
               <option value="price-high">Price: High to Low</option>
-              <option value="alphabetical">Alphabetical: A-Z</option>
+              <option value="alphabetical">Alphabetical</option>
             </select>
           </div>
         </div>
+
+        {activeFiltersCount > 0 && (
+          <div className="active-filters-summary">
+            {selectedPrices.map(p => (
+              <div key={p} className="active-filter-pill">
+                <span>{p}</span>
+                <button onClick={() => toggleFilter(selectedPrices, setSelectedPrices, p)}>×</button>
+              </div>
+            ))}
+            {selectedOccasions.map(o => (
+              <div key={o} className="active-filter-pill">
+                <span>{o}</span>
+                <button onClick={() => toggleFilter(selectedOccasions, setSelectedOccasions, o)}>×</button>
+              </div>
+            ))}
+            {selectedCategories.map(c => (
+              <div key={c} className="active-filter-pill">
+                <span>{c}</span>
+                <button onClick={() => toggleFilter(selectedCategories, setSelectedCategories, c)}>×</button>
+              </div>
+            ))}
+            {selectedColors.map(col => (
+              <div key={col} className="active-filter-pill">
+                <span>{col}</span>
+                <button onClick={() => toggleFilter(selectedColors, setSelectedColors, col)}>×</button>
+              </div>
+            ))}
+            {selectedCrafts.map(cr => (
+              <div key={cr} className="active-filter-pill">
+                <span>{cr}</span>
+                <button onClick={() => toggleFilter(selectedCrafts, setSelectedCrafts, cr)}>×</button>
+              </div>
+            ))}
+            {selectedToggles.map(t => (
+              <div key={t} className="active-filter-pill">
+                <span>{t}</span>
+                <button onClick={() => toggleFilter(selectedToggles, setSelectedToggles, t)}>×</button>
+              </div>
+            ))}
+            <button className="btn-clear-all" onClick={clearAllFilters}>Clear All</button>
+          </div>
+        )}
       </div>
 
-      {/* ─── PRODUCT GRID ─── */}
-      <section className={`collection-products-grid grid-${layoutMode}`}>
+      {/* ─── PRODUCTS GRID ─── */}
+      <section className="collection-products-section">
         {loading ? (
-          <div className="collection-loading-state" style={{ gridColumn: '1 / -1', textTransform: 'uppercase', letterSpacing: '2px', textAlign: 'center', padding: '100px 0', fontSize: '13px', color: '#666' }}>
-            Loading Collection Silhouettes...
+          <div className="collection-loading-state">
+            <div className="spinner"></div>
+            <span>Curating Collection...</span>
           </div>
         ) : displayProducts.length === 0 ? (
-          <div className="collection-empty" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '100px 0' }}>
-            <p style={{ textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '20px' }}>
-              No products found matching your selected filters.
-            </p>
-            <button className="btn-primary" onClick={clearAllFilters} style={{ padding: '12px 24px', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.2em' }}>
-              Reset Filters
-            </button>
+          <div className="collection-empty-state">
+            <h3>No Silhouettes Available</h3>
+            <p>We couldn&apos;t find any items matching your selected criteria.</p>
+            <button className="btn-primary" onClick={clearAllFilters}>Reset Filters</button>
           </div>
         ) : (
-          displayProducts.map((product, idx) => (
-            <Link
-              href={`/products/${product.handle}`}
-              key={product.id ? `${product.id}-${idx}` : `${product.handle}-${idx}`}
-              className="product-card"
-            >
-              <div className="product-card-image-wrap">
-                <img src={product.img} alt={product.altText || product.name} loading="lazy" />
-                <div className="product-card-overlay">
-                  <span className="btn-card-quick-view">
-                    View Silhouette
-                  </span>
+          <div className="collection-products-grid grid-studio">
+            {displayProducts.map((product) => {
+              const isWishlisted = isInWishlist(product.id);
+              return (
+                <div key={product.id} className="product-card">
+                  <div className="product-card-image-wrap">
+                    <Link href={`/products/${product.handle}`}>
+                      <img src={product.img} alt={product.altText} />
+                    </Link>
+                    <button
+                      className={`card-wishlist-icon ${isWishlisted ? 'active' : ''}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        requireAuth(() => toggleWishlist(product));
+                      }}
+                      aria-label="Add to Wishlist"
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill={isWishlisted ? "#b00" : "none"} stroke={isWishlisted ? "#b00" : "#111"} strokeWidth="1.5">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="product-card-info">
+                    <div className="product-card-category">{product.category}</div>
+                    <h3 className="product-card-name">
+                      <Link href={`/products/${product.handle}`}>{product.name}</Link>
+                    </h3>
+                    <div className="product-card-price">{product.price}</div>
+                  </div>
                 </div>
-              </div>
-              <div className="product-card-info">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <h3 className="product-card-name" style={{ margin: 0 }}>{product.name.toUpperCase()}</h3>
-                  <button
-                    className={`wishlist-heart-btn ${isInWishlist(product.name) ? 'active' : ''}`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      requireAuth(() => {
-                        toggleWishlist(product);
-                      });
-                    }}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      padding: '4px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: isInWishlist(product.name) ? '#b00' : 'inherit',
-                      transition: 'transform 0.2s'
-                    }}
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill={isInWishlist(product.name) ? '#b00' : 'none'} stroke={isInWishlist(product.name) ? '#b00' : 'currentColor'} strokeWidth="2">
-                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-                    </svg>
-                  </button>
-                </div>
-                <div className="product-card-meta">
-                  <span className="product-card-fabric">{product.fabric?.toUpperCase() || 'PREMIUM'}</span>
-                  <span className="product-card-price">{product.price}</span>
-                </div>
-              </div>
-            </Link>
-          ))
+              );
+            })}
+          </div>
         )}
       </section>
 
@@ -376,43 +481,146 @@ export default function CategoryPage() {
           <button className="btn-close-filters" onClick={() => setIsFilterOpen(false)}>×</button>
         </div>
         <div className="filters-body">
-          {/* Fabrics Filter */}
-          {fabricsList.length > 0 && (
-            <div className="filter-group">
-              <div className="filter-group-title">Fabrics</div>
-              <div className="filter-options">
-                {fabricsList.map(fabric => (
-                  <label key={fabric} className="filter-label">
-                    <input
-                      type="checkbox"
-                      checked={selectedFabrics.includes(fabric)}
-                      onChange={() => toggleFilter(selectedFabrics, setSelectedFabrics, fabric)}
-                    />
-                    <span>{fabric}</span>
-                  </label>
-                ))}
-              </div>
+          {/* 1. Price Range Tiers */}
+          <div className="filter-group">
+            <div className="filter-group-title">1. Price Range</div>
+            <div className="filter-options">
+              {['Under ₹10,000', '₹10,000 – ₹25,000', '₹25,000 – ₹50,000', '₹50,000+'].map(price => (
+                <label key={price} className="filter-label">
+                  <input
+                    type="checkbox"
+                    checked={selectedPrices.includes(price)}
+                    onChange={() => toggleFilter(selectedPrices, setSelectedPrices, price)}
+                  />
+                  <span>{price}</span>
+                </label>
+              ))}
             </div>
-          )}
+          </div>
 
-          {/* Components Filter */}
-          {componentsList.length > 0 && (
-            <div className="filter-group">
-              <div className="filter-group-title">Garment Pieces</div>
-              <div className="filter-options">
-                {componentsList.map(comp => (
-                  <label key={comp} className="filter-label">
-                    <input
-                      type="checkbox"
-                      checked={selectedComponents.includes(comp)}
-                      onChange={() => toggleFilter(selectedComponents, setSelectedComponents, comp)}
-                    />
-                    <span>{comp} Piece Set</span>
-                  </label>
-                ))}
-              </div>
+          {/* 2. Occasion & Mood */}
+          <div className="filter-group">
+            <div className="filter-group-title">2. Occasion & Mood</div>
+            <div className="filter-options">
+              {[
+                'Resort & Vacation',
+                'Festive & Wedding Guest',
+                'Cocktail & Evening Statement',
+                'Everyday Luxe & Casual',
+                'Office / Formal Tailoring'
+              ].map(occ => (
+                <label key={occ} className="filter-label">
+                  <input
+                    type="checkbox"
+                    checked={selectedOccasions.includes(occ)}
+                    onChange={() => toggleFilter(selectedOccasions, setSelectedOccasions, occ)}
+                  />
+                  <span>{occ}</span>
+                </label>
+              ))}
             </div>
-          )}
+          </div>
+
+          {/* 3. Silhouette & Category Type */}
+          <div className="filter-group">
+            <div className="filter-group-title">3. Silhouette & Category</div>
+            <div className="filter-options">
+              {[
+                'Co-ord Sets',
+                'Capes & Drapes',
+                'Blazers & Waistcoats',
+                'Shirts & Tops',
+                'Skirts & Dhoti Skirts',
+                'Kaftans & Dresses'
+              ].map(cat => (
+                <label key={cat} className="filter-label">
+                  <input
+                    type="checkbox"
+                    checked={selectedCategories.includes(cat)}
+                    onChange={() => toggleFilter(selectedCategories, setSelectedCategories, cat)}
+                  />
+                  <span>{cat}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* 4. Color Palette Swatches */}
+          <div className="filter-group">
+            <div className="filter-group-title">4. Color Palette</div>
+            <div className="color-swatches-grid">
+              {colorOptions.map(opt => {
+                const isSelected = selectedColors.includes(opt.label);
+                return (
+                  <div
+                    key={opt.label}
+                    className={`color-swatch-pill ${isSelected ? 'selected' : ''}`}
+                    onClick={() => toggleFilter(selectedColors, setSelectedColors, opt.label)}
+                  >
+                    <span className="color-dot" style={{ background: opt.color }}></span>
+                    <span>{opt.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 5. Craft & Heritage Technique */}
+          <div className="filter-group">
+            <div className="filter-group-title">5. Artisanal Craft</div>
+            <div className="filter-options">
+              {[
+                'Hand Embroidered (Phulkari)',
+                'Block Print / Rangrez',
+                'Vegan Silk Weave',
+                'Solid / Minimalist'
+              ].map(craft => (
+                <label key={craft} className="filter-label">
+                  <input
+                    type="checkbox"
+                    checked={selectedCrafts.includes(craft)}
+                    onChange={() => toggleFilter(selectedCrafts, setSelectedCrafts, craft)}
+                  />
+                  <span>{craft}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* 6. Availability & Sorting */}
+          <div className="filter-group">
+            <div className="filter-group-title">6. Availability & Sort</div>
+            <div className="filter-options" style={{ marginBottom: '20px' }}>
+              {[
+                'In Stock Only',
+                'Ships Next Day (Ready to Ship)',
+                'Custom Order Available'
+              ].map(tog => (
+                <label key={tog} className="filter-label">
+                  <input
+                    type="checkbox"
+                    checked={selectedToggles.includes(tog)}
+                    onChange={() => toggleFilter(selectedToggles, setSelectedToggles, tog)}
+                  />
+                  <span>{tog}</span>
+                </label>
+              ))}
+            </div>
+            <div className="filter-group-title" style={{ marginTop: '15px' }}>Sort By</div>
+            <div className="sort-select-wrapper" style={{ width: '100%' }}>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="sort-select"
+                style={{ width: '100%', padding: '10px' }}
+              >
+                <option value="default">Featured</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+                <option value="alphabetical">Newest Arrivals</option>
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 
