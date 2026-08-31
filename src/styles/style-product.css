@@ -375,10 +375,16 @@
 }
 
 /* Call to Action Grid */
+.pd-cta-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
 .pd-cta-group {
   display: flex;
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: 14px;
 }
 
 @media (max-width: 480px) {
@@ -387,9 +393,9 @@
   }
 }
 
-.pd-btn-primary {
-  flex: 1.2;
-  padding: 20px 30px;
+.pd-btn-buynow {
+  flex: 1;
+  padding: 18px 24px;
   background: #000;
   color: #fff;
   border: 1px solid #000;
@@ -400,11 +406,53 @@
   cursor: pointer;
   border-radius: 40px;
   transition: all 0.4s cubic-bezier(0.25, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
-.pd-btn-primary:hover {
+.pd-btn-buynow:hover:not(:disabled) {
+  background: #222;
+  border-color: #222;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+.pd-btn-buynow.loading {
+  opacity: 0.75;
+  cursor: wait;
+}
+
+.pd-btn-buynow:disabled,
+.pd-btn-primary:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.pd-btn-primary {
+  flex: 1;
+  padding: 18px 24px;
   background: transparent;
   color: #000;
+  border: 1px solid #000;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 40px;
+  transition: all 0.4s cubic-bezier(0.25, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.pd-btn-primary:hover:not(:disabled) {
+  background: #000;
+  color: #fff;
+  transform: translateY(-1px);
 }
 
 .pd-btn-primary.added {
@@ -414,14 +462,14 @@
 }
 
 .pd-btn-whatsapp {
-  flex: 0.8;
+  width: 100%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  padding: 20px 24px;
+  padding: 14px 20px;
   background: transparent;
-  color: #000;
+  color: #222;
   border: 1px solid rgba(0, 0, 0, 0.2);
   font-family: var(--font-mono);
   font-size: 10px;
@@ -782,18 +830,24 @@
     font-size: 10px;
   }
 
-  .pd-cta-group {
+  .pd-cta-container {
     margin-bottom: 5px;
-    gap: 10px;
+    gap: 8px;
   }
 
+  .pd-cta-group {
+    margin-bottom: 0px;
+    gap: 8px;
+  }
+
+  .pd-btn-buynow,
   .pd-btn-primary {
-    padding: 14px 24px;
+    padding: 13px 18px;
     font-size: 10px;
   }
 
   .pd-btn-whatsapp {
-    padding: 14px 20px;
+    padding: 11px 16px;
     font-size: 9px;
   }
 
@@ -881,6 +935,12 @@
   transform: rotate(90deg);
 }
 
+.pd-modal-header {
+  margin-bottom: 20px;
+  border-bottom: 1px solid #e5e5e5;
+  padding-bottom: 15px;
+}
+
 .pd-modal-title {
   font-family: var(--font-display);
   font-size: 1.8rem;
@@ -888,9 +948,41 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: #1d1d1f;
-  margin-bottom: 25px;
-  border-bottom: 1px solid #e5e5e5;
-  padding-bottom: 15px;
+  margin-bottom: 12px;
+}
+
+.pd-modal-gender-tabs {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.pd-modal-gender-tab {
+  padding: 8px 18px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: #fbfbfc;
+  color: #666;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.pd-modal-gender-tab:hover {
+  border-color: #000;
+  color: #000;
+}
+
+.pd-modal-gender-tab.active {
+  background: #000;
+  border-color: #000;
+  color: #fff;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 /* Modal Content Grid - 3 Columns on Desktop */

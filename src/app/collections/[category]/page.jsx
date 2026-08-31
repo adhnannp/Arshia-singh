@@ -40,6 +40,13 @@ const normalizeProduct = (node, collectionCategory) => {
     components: metafieldMap.components || '',
     category: collectionCategory || metafieldMap.category || 'Luxury Edit',
     details: node.description || '',
+    is_couple_set:
+      metafieldMap.is_couple_set === true ||
+      metafieldMap.is_couple_set === 'true' ||
+      metafieldMap.is_couple_set === '1' ||
+      metafieldMap.is_couple_set === 'yes' ||
+      (typeof metafieldMap.is_couple_set === 'string' && metafieldMap.is_couple_set.toLowerCase() === 'true'),
+    tags: Array.isArray(node.tags) ? node.tags : [],
     metafields: metafieldMap,
   };
 };

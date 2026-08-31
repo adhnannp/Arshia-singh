@@ -201,8 +201,10 @@ export default function Navbar() {
             className="cart-toggle"
             onClick={() => setIsCartOpen(true)}
           >
-            CART{cartItems.length > 0 && (
-              <span className="cart-count-badge">{cartItems.length}</span>
+            CART{cartItems.reduce((acc, item) => acc + (typeof item.quantity === 'number' && item.quantity > 0 ? item.quantity : 1), 0) > 0 && (
+              <span className="cart-count-badge">
+                {cartItems.reduce((acc, item) => acc + (typeof item.quantity === 'number' && item.quantity > 0 ? item.quantity : 1), 0)}
+              </span>
             )}
           </button>
           <button className="menu-toggle" onClick={() => setMenuOpen(true)} aria-label="Open Menu">

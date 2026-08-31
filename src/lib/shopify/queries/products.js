@@ -43,6 +43,7 @@ export const GET_COLLECTION_PRODUCTS_QUERY = `#graphql
           }
 
           availableForSale
+          tags
 
           metafields(
             identifiers: [
@@ -58,6 +59,7 @@ export const GET_COLLECTION_PRODUCTS_QUERY = `#graphql
               { namespace: "custom", key: "lining" }
               { namespace: "custom", key: "fit" }
               { namespace: "custom", key: "components" }
+              { namespace: "custom", key: "is_couple_set" }
             ]
           ) {
             namespace
@@ -80,6 +82,7 @@ export const GET_PRODUCT_BY_HANDLE_QUERY = `#graphql
       description
       descriptionHtml
       availableForSale
+      tags
 
       images(first: 20) {
         nodes {
@@ -119,6 +122,7 @@ export const GET_PRODUCT_BY_HANDLE_QUERY = `#graphql
           id
           title
           availableForSale
+          quantityAvailable
           price {
             amount
             currencyCode
@@ -150,6 +154,7 @@ export const GET_PRODUCT_BY_HANDLE_QUERY = `#graphql
           { namespace: "custom", key: "components" }
           { namespace: "custom", key: "details" }
           { namespace: "custom", key: "textile" }
+          { namespace: "custom", key: "is_couple_set" }
         ]
       ) {
         namespace
@@ -194,6 +199,7 @@ export const GET_ALL_PRODUCTS_QUERY = `#graphql
         }
 
         availableForSale
+        tags
 
         metafields(
           identifiers: [
@@ -207,6 +213,7 @@ export const GET_ALL_PRODUCTS_QUERY = `#graphql
             { namespace: "custom", key: "lining" }
             { namespace: "custom", key: "fit" }
             { namespace: "custom", key: "components" }
+            { namespace: "custom", key: "is_couple_set" }
           ]
         ) {
           namespace

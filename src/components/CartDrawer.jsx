@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useCart } from './CartContext';
 import { createShopifyCheckout } from '../lib/shopify/mutations/cart';
 
 export default function CartDrawer() {
-  const { cartItems, isCartOpen, setIsCartOpen, removeFromCart, clearCart, revalidateCartItems, isValidatingCart } = useCart();
+  const { cartItems, isCartOpen, setIsCartOpen, removeFromCart, updateQuantity, clearCart, revalidateCartItems, isValidatingCart } = useCart();
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState(null);
   const [checkoutNotice, setCheckoutNotice] = useState(null);
@@ -45,12 +46,14 @@ export default function CartDrawer() {
   }, [setIsCartOpen]);
 
   const hasUnavailableItems = cartItems.some((item) => item.isUnavailable || item.availableForSale === false);
+  const hasStockAdjustedItems = cartItems.some((item) => Boolean(item.stockNotice));
 
   const total = cartItems.reduce((acc, item) => {
-    // Only sum price for available items or all items in display
+    // Only sum price for available items
     if (item.isUnavailable || item.availableForSale === false) return acc;
-    const priceNum = parseInt(item.price.replace(/[^0-9]/g, '')) || 0;
-    return acc + priceNum;
+    const priceNum = parseInt(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
+    const qty = typeof item.quantity === 'number' && item.quantity > 0 ? item.quantity : 1;
+    return acc + (priceNum * qty);
   }, 0);
 
   const handleCheckout = async () => {
@@ -116,6 +119,13 @@ export default function CartDrawer() {
           </div>
         )}
 
+        {/* Global Stock Adjustment Warning Notice */}
+        {hasStockAdjustedItems && (
+          <div className="cart-drawer-notice warning">
+            <span>⚠️ Live Inventory Update: Some item quantities in your collection were automatically adjusted to match currently available stock.</span>
+          </div>
+        )}
+
         {checkoutNotice && (
           <div className="cart-drawer-notice info">
             <span>{checkoutNotice}</span>
@@ -134,31 +144,94 @@ export default function CartDrawer() {
           ) : (
             cartItems.map((item, index) => {
               const isItemUnavailable = item.isUnavailable || item.availableForSale === false;
-              const priceStr = item.price.replace('/-', '').replace('₹', '').trim();
+              const unitPriceNum = parseInt(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
+              const qty = typeof item.quantity === 'number' && item.quantity > 0 ? item.quantity : 1;
+              const itemTotal = unitPriceNum * qty;
+              const productHandle = item.handle || (item.name ? item.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : '');
+              const productUrl = productHandle ? `/products/${productHandle}` : null;
 
               return (
-                <div className={`cart-item ${isItemUnavailable ? 'unavailable' : ''}`} key={item.id || index}>
-                  <img src={item.img} alt={item.name} className="cart-item-img" />
+                <div className={`cart-item ${isItemUnavailable ? 'unavailable' : ''}`} key={item.id || `${item.handle || item.name}_${item.size}_${index}`}>
+                  {productUrl ? (
+                    <Link
+                      href={productUrl}
+                      onClick={() => setIsCartOpen(false)}
+                      className="cart-item-img-link"
+                      title={`View ${item.name}`}
+                    >
+                      <img src={item.img} alt={item.name} className="cart-item-img" />
+                    </Link>
+                  ) : (
+                    <img src={item.img} alt={item.name} className="cart-item-img" />
+                  )}
+
                   <div className="cart-item-details">
                     <div>
                       <div className="flex items-center justify-between gap-2">
-                        <h4 className="cart-item-name">{item.name}</h4>
+                        {productUrl ? (
+                          <Link
+                            href={productUrl}
+                            onClick={() => setIsCartOpen(false)}
+                            className="cart-item-name-link"
+                            title={`View ${item.name}`}
+                          >
+                            <h4 className="cart-item-name">{item.name}</h4>
+                          </Link>
+                        ) : (
+                          <h4 className="cart-item-name">{item.name}</h4>
+                        )}
                         {isItemUnavailable && (
                           <span className="cart-item-badge unavailable">
                             {item.unlisted ? 'UNLISTED' : 'OUT OF STOCK'}
                           </span>
                         )}
                       </div>
-                      <div className="cart-item-meta">Size: {item.size}</div>
+                      <div className="cart-item-meta">
+                        <span>Size: <strong>{item.size}</strong></span>
+                        {qty > 1 && <span className="cart-item-qty-badge">x{qty}</span>}
+                      </div>
                     </div>
+
                     <div className="cart-item-price-row">
-                      <span className={`cart-item-price ${isItemUnavailable ? 'line-through opacity-50' : ''}`}>
-                        ₹{priceStr}
-                      </span>
-                      <button className="cart-item-remove" onClick={() => removeFromCart(index)}>
-                        Remove
-                      </button>
+                      <div className="cart-item-pricing">
+                        <span className={`cart-item-price ${isItemUnavailable ? 'line-through opacity-50' : ''}`}>
+                          ₹{itemTotal > 0 ? itemTotal.toLocaleString('en-IN') : String(item.price || '0').replace('/-', '').replace('₹', '').trim()}
+                        </span>
+                        {qty > 1 && unitPriceNum > 0 && (
+                          <span className="cart-item-unit-price">
+                            (₹{unitPriceNum.toLocaleString('en-IN')} each)
+                          </span>
+                        )}
+                      </div>
+                      <div className="cart-item-actions">
+                        {qty > 1 && (
+                          <div className="cart-qty-stepper">
+                            <button
+                              type="button"
+                              className="cart-qty-btn minus"
+                              onClick={() => updateQuantity(index, qty - 1)}
+                              title="Decrease quantity"
+                            >
+                              –
+                            </button>
+                            <span className="cart-qty-val">Qty: {qty}</span>
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          className="cart-item-remove"
+                          onClick={() => removeFromCart(index)}
+                        >
+                          Remove
+                        </button>
+                      </div>
                     </div>
+
+                    {item.stockNotice && (
+                      <div className="cart-item-stock-notice">
+                        ⚠️ {item.stockNotice}
+                      </div>
+                    )}
                   </div>
                 </div>
               );
