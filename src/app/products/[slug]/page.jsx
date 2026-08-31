@@ -10,6 +10,7 @@ import { useCart } from '../../../components/CartContext';
 import { useAuth } from '../../../components/AuthContext';
 import { useWishlist } from '../../../components/WishlistContext';
 import { fetchProductByHandle } from '../../../lib/shopify/queries/products';
+import { createShopifyCheckout } from '../../../lib/shopify/mutations/cart';
 
 const DEFAULT_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL'];
 
@@ -171,6 +172,13 @@ const normalizeProductDetail = (node) => {
     wash_care: metafieldMap.wash_care || 'Dry clean recommended.',
     delivery: metafieldMap.delivery || '7 - 10 Business Days',
     textile: metafieldMap.textile || '',
+    is_couple_set:
+      metafieldMap.is_couple_set === true ||
+      metafieldMap.is_couple_set === 'true' ||
+      metafieldMap.is_couple_set === '1' ||
+      metafieldMap.is_couple_set === 'yes' ||
+      (typeof metafieldMap.is_couple_set === 'string' && metafieldMap.is_couple_set.toLowerCase() === 'true'),
+    tags: Array.isArray(node.tags) ? node.tags : [],
     variants: node.variants?.nodes || [],
     metafields: metafieldMap,
   };
@@ -196,6 +204,9 @@ export default function ProductDetailPage() {
   const [addedToCart, setAddedToCart] = useState(false);
   const [openAccordion, setOpenAccordion] = useState('details');
   const [showSizeModal, setShowSizeModal] = useState(false);
+  const [modalGenderTab, setModalGenderTab] = useState('women');
+  const [buyNowLoading, setBuyNowLoading] = useState(false);
+  const [buyNowError, setBuyNowError] = useState('');
   const [sizeUnit, setSizeUnit] = useState('in');
   const [activeSlide, setActiveSlide] = useState(0);
 
@@ -206,6 +217,9 @@ export default function ProductDetailPage() {
     fetchProductByHandle(slug).then(data => {
       const norm = normalizeProductDetail(data);
       setProduct(norm);
+      if (norm?.sizes && norm.sizes.length > 0) {
+        setSelectedSize(norm.sizes[0]);
+      }
       setLoading(false);
     });
   }, [slug]);
@@ -230,10 +244,11 @@ export default function ProductDetailPage() {
   // Helper: Find variant corresponding to selected options
   const getSizeVariant = (size) => {
     if (!product?.variants || product.variants.length === 0) return null;
+    const targetSize = size || selectedSize || (product.sizes && product.sizes[0]);
     return product.variants.find(v => {
-      if (size) {
+      if (targetSize) {
         const matchesSize = v.selectedOptions?.some(
-          opt => opt.name?.toLowerCase() === 'size' && opt.value?.toUpperCase() === size.toUpperCase()
+          opt => opt.name?.toLowerCase() === 'size' && opt.value?.toUpperCase() === targetSize.toUpperCase()
         );
         if (!matchesSize) return false;
       }
@@ -243,7 +258,14 @@ export default function ProductDetailPage() {
           so => so.name?.toLowerCase() === optName.toLowerCase() && so.value?.toLowerCase() === optVal.toLowerCase()
         );
       });
-    });
+    }) || product.variants.find(v => {
+      return Object.entries(selectedOptionsState).every(([optName, optVal]) => {
+        if (!optVal || optName.toLowerCase() === 'size') return true;
+        return v.selectedOptions?.some(
+          so => so.name?.toLowerCase() === optName.toLowerCase() && so.value?.toLowerCase() === optVal.toLowerCase()
+        );
+      });
+    }) || product.variants[0];
   };
 
   const handleSelectSize = (size) => {
@@ -261,13 +283,23 @@ export default function ProductDetailPage() {
   const selectedVariant = selectedSize ? getSizeVariant(selectedSize) : null;
   const isSelectedSizeOutOfStock = selectedSize && selectedVariant && !selectedVariant.availableForSale;
 
-  // Dynamic values & prices from API
-  const isMens = product && (
-    product.category?.toLowerCase() === 'natural luxury' ||
-    product.category?.toLowerCase() === 'printed stories' ||
-    product.category?.toLowerCase() === 'modern classics' ||
-    product.name?.toLowerCase().includes("groom")
+  // Dynamic gender & couple set calculation based purely on Shopify Tags and is_couple_set metafield
+  const productTags = (product?.tags || []).map(t => typeof t === 'string' ? t.trim().toLowerCase() : '');
+  const hasMenTag = productTags.some(t => t === 'men' || t === 'mens' || t === "men's" || t === 'man');
+  const hasWomenTag = productTags.some(t => t === 'women' || t === 'womens' || t === "women's" || t === 'woman');
+  const hasCoupleTag = productTags.some(t => t === 'couple' || t === 'couple set' || t === 'couples' || t === 'couple-set' || t === 'unisex');
+
+  // If product is untagged, tagged with both men & women, tagged couple, or is_couple_set metafield -> couple set (show both sizes)
+  const isCoupleSet = Boolean(
+    product?.is_couple_set ||
+    hasCoupleTag ||
+    (hasMenTag && hasWomenTag) ||
+    (!hasMenTag && !hasWomenTag)
   );
+
+  const isMens = hasMenTag && !hasWomenTag;
+  const currentModalGender = isCoupleSet ? modalGenderTab : (isMens ? 'men' : 'women');
+  const isModalMens = currentModalGender === 'men';
 
   const displayPrice = useMemo(() => {
     if (selectedVariant?.price) {
@@ -352,17 +384,86 @@ export default function ProductDetailPage() {
       ? `${product.name} (${nonSizeSummary})`
       : product.name;
 
-    addToCart({
+    const res = addToCart({
       name: finalName,
       size: selectedSize,
       price: displayPrice,
       img: selectedVariant?.image?.url || images[0],
       handle: product.handle,
       variantId: selectedVariant?.id || null,
+      selectedOptions: { ...selectedOptionsState },
+      quantityAvailable: typeof selectedVariant?.quantityAvailable === 'number' ? selectedVariant.quantityAvailable : null,
       availableForSale: product.availableForSale !== false && !isSelectedSizeOutOfStock
     });
+
+    if (res && res.success === false) {
+      setStockMessage(`⚠️ ${res.error}`);
+      return;
+    }
+
+    setStockMessage('');
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2000);
+  };
+
+  const handleBuyNow = async () => {
+    if (!selectedSize) {
+      setSizeError(true);
+      setTimeout(() => setSizeError(false), 700);
+      return;
+    }
+
+    if (isSelectedSizeOutOfStock) {
+      setStockMessage(`⚠️ Size ${selectedSize} is out of stock and cannot be purchased.`);
+      return;
+    }
+
+    const nonSizeSummary = Object.entries(selectedOptionsState)
+      .filter(([k]) => k.toLowerCase() !== 'size')
+      .map(([, v]) => v)
+      .filter(Boolean)
+      .join(', ');
+
+    const finalName = nonSizeSummary
+      ? `${product.name} (${nonSizeSummary})`
+      : product.name;
+
+    const buyItem = {
+      name: finalName,
+      size: selectedSize,
+      price: displayPrice,
+      img: selectedVariant?.image?.url || images[0],
+      handle: product.handle,
+      variantId: selectedVariant?.id || null,
+      selectedOptions: { ...selectedOptionsState },
+      quantity: 1,
+      quantityAvailable: typeof selectedVariant?.quantityAvailable === 'number' ? selectedVariant.quantityAvailable : null,
+      availableForSale: product.availableForSale !== false && !isSelectedSizeOutOfStock
+    };
+
+    setBuyNowLoading(true);
+    setBuyNowError('');
+
+    try {
+      const { checkoutUrl, error } = await createShopifyCheckout([buyItem]);
+      if (error) {
+        setBuyNowError(`Checkout error: ${error}`);
+        setBuyNowLoading(false);
+        return;
+      }
+
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl;
+        setTimeout(() => setBuyNowLoading(false), 2000);
+      } else {
+        setBuyNowError('Could not generate Shopify checkout URL. Please try again.');
+        setBuyNowLoading(false);
+      }
+    } catch (err) {
+      console.error('[Product Buy Now] Checkout exception:', err);
+      setBuyNowError('An unexpected error occurred. Please try again.');
+      setBuyNowLoading(false);
+    }
   };
 
   const handleWhatsApp = () => {
@@ -532,20 +633,32 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Checkout & Enquire CTAs */}
-          <div className="pd-cta-group">
-            <button
-              className={`pd-btn-primary ${addedToCart ? 'added' : ''} ${isSelectedSizeOutOfStock ? 'disabled' : ''}`}
-              onClick={handleAddToCart}
-              style={isSelectedSizeOutOfStock ? { background: '#999', cursor: 'not-allowed' } : {}}
-            >
-              {addedToCart ? '✓ Added to Cart' : isSelectedSizeOutOfStock ? 'Out of Stock' : 'Add to Cart'}
-            </button>
+          <div className="pd-cta-container">
+            <div className="pd-cta-group">
+              <button
+                className={`pd-btn-buynow ${buyNowLoading ? 'loading' : ''} ${isSelectedSizeOutOfStock ? 'disabled' : ''}`}
+                onClick={handleBuyNow}
+                disabled={buyNowLoading || isSelectedSizeOutOfStock}
+                style={isSelectedSizeOutOfStock ? { background: '#888', cursor: 'not-allowed' } : {}}
+              >
+                {buyNowLoading ? 'Processing Checkout...' : isSelectedSizeOutOfStock ? 'Out of Stock' : 'Buy Now'}
+              </button>
+              <button
+                className={`pd-btn-primary ${addedToCart ? 'added' : ''} ${isSelectedSizeOutOfStock ? 'disabled' : ''}`}
+                onClick={handleAddToCart}
+                disabled={isSelectedSizeOutOfStock}
+                style={isSelectedSizeOutOfStock ? { background: '#999', cursor: 'not-allowed' } : {}}
+              >
+                {addedToCart ? '✓ Added to Cart' : isSelectedSizeOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+              </button>
+            </div>
             <button className="pd-btn-whatsapp" onClick={handleWhatsApp}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
               </svg>
               WhatsApp Custom Order
             </button>
+            {buyNowError && <p className="pd-size-error-msg" style={{ color: '#b00', marginTop: '8px' }}>{buyNowError}</p>}
           </div>
 
           {/* Delivery Note */}
@@ -606,15 +719,36 @@ export default function ProductDetailPage() {
         <div className="pd-modal-overlay" onClick={() => setShowSizeModal(false)}>
           <div className="pd-modal" onClick={(e) => e.stopPropagation()}>
             <button className="pd-modal-close" onClick={() => setShowSizeModal(false)}>&times;</button>
-            <h3 className="pd-modal-title">{isMens ? "Men's Size Guide" : "Women's Size Guide"}</h3>
+            
+            <div className="pd-modal-header">
+              <h3 className="pd-modal-title">
+                {isCoupleSet ? "Couple Set Size Guide" : isMens ? "Men's Size Guide" : "Women's Size Guide"}
+              </h3>
+              {isCoupleSet && (
+                <div className="pd-modal-gender-tabs">
+                  <button
+                    className={`pd-modal-gender-tab ${modalGenderTab === 'women' ? 'active' : ''}`}
+                    onClick={() => setModalGenderTab('women')}
+                  >
+                    Women's Size Guide
+                  </button>
+                  <button
+                    className={`pd-modal-gender-tab ${modalGenderTab === 'men' ? 'active' : ''}`}
+                    onClick={() => setModalGenderTab('men')}
+                  >
+                    Men's Size Guide
+                  </button>
+                </div>
+              )}
+            </div>
 
             <div className="pd-modal-content-wrapper">
               {/* Column 1: How to Measure Image */}
               <div className="pd-modal-col-left">
-                <h4 className="pd-modal-subtitle">{isMens ? "MEN HOW TO MEASURE" : "WOMEN HOW TO MEASURE"}</h4>
+                <h4 className="pd-modal-subtitle">{isModalMens ? "MEN HOW TO MEASURE" : "WOMEN HOW TO MEASURE"}</h4>
                 <div className="pd-measure-img-wrap">
                   <img
-                    src={isMens ? "/assets/size-chart/men-measure.jpg" : "/assets/size-chart/women-measure.jpg"}
+                    src={isModalMens ? "/assets/size-chart/men-measure.jpg" : "/assets/size-chart/women-measure.jpg"}
                     alt="How to measure diagram"
                   />
                 </div>
@@ -623,7 +757,7 @@ export default function ProductDetailPage() {
               {/* Column 2: Size Table & Details */}
               <div className="pd-modal-col-middle">
                 <div className="pd-modal-table-header">
-                  <h4 className="pd-modal-subtitle">Size Conversion</h4>
+                  <h4 className="pd-modal-subtitle">{isModalMens ? "Men's Size Conversion" : "Women's Size Conversion"}</h4>
                   <div className="pd-unit-toggle">
                     <button
                       className={`pd-unit-btn ${sizeUnit === 'in' ? 'active' : ''}`}
@@ -649,19 +783,19 @@ export default function ProductDetailPage() {
                         <th>UK</th>
                         <th>US</th>
                         <th>EU</th>
-                        <th>{isMens ? "Chest" : "Bust"}</th>
+                        <th>{isModalMens ? "Chest" : "Bust"}</th>
                         <th>Waist</th>
                         <th>Hip</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {(isMens ? MEN_SIZE_DATA : WOMEN_SIZE_DATA).map((row) => (
+                      {(isModalMens ? MEN_SIZE_DATA : WOMEN_SIZE_DATA).map((row) => (
                         <tr key={row.brand}>
                           <td><strong>{row.brand}</strong></td>
                           <td>{row.uk}</td>
                           <td>{row.us}</td>
                           <td>{row.eu}</td>
-                          <td>{sizeUnit === 'in' ? (isMens ? row.chest_in : row.bust_in) : (isMens ? row.chest_cm : row.bust_cm)}</td>
+                          <td>{sizeUnit === 'in' ? (isModalMens ? row.chest_in : row.bust_in) : (isModalMens ? row.chest_cm : row.bust_cm)}</td>
                           <td>{sizeUnit === 'in' ? row.waist_in : row.waist_cm}</td>
                           <td>{sizeUnit === 'in' ? row.hip_in : row.hip_cm}</td>
                         </tr>
@@ -692,7 +826,7 @@ export default function ProductDetailPage() {
                 </div>
                 <div className="pd-fit-guide-clean">
                   <h5>How to Measure</h5>
-                  {isMens ? (
+                  {isModalMens ? (
                     <p><strong>Men:</strong> Chest: fullest chest. Waist: natural waist. Hip: fullest part of seat.</p>
                   ) : (
                     <p><strong>Women:</strong> Bust: fullest part. Waist: natural waist. Hip: fullest part of hips.</p>
