@@ -323,7 +323,7 @@ export default function Navbar() {
 
           {/* Menu Footer */}
           <div className="menu-footer-info">
-            <div className="m-footer-left">ARSHIA SINGH © 2026 / CONSCIOUS LUXURY</div>
+            <div className="m-footer-left">ARSHIA SINGH - CONSCIOUS LUXURY</div>
             <div className="m-footer-links">
               <Link href="/shipping-policy" onClick={closeMenu}>Shipping Policy</Link>
               <Link href="/privacy-policy" onClick={closeMenu}>Privacy Policy</Link>

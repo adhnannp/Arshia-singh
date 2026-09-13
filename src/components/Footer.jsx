@@ -27,7 +27,7 @@ export default function Footer() {
       </div>
 
       <div className="footer-bottom">
-        <p className="footer-copyright">© 2026 ARSHIA SINGH — CONSCIOUS LUXURY — PETA VEGAN™</p>
+        <p className="footer-copyright">© ARSHIA SINGH — CONSCIOUS LUXURY — PETA VEGAN™</p>
       </div>
     </footer>
   );
