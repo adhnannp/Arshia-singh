@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import gsap from 'gsap';
 import Footer from '../components/Footer';
+import { fetchShopifyTestimonials } from '../lib/shopify/queries/testimonials';
 
 const VEGAN_BGS = [
   "/assets/art_museum_1.jpg",
@@ -33,27 +34,40 @@ const getLinkForImage = (src) => {
   return '/discover';
 };
 
+const MOOD_LOOKS = [
+  { id: 1, src: "/assets/new_coll_1.jpg", title: "Rangrez Print Kaftan" },
+  { id: 2, src: "/assets/new_coll_2.png", title: "Ravel Print Dhoti Skirt Set" },
+  { id: 3, src: "/assets/new_coll_3.png", title: "Raat Print Skirt Jacket Set" },
+  { id: 4, src: "/assets/new_coll_4.jpeg", title: "Pastel Embroidery Blazer Set" },
+  { id: 5, src: "/assets/new_coll_5.JPG", title: "52 Bagh Phulkari Blazer Set" },
+  { id: 6, src: "/assets/new_coll_6.jpg", title: "Libaas Drop Shoulder Shirt" },
+  { id: 7, src: "/assets/new_coll_7.jpg", title: "Block Print Drop Shoulder Shirt" },
+  { id: 8, src: "/assets/DSC_8756.jpg", title: "Ravel Waist Coat Pant Set" },
+  { id: 9, src: "/assets/DSC_8356.jpg", title: "Block Print Palazzo Co-ord" },
+  { id: 10, src: "/assets/DSC_8473.jpg", title: "Heritage Palazzo Ensemble" },
+  { id: 11, src: "/assets/DSC_8791.jpg", title: "Raat Print Skirt Set" },
+  { id: 12, src: "/assets/DSC_8402.jpg", title: "Artisanal Block Print Co-ord" },
+];
+
 export default function HomePage() {
-  const [stack, setStack] = useState([
-    { id: 1, src: "/assets/new_coll_1.jpg" },
-    { id: 2, src: "/assets/new_coll_2.png" },
-    { id: 3, src: "/assets/new_coll_3.png" },
-    { id: 4, src: "/assets/new_coll_4.jpeg" },
-    { id: 5, src: "/assets/new_coll_5.JPG" },
-    { id: 6, src: "/assets/new_coll_6.jpg" },
-    { id: 7, src: "/assets/new_coll_7.jpg" },
-    { id: 8, src: "/assets/DSC_8756.jpg" },
-    { id: 9, src: "/assets/DSC_8356.jpg" },
-    { id: 10, src: "/assets/DSC_8473.jpg" },
-    { id: 11, src: "/assets/DSC_8791.jpg" },
-    { id: 12, src: "/assets/DSC_8402.jpg" },
-  ]);
-
-  const [startX, setStartX] = useState(null);
-  const [swipeOffset, setSwipeOffset] = useState(0);
-  const [isSwiping, setIsSwiping] = useState(false);
-
+  const [currentMoodIndex, setCurrentMoodIndex] = useState(0);
+  const [touchStartX, setTouchStartX] = useState(null);
   const [currentBgIndex, setCurrentBgIndex] = useState(0);
+  const [patrons, setPatrons] = useState([]);
+
+  useEffect(() => {
+    async function loadTestimonials() {
+      try {
+        const data = await fetchShopifyTestimonials();
+        if (data && data.length > 0) {
+          setPatrons(data);
+        }
+      } catch (err) {
+        console.error('Failed to load testimonials:', err);
+      }
+    }
+    loadTestimonials();
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -62,40 +76,20 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, []);
 
-  const cycleStack = () => {
-    setStack(prev => {
-      const next = [...prev];
-      const first = next.shift();
-      next.push(first);
-      return next;
-    });
-  };
-
   const handleTouchStart = (e) => {
-    setStartX(e.touches[0].clientX);
-    setIsSwiping(true);
+    setTouchStartX(e.touches[0].clientX);
   };
 
-  const handleTouchMove = (e) => {
-    if (!startX) return;
-    const currentX = e.touches[0].clientX;
-    const diff = currentX - startX;
-    setSwipeOffset(diff);
-  };
-
-  const handleTouchEnd = () => {
-    if (Math.abs(swipeOffset) > 80) {
-      const flyDirection = swipeOffset > 0 ? 350 : -350;
-      setSwipeOffset(flyDirection);
-      setTimeout(() => {
-        cycleStack();
-        setSwipeOffset(0);
-      }, 300);
-    } else {
-      setSwipeOffset(0);
+  const handleTouchEnd = (e) => {
+    if (!touchStartX) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX - touchEndX;
+    if (diff > 40) {
+      setCurrentMoodIndex((prev) => (prev === MOOD_LOOKS.length - 1 ? 0 : prev + 1));
+    } else if (diff < -40) {
+      setCurrentMoodIndex((prev) => (prev === 0 ? MOOD_LOOKS.length - 1 : prev - 1));
     }
-    setStartX(null);
-    setIsSwiping(false);
+    setTouchStartX(null);
   };
 
   useEffect(() => {
@@ -193,8 +187,8 @@ export default function HomePage() {
           </div>
           <p className="hero-subtitle italic fade-up cinematic-subtitle">Where Craftsmanship Meets Consciousness.</p>
           <div className="hero-ctas fade-up cinematic-ctas">
-            <Link href="/collections/matching-moods" className="btn-primary cinematic-btn">Enter the Collection</Link>
-            <Link href="/our-story" className="btn-secondary cinematic-btn-outline">Discover the Story</Link>
+            <Link href="/collections" className="btn-primary cinematic-btn">Enter the Collection</Link>
+            <Link href="/story" className="btn-secondary cinematic-btn-outline">Discover the Story</Link>
           </div>
         </div>
       </section>
@@ -275,43 +269,68 @@ export default function HomePage() {
           </div></div>
         </div>
 
-        {/* Mobile View: Layered Stack of Images */}
-        <div
-          className="mood-mobile-stack"
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
-          {stack.map((card, index) => {
-            const rotations = [-5, 4, -2, 1, -4, 3, -1, 5, -3, 2, -6, 4];
-            const translateXs = [-10, 8, -4, 0, -6, 5, -2, 7, -8, 4, -5, 6];
-            const translateYs = [-8, -4, 4, 10, -6, 2, 8, -5, 6, -3, 5, -7];
-
-            const rotVal = rotations[index % rotations.length];
-            const posXVal = translateXs[index % translateXs.length];
-            const posYVal = translateYs[index % translateYs.length];
-
-            const isTopCard = index === stack.length - 1;
-            const currentTranslateX = isTopCard ? posXVal + swipeOffset : posXVal;
-            const currentTranslateY = posYVal;
-            const currentRotation = isTopCard ? rotVal + (swipeOffset / 15) : rotVal;
-
-            return (
-              <div
-                key={card.id}
-                className="mood-stack-card"
-                style={{
-                  zIndex: index,
-                  transform: `rotate(${currentRotation}deg) translate(${currentTranslateX}px, ${currentTranslateY}px)`,
-                  transition: isSwiping && isTopCard ? 'none' : 'transform 0.4s cubic-bezier(0.25, 1, 0.3, 1), z-index 0.4s ease',
-                }}
+        {/* Mobile View: Intuitive Sequential Lookbook Carousel */}
+        <div className="mood-mobile-carousel">
+          <div className="mood-carousel-header">
+            <span className="mood-carousel-kicker">
+              LOOK {String(currentMoodIndex + 1).padStart(2, '0')} OF {String(MOOD_LOOKS.length).padStart(2, '0')}
+            </span>
+            <div className="mood-carousel-controls">
+              <button
+                type="button"
+                className="mood-nav-btn prev"
+                onClick={() => setCurrentMoodIndex((prev) => (prev === 0 ? MOOD_LOOKS.length - 1 : prev - 1))}
+                aria-label="Previous Look"
               >
-                <Link href={getLinkForImage(card.src)} style={{ display: 'block', width: '100%', height: '100%' }}>
-                  <img src={card.src} alt={`Look ${card.id}`} />
-                </Link>
+                ←
+              </button>
+              <button
+                type="button"
+                className="mood-nav-btn next"
+                onClick={() => setCurrentMoodIndex((prev) => (prev === MOOD_LOOKS.length - 1 ? 0 : prev + 1))}
+                aria-label="Next Look"
+              >
+                →
+              </button>
+            </div>
+          </div>
+
+          <div
+            className="mood-carousel-stage"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
+            <Link
+              href={getLinkForImage(MOOD_LOOKS[currentMoodIndex].src)}
+              className="mood-slide-link"
+            >
+              <div className="mood-slide-img-wrap">
+                <img
+                  src={MOOD_LOOKS[currentMoodIndex].src}
+                  alt={MOOD_LOOKS[currentMoodIndex].title}
+                />
+                <div className="mood-slide-tag">
+                  LOOK {String(currentMoodIndex + 1).padStart(2, '0')}
+                </div>
               </div>
-            );
-          })}
+              <div className="mood-slide-info">
+                <span className="mood-slide-name">{MOOD_LOOKS[currentMoodIndex].title}</span>
+                <span className="mood-slide-cta">View Silhouette →</span>
+              </div>
+            </Link>
+          </div>
+
+          <div className="mood-carousel-pills">
+            {MOOD_LOOKS.map((look, idx) => (
+              <button
+                key={look.id}
+                type="button"
+                className={`mood-pill-dot${idx === currentMoodIndex ? ' active' : ''}`}
+                onClick={() => setCurrentMoodIndex(idx)}
+                aria-label={`Go to look ${idx + 1}`}
+              />
+            ))}
+          </div>
         </div>
 
         <div className="parallax-mood-body">
@@ -380,14 +399,26 @@ export default function HomePage() {
       {/* ─── THE COLLECTION EDITORIAL GRID ─── */}
       <section className="section the-collection" id="the-collection">
         <div className="collection-header">
-          <h2 className="display">ROOTED IN INTENTION</h2>
+          <div className="collection-header-text">
+            <span className="collection-kicker">EDITORIAL ARCHIVE / CHAPTER 01</span>
+            <h2 className="display">ROOTED IN INTENTION</h2>
+          </div>
           <div className="collection-badges">
             <span className="badge">Heritage Craft</span>
             <span className="badge">NEW IN</span>
-            <Link href="/collections/matching-moods" className="btn-primary">Uncover the Details</Link>
+            <Link href="/collections" className="btn-primary collection-header-cta">
+              Enter The Collection →
+            </Link>
           </div>
         </div>
-        <div className="collection-swipe-hint">SWIPE TO UNFOLD &gt;&gt;&gt;</div>
+
+        <div className="collection-swipe-cue-wrap">
+          <div className="collection-swipe-cue">
+            <span className="cue-dot" />
+            <span className="cue-text">SWIPE TO UNFOLD ARCHIVE</span>
+            <span className="cue-arrow">→</span>
+          </div>
+        </div>
         <div className="editorial-grid">
           <div className="grid-item item-large" data-speed="0.9" data-index="01">
             <Link href={getLinkForImage('/assets/IMG-20260903-WA0002.webp')} className="grid-item-link">
@@ -415,6 +446,13 @@ export default function HomePage() {
             </Link>
           </div>
         </div>
+        {/* Mobile prominent CTA below editorial grid */}
+        <div className="collection-mobile-cta-wrap">
+          <Link href="/collections" className="btn-primary collection-mobile-cta">
+            Enter The Collection →
+          </Link>
+        </div>
+
         <div className="collection-progress"><div className="progress-track"><div className="progress-bar"></div></div></div>
         <div className="collection-ticker"><div className="ticker-track">
           <div className="ticker-text">NEW IN → → EVERYDAY EASE OCCASION STATEMENT PIECES CUSTOM // // // ∞ PHULKARI BLOCK PRINT HAND EMBROIDERY</div>
@@ -429,6 +467,107 @@ export default function HomePage() {
           <div className="marquee-text">CRAFTSMANSHIP ✧ CONSCIOUSNESS — HERITAGE ∞ VEGAN ♥ PHULKARI ★ BLOCK PRINT ✧ HAND EMBROIDERY — INTENTIONAL ∞ MODERN ✧ EVOLUTION — TIMELESS ♥ EMPOWERMENT ★ INDIVIDUALITY ✧ PETA APPROVED ∞ SUSTAINABLE — DESIGN ★ EXPRESSION ♥ IDENTITY</div>
         </div>
       </section>
+
+      {/* ─── PATRON REFLECTIONS / COURIER POSTCARD RAIL ─── */}
+      {patrons && patrons.length > 0 && (
+        <section className="section patron-reflections" id="reflections">
+          <div className="reflections-container">
+            <div className="reflections-header">
+              <span className="reflections-kicker">VOICES OF CONSCIOUS LUXURY</span>
+              <h2 className="reflections-title">In Praise of the Craft</h2>
+              <p className="reflections-subtitle">
+                Reflections from patrons who embrace mindful craftsmanship, ethical luxury, and timeless individuality.
+              </p>
+            </div>
+
+            {/* Courier Postcard Infinite Rail */}
+            <div className="postcard-rail-wrapper">
+              <div className="postcard-track">
+                {(patrons.length < 4 ? [...patrons, ...patrons, ...patrons, ...patrons] : [...patrons, ...patrons]).map((item, index) => (
+                  <article
+                    key={`postcard-${index}`}
+                    className="postcard-card"
+                    style={{
+                      backgroundColor: item.cardColor,
+                      '--card-color': item.cardColor,
+                      '--stamp-tint': item.stampTint,
+                    }}
+                  >
+                    {/* Top: Quote & Postage Stamp */}
+                    <div className="postcard-top">
+                      <div className="postcard-quote-wrapper">
+                        <p className="postcard-quote">&ldquo;{item.quote}&rdquo;</p>
+                      </div>
+
+                      <div className="postcard-stamp-cluster">
+                        <div className="postcard-postmark" aria-hidden="true">
+                          <svg width="60" height="60" viewBox="0 0 60 60" className="postmark-svg">
+                            <circle cx="30" cy="30" r="28" fill="none" stroke="#2D2319" strokeWidth="1.1" opacity="0.45" />
+                            <circle cx="30" cy="30" r="18" fill="none" stroke="#2D2319" strokeWidth="0.8" opacity="0.35" />
+                          </svg>
+                          <span className="postmark-date">{item.postmark}</span>
+                        </div>
+
+                        <div className="postcard-stamp">
+                          <div className="postcard-stamp-inner">
+                            <img
+                              src={item.photo}
+                              alt={item.name}
+                              className="postcard-stamp-img"
+                              loading="lazy"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Bottom: Signature / Name / City / Address lines */}
+                    <div className="postcard-bottom">
+                      <div className="postcard-author-info">
+                        <div className="postcard-signature" aria-hidden="true">
+                          <svg width="86" height="14" viewBox="0 0 120 16" fill="none">
+                            <path
+                              d="M2 12 C10 2, 18 2, 24 11 C29 18, 36 4, 44 10 C50 14, 55 4, 62 9 C69 14, 74 5, 82 10 C89 14, 96 6, 118 4"
+                              stroke="#2D2319"
+                              strokeWidth="1.6"
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                        </div>
+                        <span className="postcard-name">{item.name}</span>
+                        <span className="postcard-meta">{item.role} &bull; {item.city}</span>
+                      </div>
+
+                      <div className="postcard-address-lines" aria-hidden="true">
+                        <span className="postcard-addr-line" />
+                        <span className="postcard-addr-line" />
+                        <span className="postcard-addr-line short" />
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+
+            <div className="reflections-trust-bar">
+              <div className="trust-item">
+                <span className="trust-icon">✦</span>
+                <span className="trust-label">100% PETA-Approved Vegan Textiles</span>
+              </div>
+              <div className="trust-divider" />
+              <div className="trust-item">
+                <span className="trust-icon">✦</span>
+                <span className="trust-label">Authentic Artisanal Heritage Karigari</span>
+              </div>
+              <div className="trust-divider" />
+              <div className="trust-item">
+                <span className="trust-icon">✦</span>
+                <span className="trust-label">Bespoke Fit &amp; Global Conscious Delivery</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ─── FOUNDER NOTE ─── */}
       <section className="section founder-note">
@@ -462,6 +601,22 @@ export default function HomePage() {
                 <p className="m-0"><strong>Where Craftsmanship Meets Consciousness</strong></p>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── BOTTOM JOURNEY: ENTER THE COLLECTION CTA ─── */}
+      <section className="section bottom-collection-invitation">
+        <div className="invitation-container">
+          <span className="invitation-kicker">WHERE CRAFTSMANSHIP MEETS CONSCIOUSNESS</span>
+          <h2 className="invitation-title">ENTER THE COLLECTION</h2>
+          <p className="invitation-desc">
+            Discover our full spectrum of conscious silhouettes—from fluid everyday drapes to handcrafted ceremonial blazers and bespoke ensembles.
+          </p>
+          <div className="invitation-actions">
+            <Link href="/collections" className="btn-primary invitation-btn">
+              Explore All Collections
+            </Link>
           </div>
         </div>
       </section>

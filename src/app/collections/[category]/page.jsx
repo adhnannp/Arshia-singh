@@ -9,6 +9,7 @@ import Footer from '../../../components/Footer';
 import { useAuth } from '../../../components/AuthContext';
 import { useWishlist } from '../../../components/WishlistContext';
 import { fetchCollectionProducts } from '../../../lib/shopify/queries/products';
+import { fetchShopifyCollections } from '../../../lib/shopify/queries/collections';
 
 // Helper: Normalize Shopify product node
 const normalizeProduct = (node, collectionCategory) => {
@@ -58,8 +59,6 @@ const getSortParams = (sortBy) => {
       return { sortKey: 'PRICE', reverse: false };
     case 'price-high':
       return { sortKey: 'PRICE', reverse: true };
-    case 'alphabetical':
-      return { sortKey: 'TITLE', reverse: false };
     case 'default':
     default:
       return { sortKey: 'COLLECTION_DEFAULT', reverse: false };
@@ -75,10 +74,25 @@ export default function CategoryPage() {
 
   // Dynamic Shopify Collection State
   const [collectionInfo, setCollectionInfo] = useState({ title: '', description: '', image: null });
+  const [collectionsNav, setCollectionsNav] = useState([]);
   const [productsList, setProductsList] = useState([]);
   const [pageInfo, setPageInfo] = useState({ hasNextPage: false, endCursor: null });
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);  // Layout & Filter States
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  useEffect(() => {
+    async function loadNavCollections() {
+      try {
+        const data = await fetchShopifyCollections();
+        if (data && data.length > 0) {
+          setCollectionsNav(data);
+        }
+      } catch (e) {
+        console.error('Error fetching collections nav:', e);
+      }
+    }
+    loadNavCollections();
+  }, []);
   const [layoutMode] = useState('studio'); // 'studio' (3-col)
   const [mobileGrid, setMobileGrid] = useState('1col'); // mobile: '1col' | '2col'
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -91,6 +105,59 @@ export default function CategoryPage() {
   const [sortBy, setSortBy] = useState('default');
 
   const sentinelRef = useRef(null);
+
+  // Restore filters and sort state from sessionStorage or URL query params
+  useEffect(() => {
+    if (typeof window === 'undefined' || !slug) return;
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlSort = urlParams.get('sort');
+      const savedRaw = sessionStorage.getItem(`as_filter_${slug}`);
+      const saved = savedRaw ? JSON.parse(savedRaw) : null;
+
+      if (urlSort && ['default', 'price-low', 'price-high'].includes(urlSort)) {
+        setSortBy(urlSort);
+      } else if (saved?.sortBy) {
+        setSortBy(saved.sortBy);
+      }
+
+      if (saved?.selectedPrices) setSelectedPrices(saved.selectedPrices);
+      if (saved?.selectedOccasions) setSelectedOccasions(saved.selectedOccasions);
+      if (saved?.selectedCategories) setSelectedCategories(saved.selectedCategories);
+      if (saved?.selectedColors) setSelectedColors(saved.selectedColors);
+      if (saved?.selectedCrafts) setSelectedCrafts(saved.selectedCrafts);
+      if (saved?.selectedToggles) setSelectedToggles(saved.selectedToggles);
+    } catch (e) {
+      console.warn('Could not restore filter state', e);
+    }
+  }, [slug]);
+
+  // Persist filters and sort state to sessionStorage and update URL query
+  useEffect(() => {
+    if (typeof window === 'undefined' || !slug) return;
+    try {
+      const stateToSave = {
+        sortBy,
+        selectedPrices,
+        selectedOccasions,
+        selectedCategories,
+        selectedColors,
+        selectedCrafts,
+        selectedToggles,
+      };
+      sessionStorage.setItem(`as_filter_${slug}`, JSON.stringify(stateToSave));
+
+      const url = new URL(window.location.href);
+      if (sortBy && sortBy !== 'default') {
+        url.searchParams.set('sort', sortBy);
+      } else {
+        url.searchParams.delete('sort');
+      }
+      window.history.replaceState(null, '', url.toString());
+    } catch (e) {
+      console.warn('Could not persist filter state', e);
+    }
+  }, [slug, sortBy, selectedPrices, selectedOccasions, selectedCategories, selectedColors, selectedCrafts, selectedToggles]);
 
   // Fetch initial collection data and products from Shopify
   const loadInitialProducts = useCallback(async () => {
@@ -189,6 +256,14 @@ export default function CategoryPage() {
     setSelectedCrafts([]);
     setSelectedToggles([]);
     setSortBy('default');
+    if (typeof window !== 'undefined') {
+      try {
+        sessionStorage.removeItem(`as_filter_${slug}`);
+        const url = new URL(window.location.href);
+        url.searchParams.delete('sort');
+        window.history.replaceState(null, '', url.toString());
+      } catch (e) {}
+    }
   };
 
   const activeFiltersCount =
@@ -299,6 +374,20 @@ export default function CategoryPage() {
     return true;
   });
 
+  // Client-side Price Sorting guarantee
+  const sortedDisplayProducts = [...displayProducts];
+  if (sortBy === 'price-low') {
+    sortedDisplayProducts.sort((a, b) => (a.rawPrice || 0) - (b.rawPrice || 0));
+  } else if (sortBy === 'price-high') {
+    sortedDisplayProducts.sort((a, b) => (b.rawPrice || 0) - (a.rawPrice || 0));
+  }
+
+  // Next collection computation for end-of-page CTA
+  const currentNavIndex = collectionsNav.findIndex(c => c.handle === slug);
+  const nextCollection = collectionsNav.length > 0 
+    ? collectionsNav[(currentNavIndex + 1) % collectionsNav.length] 
+    : null;
+
   // Animation triggers with GSAP
   useEffect(() => {
     const displayCategoryName = collectionInfo.title || slug.replace(/-/g, ' ').toUpperCase();
@@ -351,6 +440,30 @@ export default function CategoryPage() {
         </div>
       </section>
 
+      {/* ─── LUXURY COLLECTION SWITCHER BAR ─── */}
+      <div className="collection-switcher-bar">
+        <div className="collection-switcher-track">
+          <Link href="/collections" className="switcher-pill directory-pill">
+            <span className="pill-dot">✦</span> All Collections
+          </Link>
+          <div className="switcher-divider" />
+          {collectionsNav.map((col) => {
+            const isActive = col.handle === slug;
+            return (
+              <Link
+                key={col.handle}
+                href={`/collections/${col.handle}`}
+                className={`switcher-pill${isActive ? ' active' : ''}`}
+              >
+                <span className="pill-tag">{col.category}</span>
+                <span className="pill-title">{col.title}</span>
+                {isActive && <span className="pill-active-dot" />}
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+
       {/* ─── DYNAMIC UTILITY CONTROLS BAR ─── */}
       <div className="collection-controls-bar">
         <div className="controls-top-row">
@@ -399,17 +512,17 @@ export default function CategoryPage() {
             {/* Thin separator — visible only when toggle is showing */}
             <div className="controls-sep" />
 
-            {/* Sort — compact labels in the bar */}
+            {/* Sort — clear labels */}
             <div className="sort-select-wrapper">
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
                 className="sort-select"
+                aria-label="Sort silhouettes"
               >
                 <option value="default">Featured</option>
-                <option value="price-low">Price ↑</option>
-                <option value="price-high">Price ↓</option>
-                <option value="alphabetical">A – Z</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
               </select>
             </div>
 
@@ -466,7 +579,7 @@ export default function CategoryPage() {
             <div className="spinner"></div>
             <span>Curating Collection...</span>
           </div>
-        ) : displayProducts.length === 0 ? (
+        ) : sortedDisplayProducts.length === 0 ? (
           <div className="collection-empty-state">
             <h3>No Silhouettes Available</h3>
             <p>We couldn&apos;t find any items matching your selected criteria.</p>
@@ -474,7 +587,7 @@ export default function CategoryPage() {
           </div>
         ) : (
           <div className={`collection-products-grid grid-studio${mobileGrid === '2col' ? ' mobile-2col' : ''}`}>
-            {displayProducts.map((product) => {
+            {sortedDisplayProducts.map((product) => {
               const isWishlisted = isInWishlist(product.id);
               return (
                 <div key={product.id} className="product-card">
@@ -658,18 +771,272 @@ export default function CategoryPage() {
                 onChange={(e) => setSortBy(e.target.value)}
                 className="sort-select"
                 style={{ width: '100%', padding: '10px' }}
+                aria-label="Sort silhouettes"
               >
                 <option value="default">Featured</option>
                 <option value="price-low">Price: Low to High</option>
                 <option value="price-high">Price: High to Low</option>
-                <option value="alphabetical">Newest Arrivals</option>
               </select>
             </div>
           </div>
         </div>
       </div>
 
+      {/* ─── NEXT COLLECTION END-OF-PAGE CTA ─── */}
+      {nextCollection && (
+        <section className="next-collection-section">
+          <div className="next-collection-card">
+            <div className="next-collection-media">
+              <img src={nextCollection.img} alt={nextCollection.title} loading="lazy" />
+              <div className="next-collection-overlay" />
+            </div>
+            <div className="next-collection-content">
+              <div className="next-collection-tag-wrap">
+                <span className="next-collection-badge">CONTINUE BROWSING</span>
+                <span className="next-collection-gender">{(nextCollection.category || 'CURATED').toUpperCase()} COLLECTION</span>
+              </div>
+              <h2 className="next-collection-title">
+                Next: {nextCollection.title}
+              </h2>
+              <p className="next-collection-desc">
+                {nextCollection.shortDescription || nextCollection.description || 'Consciously handcrafted luxury silhouettes, celebrating age-old artisanal techniques.'}
+              </p>
+              <Link
+                href={`/collections/${nextCollection.handle}`}
+                className="btn-next-collection"
+              >
+                <span>Explore {nextCollection.title}</span>
+                <span className="btn-next-arrow">→</span>
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
       <style>{`
+        /* ── Collection Switcher Bar ── */
+        .collection-switcher-bar {
+          width: 100%;
+          background: #FAF9F6;
+          border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+          padding: 14px 6vw;
+          box-sizing: border-box;
+          overflow-x: auto;
+          scrollbar-width: none;
+          -webkit-overflow-scrolling: touch;
+        }
+        .collection-switcher-bar::-webkit-scrollbar {
+          display: none;
+        }
+        .collection-switcher-track {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          min-width: max-content;
+        }
+        .switcher-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 18px;
+          border-radius: 30px;
+          border: 1px solid rgba(0, 0, 0, 0.12);
+          background: #ffffff;
+          color: #222222;
+          text-decoration: none;
+          font-family: var(--font-body, sans-serif);
+          font-size: 11.5px;
+          font-weight: 500;
+          letter-spacing: 0.04em;
+          transition: all 0.25s ease;
+          position: relative;
+          white-space: nowrap;
+        }
+        .switcher-pill:hover {
+          border-color: #111111;
+          color: #000000;
+          background: #fdfdfd;
+          transform: translateY(-1px);
+        }
+        .switcher-pill.active {
+          background: #111111;
+          color: #ffffff;
+          border-color: #111111;
+          font-weight: 600;
+        }
+        .switcher-pill.directory-pill {
+          background: rgba(136, 122, 100, 0.1);
+          border-color: rgba(136, 122, 100, 0.3);
+          color: #72624d;
+          font-family: var(--font-mono, monospace);
+          font-size: 10.5px;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+        }
+        .switcher-pill.directory-pill:hover {
+          background: rgba(136, 122, 100, 0.2);
+          border-color: #72624d;
+          color: #111;
+        }
+        .switcher-pill .pill-tag {
+          font-family: var(--font-mono, monospace);
+          font-size: 8.5px;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          opacity: 0.65;
+        }
+        .switcher-pill.active .pill-tag {
+          opacity: 0.85;
+          color: #e5e5e5;
+        }
+        .pill-active-dot {
+          width: 5px;
+          height: 5px;
+          border-radius: 50%;
+          background: #d4af37;
+          display: inline-block;
+        }
+        .switcher-divider {
+          width: 1px;
+          height: 22px;
+          background: rgba(0, 0, 0, 0.12);
+          margin: 0 4px;
+        }
+
+        /* ── Next Collection Card ── */
+        .next-collection-section {
+          padding: 80px 6vw 100px;
+          background: #FAF9F6;
+          box-sizing: border-box;
+        }
+        .next-collection-card {
+          position: relative;
+          border-radius: 20px;
+          overflow: hidden;
+          background: #111111;
+          color: #FAF9F6;
+          display: grid;
+          grid-template-columns: 1.2fr 1fr;
+          min-height: 400px;
+          box-shadow: 0 25px 60px rgba(0, 0, 0, 0.12);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .next-collection-media {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          min-height: 320px;
+          overflow: hidden;
+        }
+        .next-collection-media img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          object-position: center;
+          transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .next-collection-card:hover .next-collection-media img {
+          transform: scale(1.04);
+        }
+        .next-collection-overlay {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(to right, rgba(0,0,0,0.1) 0%, rgba(17,17,17,0.7) 100%);
+        }
+        .next-collection-content {
+          padding: 60px 50px;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: flex-start;
+          z-index: 2;
+        }
+        .next-collection-tag-wrap {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 20px;
+          flex-wrap: wrap;
+        }
+        .next-collection-badge {
+          font-family: var(--font-mono, monospace);
+          font-size: 9px;
+          letter-spacing: 0.25em;
+          text-transform: uppercase;
+          background: rgba(255, 255, 255, 0.15);
+          color: #FAF9F6;
+          padding: 6px 14px;
+          border-radius: 20px;
+          backdrop-filter: blur(10px);
+        }
+        .next-collection-gender {
+          font-family: var(--font-mono, monospace);
+          font-size: 10px;
+          letter-spacing: 0.2em;
+          text-transform: uppercase;
+          color: #c4b59d;
+        }
+        .next-collection-title {
+          font-family: var(--font-display, serif);
+          font-size: clamp(2.2rem, 3.8vw, 3.6rem);
+          font-weight: 400;
+          color: #FAF9F6;
+          line-height: 1.15;
+          margin: 0 0 16px;
+          text-transform: uppercase;
+          letter-spacing: -0.01em;
+        }
+        .next-collection-desc {
+          font-family: var(--font-body, sans-serif);
+          font-size: 1.05rem;
+          color: #cccccc;
+          line-height: 1.6;
+          margin: 0 0 35px;
+          max-width: 440px;
+        }
+        .btn-next-collection {
+          display: inline-flex;
+          align-items: center;
+          gap: 12px;
+          padding: 16px 36px;
+          border-radius: 40px;
+          background: #FAF9F6;
+          color: #111111;
+          text-decoration: none;
+          font-family: var(--font-mono, monospace);
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .btn-next-collection:hover {
+          background: #d4af37;
+          color: #000;
+          transform: translateX(4px);
+        }
+        .btn-next-arrow {
+          font-size: 16px;
+          transition: transform 0.3s ease;
+        }
+        .btn-next-collection:hover .btn-next-arrow {
+          transform: translateX(4px);
+        }
+        @media (max-width: 900px) {
+          .next-collection-card {
+            grid-template-columns: 1fr;
+          }
+          .next-collection-overlay {
+            background: linear-gradient(to top, rgba(17,17,17,0.95) 0%, rgba(17,17,17,0.4) 100%);
+          }
+          .next-collection-content {
+            padding: 40px 28px;
+          }
+          .next-collection-section {
+            padding: 50px 5vw 70px;
+          }
+        }
+
         /* ── Controls Bar ── */
         .collection-controls-bar {
           width: 100%;

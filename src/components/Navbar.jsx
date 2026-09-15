@@ -8,9 +8,6 @@ import { useWishlist } from './WishlistContext';
 import gsap from 'gsap';
 import { fetchShopifyCollections } from '../lib/shopify/queries/collections';
 
-const WOMEN_HANDLES = ['matching-moods', 'flow-state', 'power-layers', 'six-yards-of-good'];
-const MEN_HANDLES = ['natural-luxury', 'printed-stories', 'modern-classics'];
-
 const CONNECT_LINKS = [
   { label: 'Discover', href: '/discover', external: false },
   { label: 'Blog', href: '/blogs', external: false },
@@ -28,42 +25,50 @@ export default function Navbar() {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const overlayRef = useRef(null);
 
-  // Dynamic collections API integration (100% dynamic, no static link fallbacks)
+  // Dynamic collections API integration based purely on Shopify Metafield Tags (Male/Men, Female/Women, Bespoke)
   const [womenLinks, setWomenLinks] = useState([]);
   const [menLinks, setMenLinks] = useState([]);
-  const [madeForMomentsHref, setMadeForMomentsHref] = useState('/collections/custom-made-for-moments');
+  const [bespokeLink, setBespokeLink] = useState({
+    label: 'Made for Moments',
+    href: '/collections/custom-made-for-moments',
+    img: '/assets/new_coll_5.JPG',
+  });
+  const [showcaseImg, setShowcaseImg] = useState('/assets/new_coll_3.png');
 
   useEffect(() => {
     async function loadCollections() {
       try {
-        const nodes = await fetchShopifyCollections();
-        if (nodes && nodes.length > 0) {
+        const collections = await fetchShopifyCollections();
+        if (collections && collections.length > 0) {
           const fetchedWomen = [];
           const fetchedMen = [];
-          let customMomentsLink = '/collections/custom-made-for-moments';
+          let foundBespoke = null;
 
-          nodes.forEach((node) => {
-            const metafieldVal = node.metafield?.value?.trim()?.toLowerCase() || '';
-            const handle = node.handle?.toLowerCase() || '';
-            const title = node.title?.toLowerCase() || '';
+          collections.forEach((col) => {
             const item = {
-              label: node.title,
-              href: `/collections/${node.handle}`,
-              img: node.image?.url || '/assets/new_coll_3.png',
+              label: col.title,
+              href: `/collections/${col.handle}`,
+              img: col.img || '/assets/new_coll_3.png',
+              category: col.category,
             };
 
-            if (handle === 'custom-made-for-moments' || title.includes('custom made')) {
-              customMomentsLink = `/collections/${node.handle}`;
-            } else if (metafieldVal === 'women' || WOMEN_HANDLES.includes(handle)) {
+            if (col.category === 'Women') {
               fetchedWomen.push(item);
-            } else if (metafieldVal === 'men' || MEN_HANDLES.includes(handle)) {
+            } else if (col.category === 'Men') {
               fetchedMen.push(item);
+            } else if (col.category === 'Bespoke') {
+              foundBespoke = item;
             }
           });
 
           setWomenLinks(fetchedWomen);
           setMenLinks(fetchedMen);
-          setMadeForMomentsHref(customMomentsLink);
+          if (foundBespoke) {
+            setBespokeLink(foundBespoke);
+          }
+          if (collections[0]?.img) {
+            setShowcaseImg(collections[0].img);
+          }
         }
       } catch (err) {
         console.error('Error loading collections from Shopify API:', err);
@@ -221,7 +226,7 @@ export default function Navbar() {
         <div className="menu-container">
           <div className="menu-visual-showcase">
             <div className="showcase-img-wrapper">
-              <img src="/assets/new_coll_3.png" alt="Editorial Showcase" id="menu-showcase-img" className="showcase-img" />
+              <img src={showcaseImg} alt="Editorial Showcase" id="menu-showcase-img" className="showcase-img" />
             </div>
           </div>
 
@@ -233,7 +238,12 @@ export default function Navbar() {
               <ul className="nav-section-links">
                 {womenLinks.map((link) => (
                   <li key={link.href}>
-                    <Link href={link.href} data-img={link.img} onClick={closeMenu}>
+                    <Link
+                      href={link.href}
+                      data-img={link.img}
+                      onMouseEnter={() => link.img && setShowcaseImg(link.img)}
+                      onClick={closeMenu}
+                    >
                       {link.label}
                     </Link>
                   </li>
@@ -248,7 +258,12 @@ export default function Navbar() {
               <ul className="nav-section-links">
                 {menLinks.map((link) => (
                   <li key={link.href}>
-                    <Link href={link.href} data-img={link.img} onClick={closeMenu}>
+                    <Link
+                      href={link.href}
+                      data-img={link.img}
+                      onMouseEnter={() => link.img && setShowcaseImg(link.img)}
+                      onClick={closeMenu}
+                    >
                       {link.label}
                     </Link>
                   </li>
@@ -282,7 +297,7 @@ export default function Navbar() {
               <Link href="/karigar-of-as" onClick={closeMenu}>Karigar of AS</Link>
             </span>
             <span className="nav-section-title karigar-title karigar-title-custom">
-              <Link href={madeForMomentsHref} onClick={closeMenu}>Made for Moments</Link>
+              <Link href={bespokeLink.href} onClick={closeMenu}>{bespokeLink.label}</Link>
             </span>
             <style>{`
               .karigar-section-custom {
