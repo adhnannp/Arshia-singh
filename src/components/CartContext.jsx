@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import { fetchProductByHandle } from '../lib/shopify/queries/products';
 
@@ -56,167 +56,69 @@ const isSameCartItem = (itemA, itemB) => {
   return true;
 };
 
-// Helper to merge two lists of cart items without duplicates
-const mergeCartLists = (primaryList = [], secondaryList = []) => {
-  const merged = [...primaryList];
-  secondaryList.forEach((sItem) => {
-    const existingIndex = merged.findIndex((pItem) => isSameCartItem(pItem, sItem));
-    if (existingIndex > -1) {
-      const pQty = typeof merged[existingIndex].quantity === 'number' ? merged[existingIndex].quantity : 1;
-      const sQty = typeof sItem.quantity === 'number' ? sItem.quantity : 1;
-      merged[existingIndex] = {
-        ...merged[existingIndex],
-        ...sItem,
-        quantity: Math.max(pQty, sQty),
-        quantityAvailable: sItem.quantityAvailable ?? merged[existingIndex].quantityAvailable
-      };
-    } else {
-      merged.push({
-        ...sItem,
-        quantity: typeof sItem.quantity === 'number' ? sItem.quantity : 1
-      });
-    }
-  });
-  return merged;
-};
-
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isValidatingCart, setIsValidatingCart] = useState(false);
   const { user } = useAuth();
-  const syncTimeoutRef = useRef(null);
 
-  // ─── API Helper: Send cart updates to /api/cart for cross-device synchronization ───
-  const syncCartToServer = useCallback(async (items, currentUser) => {
-    if (!currentUser) return;
-    try {
-      await fetch('/api/cart', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          cartItems: items,
-          customerId: currentUser.id || null,
-          email: currentUser.email || null
-        })
-      });
-    } catch (err) {
-      console.warn('[CartContext] Background cart sync failed:', err);
-    }
-  }, []);
-
-  // ─── Load cart on mount / login & perform cross-device sync with /api/cart ───
+  // ─── Load initial cart (guest or customer) & handle guest-to-user cart migration on login ───
   useEffect(() => {
-    let isCancelled = false;
+    const guestCartRaw = localStorage.getItem('as_cart_items');
+    let guestItems = [];
+    if (guestCartRaw) {
+      try {
+        guestItems = JSON.parse(guestCartRaw) || [];
+      } catch (e) {
+        console.error('[CartContext] Error parsing guest cart:', e);
+      }
+    }
 
-    async function initializeCart() {
-      // 1. Read local guest cart
-      const guestCartRaw = localStorage.getItem('as_cart_items');
-      let guestItems = [];
-      if (guestCartRaw) {
+    if (user) {
+      const userCartKey = `as_user_cart_${user.email || user.id || 'member'}`;
+      const userCartRaw = localStorage.getItem(userCartKey);
+      let userItems = [];
+      if (userCartRaw) {
         try {
-          guestItems = JSON.parse(guestCartRaw) || [];
+          userItems = JSON.parse(userCartRaw) || [];
         } catch (e) {
-          console.error('[CartContext] Error parsing guest cart:', e);
+          console.error('[CartContext] Error parsing user cart:', e);
         }
       }
 
-      if (user) {
-        const userCartKey = `as_user_cart_${user.email || user.id || 'member'}`;
-        const userCartRaw = localStorage.getItem(userCartKey);
-        let localUserItems = [];
-        if (userCartRaw) {
-          try {
-            localUserItems = JSON.parse(userCartRaw) || [];
-          } catch (e) {
-            console.error('[CartContext] Error parsing user cart:', e);
-          }
-        }
+      // If guest cart has items when user logs in: merge guest items into user cart
+      if (guestItems.length > 0) {
+        const merged = [...userItems];
+        guestItems.forEach((gItem) => {
+          const existingIndex = merged.findIndex((uItem) => isSameCartItem(uItem, gItem));
 
-        // Set initial local state immediately for instant snappy UI
-        const initialMergedLocal = mergeCartLists(localUserItems, guestItems);
-        if (!isCancelled) {
-          setCartItems(initialMergedLocal);
-        }
-
-        // 2. Fetch server-synced cart from /api/cart (e.g. from Phone or another session)
-        try {
-          const emailQuery = user.email ? `?email=${encodeURIComponent(user.email)}` : '';
-          const res = await fetch(`/api/cart${emailQuery}`, {
-            cache: 'no-store',
-            credentials: 'include'
-          });
-          const data = await res.json();
-
-          if (!isCancelled && data.authenticated && Array.isArray(data.cartItems)) {
-            const serverItems = data.cartItems;
-            // Merge server cart with local items
-            const finalMerged = mergeCartLists(serverItems, initialMergedLocal);
-
-            setCartItems(finalMerged);
-            localStorage.setItem(userCartKey, JSON.stringify(finalMerged));
-
-            // Sync merged state back to server so both phone & laptop have complete cart
-            syncCartToServer(finalMerged, user);
-
-            if (guestItems.length > 0) {
-              localStorage.removeItem('as_cart_items');
-            }
-          } else if (!isCancelled && initialMergedLocal.length > 0) {
-            // First time or server was empty: push local items to server
-            syncCartToServer(initialMergedLocal, user);
-            localStorage.setItem(userCartKey, JSON.stringify(initialMergedLocal));
-            if (guestItems.length > 0) {
-              localStorage.removeItem('as_cart_items');
-            }
-          }
-        } catch (err) {
-          console.warn('[CartContext] Could not fetch server cart:', err);
-        }
-      } else {
-        // Guest mode
-        if (!isCancelled) {
-          setCartItems(guestItems);
-        }
-      }
-    }
-
-    initializeCart();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [user, syncCartToServer]);
-
-  // ─── Window Focus & Multi-Tab Synchronization ───
-  useEffect(() => {
-    // 1. Sync when user switches back to the tab (e.g. added items on phone, switched back to laptop)
-    const handleFocusSync = async () => {
-      if (document.visibilityState === 'visible' && user) {
-        try {
-          const emailQuery = user.email ? `?email=${encodeURIComponent(user.email)}` : '';
-          const res = await fetch(`/api/cart${emailQuery}`, { cache: 'no-store', credentials: 'include' });
-          const data = await res.json();
-          if (data.authenticated && Array.isArray(data.cartItems)) {
-            const userCartKey = `as_user_cart_${user.email || user.id || 'member'}`;
-            setCartItems((prev) => {
-              const prevStr = JSON.stringify(prev);
-              const serverStr = JSON.stringify(data.cartItems);
-              if (prevStr !== serverStr) {
-                const merged = mergeCartLists(data.cartItems, prev);
-                localStorage.setItem(userCartKey, JSON.stringify(merged));
-                return merged;
-              }
-              return prev;
+          if (existingIndex > -1) {
+            const uQty = typeof merged[existingIndex].quantity === 'number' ? merged[existingIndex].quantity : 1;
+            const gQty = typeof gItem.quantity === 'number' ? gItem.quantity : 1;
+            merged[existingIndex] = {
+              ...merged[existingIndex],
+              quantity: uQty + gQty
+            };
+          } else {
+            merged.push({
+              ...gItem,
+              quantity: typeof gItem.quantity === 'number' ? gItem.quantity : 1
             });
           }
-        } catch (e) {
-          // Ignore background sync error
-        }
+        });
+        setCartItems(merged);
+        localStorage.setItem(userCartKey, JSON.stringify(merged));
+        localStorage.removeItem('as_cart_items');
+      } else {
+        setCartItems(userItems);
       }
-    };
+    } else {
+      setCartItems(guestItems);
+    }
+  }, [user]);
 
-    // 2. Sync across multiple open browser tabs on the same device
+  // ─── Multi-tab synchronization across open tabs in same browser ───
+  useEffect(() => {
     const handleStorageChange = (e) => {
       if (user) {
         const userCartKey = `as_user_cart_${user.email || user.id || 'member'}`;
@@ -232,33 +134,22 @@ export function CartProvider({ children }) {
       }
     };
 
-    window.addEventListener('visibilitychange', handleFocusSync);
-    window.addEventListener('focus', handleFocusSync);
     window.addEventListener('storage', handleStorageChange);
-
     return () => {
-      window.removeEventListener('visibilitychange', handleFocusSync);
-      window.removeEventListener('focus', handleFocusSync);
       window.removeEventListener('storage', handleStorageChange);
     };
   }, [user]);
 
-  // ─── Save cart locally & trigger background API sync to /api/cart ───
+  // ─── Save cart locally ───
   const saveCart = useCallback((items) => {
     setCartItems(items);
     if (user) {
       const userCartKey = `as_user_cart_${user.email || user.id || 'member'}`;
       localStorage.setItem(userCartKey, JSON.stringify(items));
-
-      // Trigger background server sync
-      if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
-      syncTimeoutRef.current = setTimeout(() => {
-        syncCartToServer(items, user);
-      }, 300);
     } else {
       localStorage.setItem('as_cart_items', JSON.stringify(items));
     }
-  }, [user, syncCartToServer]);
+  }, [user]);
 
   /**
    * Add to cart function - Guests & Logged-in users can add freely!
@@ -363,14 +254,11 @@ export function CartProvider({ children }) {
 
   const clearCart = () => {
     saveCart([]);
-    if (user) {
-      fetch('/api/cart', { method: 'DELETE' }).catch(() => {});
-    }
   };
 
   /**
    * Revalidate all cart items against Shopify to check for unavailable/unlisted products
-   * and automatically adjust quantities if live inventory has changed.
+   * and automatically adjust quantities if live inventory has changed (e.g. 5 down to 4).
    */
   const revalidateCartItems = useCallback(async () => {
     if (cartItems.length === 0) return;
@@ -384,6 +272,7 @@ export function CartProvider({ children }) {
           try {
             const product = await fetchProductByHandle(item.handle);
             if (!product) {
+              // Product no longer exists or unlisted in Shopify
               return { ...item, isUnavailable: true, unlisted: true };
             }
 
@@ -423,11 +312,13 @@ export function CartProvider({ children }) {
                 let currentQty = typeof item.quantity === 'number' && item.quantity > 0 ? item.quantity : 1;
                 let stockNotice = item.stockNotice || null;
 
+                // If live Shopify inventory is less than what user had in cart, adjust quantity
                 if (typeof sizeVariant.quantityAvailable === 'number' && sizeVariant.quantityAvailable > 0) {
                   if (currentQty > sizeVariant.quantityAvailable) {
                     stockNotice = `Only ${sizeVariant.quantityAvailable} left in stock. Quantity was adjusted from ${currentQty} to ${sizeVariant.quantityAvailable}.`;
                     currentQty = sizeVariant.quantityAvailable;
                   } else if (currentQty === sizeVariant.quantityAvailable && item.stockNotice) {
+                    // Retain stock notice so user remains informed
                     stockNotice = item.stockNotice;
                   } else if (currentQty < sizeVariant.quantityAvailable) {
                     stockNotice = null;
@@ -453,6 +344,7 @@ export function CartProvider({ children }) {
         })
       );
 
+      // Check if any status, quantity, or stock notice changed
       const statusChanged = validatedItems.some((valItem, idx) => {
         const orig = cartItems[idx];
         return (
