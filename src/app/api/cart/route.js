@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+export const runtime = 'edge';
 // Server-side persistent storage for customer carts across sessions & devices
 const memoryCartStore = new Map();
 
