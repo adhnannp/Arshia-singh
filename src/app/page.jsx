@@ -54,6 +54,25 @@ export default function HomePage() {
   const [touchStartX, setTouchStartX] = useState(null);
   const [currentBgIndex, setCurrentBgIndex] = useState(0);
   const [patrons, setPatrons] = useState([]);
+  const [activeTestimonial, setActiveTestimonial] = useState(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setActiveTestimonial(null);
+      }
+    };
+    if (activeTestimonial) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [activeTestimonial]);
 
   useEffect(() => {
     async function loadTestimonials() {
@@ -492,11 +511,23 @@ export default function HomePage() {
                       '--card-color': item.cardColor,
                       '--stamp-tint': item.stampTint,
                     }}
+                    role="button"
+                    tabIndex={0}
+                    aria-haspopup="dialog"
+                    aria-label={`Read full reflection from ${item.name}`}
+                    onClick={() => setActiveTestimonial(item)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setActiveTestimonial(item);
+                      }
+                    }}
                   >
                     {/* Top: Quote & Postage Stamp */}
                     <div className="postcard-top">
                       <div className="postcard-quote-wrapper">
                         <p className="postcard-quote">&ldquo;{item.quote}&rdquo;</p>
+                        <span className="postcard-read-prompt">Read reflection ↗</span>
                       </div>
 
                       <div className="postcard-stamp-cluster">
@@ -566,6 +597,108 @@ export default function HomePage() {
               </div>
             </div>
           </div>
+
+          {/* ─── FULL-TEXT PATRON REFLECTION MODAL ─── */}
+          {activeTestimonial && (
+            <div
+              className="postcard-modal-overlay"
+              onClick={() => setActiveTestimonial(null)}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="postcard-modal-patron"
+            >
+              <div
+                className="postcard-modal-card"
+                style={{
+                  backgroundColor: activeTestimonial.cardColor || '#E9A78C',
+                  '--card-color': activeTestimonial.cardColor || '#E9A78C',
+                  '--stamp-tint': activeTestimonial.stampTint || '#C4826A',
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Close Button */}
+                <button
+                  type="button"
+                  className="postcard-modal-close"
+                  onClick={() => setActiveTestimonial(null)}
+                  aria-label="Close reflection"
+                >
+                  &times;
+                </button>
+
+                <div className="postcard-modal-header">
+                  <span className="postcard-modal-kicker">PATRON REFLECTION</span>
+                  <span className="postcard-modal-verified">✦ VERIFIED PATRON</span>
+                </div>
+
+                <div className="postcard-modal-body">
+                  <div className="postcard-modal-main">
+                    <div className="postcard-modal-quote-wrapper">
+                      <p className="postcard-modal-quote">
+                        &ldquo;{activeTestimonial.quote}&rdquo;
+                      </p>
+                    </div>
+
+                    <div className="postcard-modal-author-info">
+                      <div className="postcard-modal-signature" aria-hidden="true">
+                        <svg width="100" height="16" viewBox="0 0 120 16" fill="none">
+                          <path
+                            d="M2 12 C10 2, 18 2, 24 11 C29 18, 36 4, 44 10 C50 14, 55 4, 62 9 C69 14, 74 5, 82 10 C89 14, 96 6, 118 4"
+                            stroke="#2D2319"
+                            strokeWidth="1.6"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                      </div>
+                      <h3 id="postcard-modal-patron" className="postcard-modal-name">
+                        {activeTestimonial.name}
+                      </h3>
+                      <p className="postcard-modal-meta">
+                        {activeTestimonial.role} &bull; {activeTestimonial.city}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="postcard-modal-stamp-cluster">
+                    <div className="postcard-postmark modal-postmark" aria-hidden="true">
+                      <svg width="70" height="70" viewBox="0 0 60 60" className="postmark-svg">
+                        <circle cx="30" cy="30" r="28" fill="none" stroke="#2D2319" strokeWidth="1.1" opacity="0.45" />
+                        <circle cx="30" cy="30" r="18" fill="none" stroke="#2D2319" strokeWidth="0.8" opacity="0.35" />
+                      </svg>
+                      <span className="postmark-date">{activeTestimonial.postmark}</span>
+                    </div>
+
+                    <div className="postcard-stamp modal-stamp">
+                      <div className="postcard-stamp-inner">
+                        <img
+                          src={activeTestimonial.photo}
+                          alt={activeTestimonial.name}
+                          className="postcard-stamp-img"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="postcard-modal-address-lines" aria-hidden="true">
+                      <span className="postcard-addr-line" />
+                      <span className="postcard-addr-line" />
+                      <span className="postcard-addr-line short" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="postcard-modal-footer">
+                  <span className="postcard-modal-brand">ARSHIA SINGH &bull; CONSCIOUS LUXURY</span>
+                  <button
+                    type="button"
+                    className="postcard-modal-action-btn"
+                    onClick={() => setActiveTestimonial(null)}
+                  >
+                    Close Reflection
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </section>
       )}
 
