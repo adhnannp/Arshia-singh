@@ -116,6 +116,12 @@
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
+@media (max-width: 768px) {
+  .collection-controls-bar {
+    padding: 10px clamp(10px, 3vw, 16px);
+  }
+}
+
 .controls-top-row {
   display: flex;
   justify-content: space-between;

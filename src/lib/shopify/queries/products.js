@@ -201,9 +201,19 @@ export const GET_ALL_PRODUCTS_QUERY = `#graphql
         availableForSale
         tags
 
+        collections(first: 10) {
+          nodes {
+            id
+            title
+            handle
+          }
+        }
+
         metafields(
           identifiers: [
             { namespace: "custom", key: "category2" }
+            { namespace: "custom", key: "print" }
+            { namespace: "custom", key: "applied_print" }
             { namespace: "custom", key: "wash_care" }
             { namespace: "custom", key: "fabric" }
             { namespace: "custom", key: "delivery" }
