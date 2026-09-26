@@ -642,11 +642,11 @@ export default function DiscoverPage() {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 8px;
+          gap: 6px;
           width: 100%;
           box-sizing: border-box;
           flex-wrap: nowrap;
-          overflow: hidden;
+          overflow: visible;
         }
         .controls-right {
           display: flex;
@@ -692,8 +692,49 @@ export default function DiscoverPage() {
 
         /* ── Mobile ── */
         @media (max-width: 768px) {
-          .mobile-grid-toggle { display: flex; }
-          .controls-sep { display: block; }
+          .collection-controls-bar {
+            padding: 10px clamp(8px, 2.5vw, 14px) !important;
+            overflow: visible !important;
+          }
+          .controls-top-row {
+            gap: 6px !important;
+            overflow: visible !important;
+          }
+          .btn-filter-trigger {
+            padding: 6px 12px !important;
+            font-size: 10.5px !important;
+            letter-spacing: 0.08em !important;
+            gap: 6px !important;
+            flex-shrink: 0 !important;
+          }
+          .mobile-grid-toggle {
+            display: flex !important;
+            gap: 2px !important;
+          }
+          .mobile-grid-btn {
+            width: 28px !important;
+            height: 28px !important;
+          }
+          .controls-sep {
+            display: block !important;
+            margin: 0 1px !important;
+          }
+          .controls-right {
+            gap: 5px !important;
+            flex-shrink: 0 !important;
+          }
+          .sort-select-wrapper {
+            flex-shrink: 1 !important;
+            min-width: 0 !important;
+          }
+          .sort-select {
+            font-size: 10px !important;
+            letter-spacing: 0.06em !important;
+            padding: 6px 22px 6px 10px !important;
+            background-position: right 7px center !important;
+            background-size: 8px 5px !important;
+            box-sizing: border-box !important;
+          }
           .collection-products-grid.mobile-2col {
             grid-template-columns: repeat(2, 1fr) !important;
             gap: clamp(6px, 2vw, 12px) !important;
@@ -710,17 +751,24 @@ export default function DiscoverPage() {
 
         /* ── Very small screens ── */
         @media (max-width: 380px) {
+          .collection-controls-bar {
+            padding: 8px 8px !important;
+          }
           .btn-filter-trigger {
-            padding: 7px 10px !important;
-            font-size: 10px !important;
-            gap: 5px !important;
+            padding: 5px 8px !important;
+            font-size: 9.5px !important;
+            letter-spacing: 0.05em !important;
+            gap: 4px !important;
           }
           .sort-select {
-            font-size: 10px !important;
-            padding: 7px 20px 7px 8px !important;
+            font-size: 9.5px !important;
+            letter-spacing: 0.04em !important;
+            padding: 5px 18px 5px 7px !important;
+            background-position: right 5px center !important;
+            background-size: 7px 4px !important;
           }
-          .mobile-grid-btn { width: 26px; height: 26px; }
-          .mobile-grid-btn svg { width: 13px; height: 13px; }
+          .mobile-grid-btn { width: 25px !important; height: 25px !important; }
+          .mobile-grid-btn svg { width: 12px !important; height: 12px !important; }
         }
       `}</style>
       <Footer />

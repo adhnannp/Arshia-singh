@@ -8,8 +8,40 @@ import gsap from 'gsap';
 import Footer from '../../../components/Footer';
 import { useAuth } from '../../../components/AuthContext';
 import { useWishlist } from '../../../components/WishlistContext';
-import { fetchCollectionProducts } from '../../../lib/shopify/queries/products';
+import { fetchCollectionProducts, fetchShopifyProducts } from '../../../lib/shopify/queries/products';
 import { fetchShopifyCollections } from '../../../lib/shopify/queries/collections';
+
+// Helper: Check if product is Made for Moments / Bespoke
+const isBespokeOrMadeForMoments = (node) => {
+  if (Array.isArray(node.collections?.nodes)) {
+    const hasBespokeCol = node.collections.nodes.some(c => {
+      const handle = (c.handle || '').toLowerCase();
+      const title = (c.title || '').toLowerCase();
+      return (
+        handle.includes('made-for-moment') ||
+        handle.includes('bespoke') ||
+        title.includes('made for moment') ||
+        title.includes('bespoke')
+      );
+    });
+    if (hasBespokeCol) return true;
+  }
+
+  if (Array.isArray(node.tags)) {
+    const hasBespokeTag = node.tags.some(t => {
+      const tag = t.toLowerCase().trim();
+      return (
+        tag === 'made for moments' ||
+        tag === 'custom made for moments' ||
+        tag === 'bespoke' ||
+        tag.includes('made-for-moment')
+      );
+    });
+    if (hasBespokeTag) return true;
+  }
+
+  return false;
+};
 
 // Helper: Normalize Shopify product node
 const normalizeProduct = (node, collectionCategory) => {
@@ -27,6 +59,21 @@ const normalizeProduct = (node, collectionCategory) => {
     ? `₹${Math.round(rawPrice).toLocaleString('en-IN')}`
     : 'Price on Request';
 
+  // If in Women or Men "All" view, dynamically resolve the specific collection/sub-category name
+  let itemCategory = collectionCategory || metafieldMap.category || 'Luxury Edit';
+  if (collectionCategory === 'Women' || collectionCategory === 'Men') {
+    if (Array.isArray(node.collections?.nodes) && node.collections.nodes.length > 0) {
+      // Pick a non-generic collection title if available (not "Women", "Men", "All")
+      const specificCol = node.collections.nodes.find(c => {
+        const title = (c.title || '').trim().toLowerCase();
+        return title !== 'women' && title !== 'men' && title !== 'all';
+      });
+      itemCategory = specificCol ? specificCol.title : node.collections.nodes[0].title;
+    } else if (metafieldMap.category) {
+      itemCategory = metafieldMap.category;
+    }
+  }
+
   return {
     id: node.id,
     name: node.title,
@@ -39,7 +86,7 @@ const normalizeProduct = (node, collectionCategory) => {
     availableForSale: node.availableForSale,
     fabric: metafieldMap.fabric || '',
     components: metafieldMap.components || '',
-    category: collectionCategory || metafieldMap.category || 'Luxury Edit',
+    category: itemCategory,
     details: node.description || '',
     is_couple_set:
       metafieldMap.is_couple_set === true ||
@@ -159,10 +206,48 @@ export default function CategoryPage() {
     }
   }, [slug, sortBy, selectedPrices, selectedOccasions, selectedCategories, selectedColors, selectedCrafts, selectedToggles]);
 
+  const isWomen = slug.toLowerCase() === 'women';
+  const isMen = slug.toLowerCase() === 'men';
+  const isGenderAll = isWomen || isMen;
+  const genderTag = isWomen ? 'Women' : 'Men';
+
   // Fetch initial collection data and products from Shopify
   const loadInitialProducts = useCallback(async () => {
     if (!slug) return;
     setLoading(true);
+
+    if (isGenderAll) {
+      if (isWomen) {
+        setCollectionInfo({
+          title: "Women's Collection",
+          description: "Discover all silhouettes and conscious creations for women across our signature edits.",
+          image: '/assets/new_coll_1.jpg',
+        });
+      } else {
+        setCollectionInfo({
+          title: "Men's Collection",
+          description: "Discover all silhouettes and conscious menswear edits across our signature collections.",
+          image: '/assets/new_coll_6.jpg',
+        });
+      }
+
+      const { sortKey, reverse } = getSortParams(sortBy);
+      const productSortKey = sortKey === 'COLLECTION_DEFAULT' ? null : sortKey;
+      const res = await fetchShopifyProducts({
+        query: `tag:${genderTag}`,
+        first: 50,
+        after: null,
+        sortKey: productSortKey,
+        reverse,
+      });
+
+      const filtered = (res.products || []).filter(p => !isBespokeOrMadeForMoments(p));
+      const normalized = filtered.map(p => normalizeProduct(p, genderTag));
+      setProductsList(normalized);
+      setPageInfo(res.pageInfo || { hasNextPage: false, endCursor: null });
+      setLoading(false);
+      return;
+    }
 
     const { sortKey, reverse } = getSortParams(sortBy);
     const res = await fetchCollectionProducts({
@@ -186,7 +271,7 @@ export default function CategoryPage() {
     setProductsList(normalized);
     setPageInfo(res.pageInfo || { hasNextPage: false, endCursor: null });
     setLoading(false);
-  }, [slug, sortBy]);
+  }, [slug, sortBy, isGenderAll, isWomen, genderTag]);
 
   useEffect(() => {
     loadInitialProducts();
@@ -196,6 +281,29 @@ export default function CategoryPage() {
   const loadMoreProducts = useCallback(async () => {
     if (loading || loadingMore || !pageInfo.hasNextPage || !pageInfo.endCursor) return;
     setLoadingMore(true);
+
+    if (isGenderAll) {
+      const { sortKey, reverse } = getSortParams(sortBy);
+      const productSortKey = sortKey === 'COLLECTION_DEFAULT' ? null : sortKey;
+      const res = await fetchShopifyProducts({
+        query: `tag:${genderTag}`,
+        first: 50,
+        after: pageInfo.endCursor,
+        sortKey: productSortKey,
+        reverse,
+      });
+
+      const filtered = (res.products || []).filter(p => !isBespokeOrMadeForMoments(p));
+      const normalized = filtered.map(p => normalizeProduct(p, genderTag));
+      setProductsList(prev => {
+        const existingIds = new Set(prev.map(p => p.id));
+        const newUnique = normalized.filter(p => !existingIds.has(p.id));
+        return [...prev, ...newUnique];
+      });
+      setPageInfo(res.pageInfo || { hasNextPage: false, endCursor: null });
+      setLoadingMore(false);
+      return;
+    }
 
     const { sortKey, reverse } = getSortParams(sortBy);
     const res = await fetchCollectionProducts({
@@ -215,7 +323,7 @@ export default function CategoryPage() {
     });
     setPageInfo(res.pageInfo || { hasNextPage: false, endCursor: null });
     setLoadingMore(false);
-  }, [slug, sortBy, collectionInfo.title, pageInfo, loading, loadingMore]);
+  }, [slug, sortBy, collectionInfo.title, pageInfo, loading, loadingMore, isGenderAll, genderTag]);
 
   // Intersection Observer for endless scrolling
   useEffect(() => {
@@ -274,7 +382,17 @@ export default function CategoryPage() {
     selectedCrafts.length +
     selectedToggles.length;
 
-  const displayTitle = collectionInfo.title || slug.replace(/-/g, ' ').toUpperCase();
+  const displayTitle = isWomen
+    ? "WOMEN'S ALL CREATIONS"
+    : isMen
+    ? "MEN'S ALL CREATIONS"
+    : (collectionInfo.title || slug.replace(/-/g, ' ').toUpperCase());
+
+  const heroSubtitle = isWomen
+    ? "HERITAGE SILHOUETTES · ALL WOMEN"
+    : isMen
+    ? "CONSCIOUS MENSWEAR · ALL MEN"
+    : "HERITAGE SILHOUETTES";
 
   // Color option definitions
   const colorOptions = [
@@ -431,7 +549,7 @@ export default function CategoryPage() {
       <section className="collection-hero">
         <div className="collection-hero-container">
           <div className="collection-hero-content">
-            <span className="collection-hero-subtitle">HERITAGE SILHOUETTES</span>
+            <span className="collection-hero-subtitle">{heroSubtitle}</span>
             <h1 className="collection-hero-title">{displayTitle}</h1>
             <p className="collection-hero-desc">
               {collectionInfo.description || 'Consciously handcrafted luxury silhouettes, celebrating age-old artisanal techniques with PETA-approved vegan textiles.'}
@@ -445,6 +563,23 @@ export default function CategoryPage() {
         <div className="collection-switcher-track">
           <Link href="/collections" className="switcher-pill directory-pill">
             <span className="pill-dot">✦</span> All Collections
+          </Link>
+          <div className="switcher-divider" />
+          <Link
+            href="/collections/women"
+            className={`switcher-pill${isWomen ? ' active' : ''}`}
+          >
+            <span className="pill-tag">Women</span>
+            <span className="pill-title">All Women</span>
+            {isWomen && <span className="pill-active-dot" />}
+          </Link>
+          <Link
+            href="/collections/men"
+            className={`switcher-pill${isMen ? ' active' : ''}`}
+          >
+            <span className="pill-tag">Men</span>
+            <span className="pill-title">All Men</span>
+            {isMen && <span className="pill-active-dot" />}
           </Link>
           <div className="switcher-divider" />
           {collectionsNav.map((col) => {
@@ -1041,17 +1176,17 @@ export default function CategoryPage() {
         .collection-controls-bar {
           width: 100%;
           box-sizing: border-box;
-          overflow: hidden;
+          overflow: visible;
         }
         .controls-top-row {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 8px;
+          gap: 6px;
           width: 100%;
           box-sizing: border-box;
           flex-wrap: nowrap;
-          overflow: hidden;
+          overflow: visible;
         }
         .controls-right {
           display: flex;
@@ -1097,11 +1232,48 @@ export default function CategoryPage() {
 
         /* ── Mobile breakpoint ── */
         @media (max-width: 768px) {
+          .collection-controls-bar {
+            padding: 10px clamp(8px, 2.5vw, 14px) !important;
+            overflow: visible !important;
+          }
+          .controls-top-row {
+            gap: 6px !important;
+            overflow: visible !important;
+          }
+          .btn-filter-trigger {
+            padding: 6px 12px !important;
+            font-size: 10.5px !important;
+            letter-spacing: 0.08em !important;
+            gap: 6px !important;
+            flex-shrink: 0 !important;
+          }
           .mobile-grid-toggle {
-            display: flex;
+            display: flex !important;
+            gap: 2px !important;
+          }
+          .mobile-grid-btn {
+            width: 28px !important;
+            height: 28px !important;
           }
           .controls-sep {
-            display: block;
+            display: block !important;
+            margin: 0 1px !important;
+          }
+          .controls-right {
+            gap: 5px !important;
+            flex-shrink: 0 !important;
+          }
+          .sort-select-wrapper {
+            flex-shrink: 1 !important;
+            min-width: 0 !important;
+          }
+          .sort-select {
+            font-size: 10px !important;
+            letter-spacing: 0.06em !important;
+            padding: 6px 22px 6px 10px !important;
+            background-position: right 7px center !important;
+            background-size: 8px 5px !important;
+            box-sizing: border-box !important;
           }
 
           /* 2-column grid */
@@ -1124,24 +1296,31 @@ export default function CategoryPage() {
           }
         }
 
-        /* ── Very small screens (320px) ── */
+        /* ── Very small screens (320px - 360px) ── */
         @media (max-width: 380px) {
+          .collection-controls-bar {
+            padding: 8px 8px !important;
+          }
           .btn-filter-trigger {
-            padding: 7px 10px !important;
-            font-size: 10px !important;
-            gap: 5px !important;
+            padding: 5px 8px !important;
+            font-size: 9.5px !important;
+            letter-spacing: 0.05em !important;
+            gap: 4px !important;
           }
           .sort-select {
-            font-size: 10px !important;
-            padding: 7px 20px 7px 8px !important;
+            font-size: 9.5px !important;
+            letter-spacing: 0.04em !important;
+            padding: 5px 18px 5px 7px !important;
+            background-position: right 5px center !important;
+            background-size: 7px 4px !important;
           }
           .mobile-grid-btn {
-            width: 26px;
-            height: 26px;
+            width: 25px !important;
+            height: 25px !important;
           }
           .mobile-grid-btn svg {
-            width: 13px;
-            height: 13px;
+            width: 12px !important;
+            height: 12px !important;
           }
         }
       `}</style>

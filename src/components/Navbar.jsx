@@ -91,8 +91,8 @@ export default function Navbar() {
   useEffect(() => {
     if (!overlayRef.current) return;
     if (menuOpen) {
-      gsap.set('.nav-section-title, .nav-section-links li a, .connect-links li a, .karigar-title a', { opacity: 0, y: 30 });
-      gsap.to('.nav-section-title', { y: 0, opacity: 1, duration: 0.8, stagger: 0.05, ease: 'power3.out', delay: 0.25 });
+      gsap.set('.nav-section-title, .nav-view-all-tag, .nav-section-links li a, .connect-links li a, .karigar-title a', { opacity: 0, y: 30 });
+      gsap.to('.nav-section-title, .nav-view-all-tag', { y: 0, opacity: 1, duration: 0.8, stagger: 0.05, ease: 'power3.out', delay: 0.25 });
       gsap.to('.nav-section-links li a, .connect-links li a, .karigar-title a', { y: 0, opacity: 1, duration: 1.0, stagger: 0.02, ease: 'power4.out', delay: 0.35 });
     }
   }, [menuOpen]);
@@ -234,7 +234,20 @@ export default function Navbar() {
             {/* Women */}
             <div className="nav-section">
               <span className="nav-section-num">01</span>
-              <span className="nav-section-title">Women</span>
+              <div className="nav-section-header">
+                <span className="nav-section-title">Women</span>
+                <Link
+                  href="/collections/women"
+                  onClick={closeMenu}
+                  className="nav-view-all-tag"
+                  aria-label="View all women products"
+                >
+                  <span>View All</span>
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+                    <path d="M1.5 8.5L8.5 1.5M8.5 1.5H3.5M8.5 1.5V6.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </Link>
+              </div>
               <ul className="nav-section-links">
                 {womenLinks.map((link) => (
                   <li key={link.href}>
@@ -254,7 +267,20 @@ export default function Navbar() {
             {/* Men */}
             <div className="nav-section">
               <span className="nav-section-num">02</span>
-              <span className="nav-section-title">Men</span>
+              <div className="nav-section-header">
+                <span className="nav-section-title">Men</span>
+                <Link
+                  href="/collections/men"
+                  onClick={closeMenu}
+                  className="nav-view-all-tag"
+                  aria-label="View all men products"
+                >
+                  <span>View All</span>
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+                    <path d="M1.5 8.5L8.5 1.5M8.5 1.5H3.5M8.5 1.5V6.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </Link>
+              </div>
               <ul className="nav-section-links">
                 {menLinks.map((link) => (
                   <li key={link.href}>
@@ -327,10 +353,29 @@ export default function Navbar() {
                 .karigar-section-custom {
                   flex-direction: column !important;
                   gap: 15px !important;
+                  width: 100% !important;
+                  padding: 0 10px !important;
+                  box-sizing: border-box !important;
+                }
+                .karigar-title-custom {
+                  width: 100% !important;
+                  display: flex !important;
+                  justify-content: center !important;
                 }
                 .karigar-title-custom a {
-                  font-size: 1.05rem !important;
-                  padding: 10px 20px !important;
+                  font-size: clamp(0.72rem, 3.2vw, 0.92rem) !important;
+                  letter-spacing: clamp(0.04em, 1.2vw, 0.08em) !important;
+                  padding: 10px 14px !important;
+                  width: min(340px, calc(100vw - 44px)) !important;
+                  max-width: 100% !important;
+                  box-sizing: border-box !important;
+                  white-space: nowrap !important;
+                  overflow: hidden !important;
+                  text-overflow: ellipsis !important;
+                  text-align: center !important;
+                  display: inline-flex !important;
+                  align-items: center !important;
+                  justify-content: center !important;
                 }
               }
             `}</style>
